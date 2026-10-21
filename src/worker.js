@@ -80,7 +80,7 @@ async function handleAuth(request, env, action) {
   const redirectUri = `${url.origin}/api/auth/callback`;
 
   if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET || !env.SESSION_SECRET) {
-    return json({ error: "Faltan variables de entorno de Discord en Cloudflare." }, 500);
+    return json({ error: "faltan las claves de Discord (Variables and Secrets) en Cloudflare." }, 500);
   }
 
   // 1) Mandar a Discord

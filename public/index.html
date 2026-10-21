@@ -496,19 +496,24 @@ function renderAuth(u){
   document.addEventListener("click", e=>{ if(!menu.contains(e.target)){ menu.hidden = true; chip.setAttribute("aria-expanded", false); } });
 }
 
-// Si la web aún no está en Cloudflare (por ejemplo, en la vista previa), avisamos en vez de romper el enlace
+// Si el login no está disponible, avisamos con el motivo en vez de romper el enlace
+let authError = "El inicio de sesión con Discord no está disponible en esta copia de la web.";
 document.addEventListener("click", e=>{
   const a = e.target.closest('[data-auth="login"]');
-  if(a && !authReady){ e.preventDefault(); toast("El inicio de sesión con Discord se activa cuando la web esté publicada en aurenroleplay.com."); }
+  if(a && !authReady){ e.preventDefault(); toast(authError); }
 });
 
 (async ()=>{
   try{
     const r = await fetch("/api/auth/me", {credentials:"same-origin"});
-    if(!r.ok || !(r.headers.get("content-type")||"").includes("json")) throw 0;
+    const isJson = (r.headers.get("content-type")||"").includes("json");
+    const data = isJson ? await r.json() : null;
+    if(!r.ok || !data){
+      if(data && data.error) authError = "Login con Discord no disponible: " + data.error;
+      throw 0;
+    }
     authReady = true;
-    const { user } = await r.json();
-    renderAuth(user);
+    renderAuth(data.user);
   }catch(e){ authReady = false; }
   const p = new URLSearchParams(location.search);
   if(p.has("login")){

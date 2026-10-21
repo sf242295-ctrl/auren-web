@@ -13,7 +13,7 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const mobile = matchMedia("(max-width:700px)").matches;
   const DIMMED = document.body.dataset.city === "dim";
-  const DIM_BASE = DIMMED ? .5 : .05, DIM_MAX = DIMMED ? .66 : .55;
+  const DIM_BASE = DIMMED ? .55 : .12, DIM_MAX = DIMMED ? .7 : .6;
   const rnd = (a,b)=> a + Math.random()*(b-a);
   const pick = a => a[Math.random()*a.length|0];
   const canFilter = "filter" in ctx;
@@ -434,7 +434,7 @@
       for(let i=0;i<img.data.length;i+=4){ const v = Math.random()*255; img.data[i]=img.data[i+1]=img.data[i+2]=v; img.data[i+3]=255; }
       g.putImageData(img,0,0);
       const d = document.createElement("div");
-      d.setAttribute("aria-hidden","true");
+      d.setAttribute("aria-hidden","true"); d.className = "grain";
       d.style.cssText = `position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.045;mix-blend-mode:overlay;background-image:url(${c.toDataURL()})`;
       cv.after(d);
     }catch(e){}
@@ -447,10 +447,13 @@
     update(dt); draw();
     requestAnimationFrame(loop);
   }
-  function start(){ if(running || paused || reduce) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
+  const root = document.documentElement;
+  const userStill = ()=> root.dataset.motion === "reduce" || root.dataset.contrast === "high";
+  function start(){ if(running || paused || reduce || userStill()) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
   function stop(){ running = false; }
 
   build(); draw();
+  document.addEventListener("auren:prefs", ()=>{ if(userStill()) stop(); else start(); });
   if(reduce){ paused = true; setRadio("Animación en pausa (movimiento reducido)"); pauseIcon.setAttribute("d","M8 5v14l11-7z"); }
   else start();
 

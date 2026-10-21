@@ -9,10 +9,8 @@ window.AUREN_AYUDA = [
     { q:"FiveM se queda cargando o se cierra", a:"Borra la caché de FiveM (carpeta FiveM Application Data → data → cache), reinicia y vuelve a entrar. Si sigue, abre un ticket con una captura del error." },
     { q:"¿Puedo jugar desde PlayStation o Xbox?", a:"No. FiveM solo funciona con la versión de PC de GTA V." }
   ]},
-  { id:"whitelist", nombre:"Whitelist", preguntas:[
-    { q:"¿Cómo mando mi whitelist?", a:"Inicia sesión con Discord y ve a tu <a href=\"panel.html\">panel</a>. Rellena el formulario y envíalo." },
-    { q:"¿Cuánto tarda la respuesta?", a:"El staff revisa las solicitudes en orden. Te avisamos por Discord cuando tengas respuesta." },
-    { q:"Me rechazaron, ¿puedo volver a intentarlo?", a:"Sí. Lee bien las normativas y vuelve a enviarla desde el panel pasadas 24 horas." }
+  { id:"whitelist", nombre:"¿Hay whitelist?", preguntas:[
+    { q:"¿Necesito pasar una whitelist?", a:"No. Auren es de entrada directa: instala FiveM, únete al Discord y conéctate. Eso sí, lee las <a href=\"normativas.html\">normativas</a> antes de entrar." }
   ]},
   { id:"trabajos", nombre:"Trabajos y organizaciones", preguntas:[
     { q:"¿Cómo entro a la policía o al EMS?", a:"Las convocatorias se anuncian en el Discord. Allí se explica el proceso y el formulario de cada facción." },

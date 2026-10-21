@@ -1,24 +1,25 @@
 /*
   Auren RP — Worker de Cloudflare
   - Sirve la web (carpeta public)
-  - Login con Discord:  /api/auth/login, /callback, /me, /logout
-  - Whitelist:          POST /api/whitelist  (manda la solicitud a un canal de Discord)
-  - Estadísticas:       /api/stats           (jugadores de FiveM y miembros del Discord)
+  - Login con Discord:   /api/auth/login, /callback, /me, /logout
+  - Estadísticas:        /api/stats  (jugadores de FiveM y miembros del Discord)
+  - Panel del staff:     /api/admin/ws      (navegador del staff, en vivo)
+                         /api/admin/bridge  (conexión que abre el servidor de FiveM)
+                         /api/admin/status
 
   Variables (Cloudflare > tu Worker > Settings > Variables and Secrets):
-    DISCORD_CLIENT_ID          (Text)
-    DISCORD_CLIENT_SECRET      (Secret)
-    SESSION_SECRET             (Secret: 40+ letras y números al azar)
-    DISCORD_GUILD_ID           (Text, opcional: ID de tu servidor de Discord)
-    VERIFIED_ROLE_ID           (Text, opcional: ID del rol que tienen los de whitelist aprobada)
-    DISCORD_WEBHOOK_WHITELIST  (Secret: webhook del canal del staff donde llegan las solicitudes)
-    CFX_CODE                   (Text, opcional: por defecto lee9965)
-    DISCORD_INVITE             (Text, opcional: por defecto aurenrp)
+    DISCORD_CLIENT_ID      (Text)
+    DISCORD_CLIENT_SECRET  (Secret)
+    SESSION_SECRET         (Secret: 40+ letras y números al azar)
+    DISCORD_GUILD_ID       (Text, opcional: ID de tu servidor de Discord)
+    ADMIN_BRIDGE_KEY       (Secret: la misma clave que web_panel.key en auren_admin)
+    CFX_CODE               (Text, opcional: por defecto lee9965)
+    DISCORD_INVITE         (Text, opcional: por defecto aurenrp)
 */
+import { DurableObject } from "cloudflare:workers";
 
 const SESSION_COOKIE = "auren_session";
 const STATE_COOKIE = "auren_state";
-const WL_COOKIE = "auren_wl";
 const SESSION_DAYS = 7;
 const enc = new TextEncoder();
 
@@ -62,8 +63,8 @@ function getCookie(request, name) {
   return null;
 }
 
-const cookie = (name, value, maxAge, httpOnly = true) =>
-  `${name}=${encodeURIComponent(value)}; Path=/; ${httpOnly ? "HttpOnly; " : ""}Secure; SameSite=Lax; Max-Age=${maxAge}`;
+const cookie = (name, value, maxAge) =>
+  `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 
 const redirect = (to, cookies = []) => {
   const headers = new Headers({ Location: to });
@@ -76,6 +77,16 @@ const json = (data, status = 200, extra = {}) =>
     status,
     headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...extra },
   });
+
+// Comparación en tiempo constante (para la clave del puente)
+function safeEqual(a, b) {
+  a = String(a || ""); b = String(b || "");
+  if (!a || !b) return false;
+  const x = enc.encode(a), y = enc.encode(b);
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) diff |= (x[i] || 0) ^ (y[i] || 0);
+  return diff === 0;
+}
 
 // Solo rutas internas de la web para volver tras el login
 const safeNext = (n) => (typeof n === "string" && /^\/(?!\/)[\w\-\/.#]*$/.test(n) ? n : "/");
@@ -140,18 +151,10 @@ async function handleAuth(request, env, action) {
     if (!userRes.ok) return redirect(withParam(next, "login=error"), [clearState]);
     const user = await userRes.json();
 
-    // ¿Está en el Discord? ¿Tiene el rol de whitelist?
-    let member = null, verified = null;
+    let member = null;
     if (env.DISCORD_GUILD_ID) {
       const mRes = await fetch(`https://discord.com/api/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`, { headers: authHeader });
-      if (mRes.ok) {
-        const m = await mRes.json();
-        member = true;
-        if (env.VERIFIED_ROLE_ID) verified = (m.roles || []).includes(env.VERIFIED_ROLE_ID);
-      } else {
-        member = false;
-        if (env.VERIFIED_ROLE_ID) verified = false;
-      }
+      member = mRes.ok;
     }
 
     const session = {
@@ -160,7 +163,6 @@ async function handleAuth(request, env, action) {
       name: user.global_name || user.username,
       avatar: user.avatar,
       member,
-      verified,
       exp: Date.now() + SESSION_DAYS * 864e5,
     };
     const token = await signSession(env.SESSION_SECRET, session);
@@ -179,68 +181,6 @@ async function handleAuth(request, env, action) {
   }
 
   return json({ error: "Ruta no encontrada" }, 404);
-}
-
-/* ---------- whitelist ---------- */
-const LIMITS = { personaje: [3, 60], edad: [1, 3], historia: [200, 1500], mg: [30, 500], pg: [30, 500], situacion: [30, 500], experiencia: [1, 40], conocio: [0, 100] };
-const LABELS = { personaje: "Personaje", edad: "Edad", experiencia: "Experiencia en RP", conocio: "Cómo nos conoció", historia: "Historia del personaje", mg: "¿Qué es el metagaming?", pg: "¿Qué es el powergaming?", situacion: "Le apuntan con un arma y le piden la cartera" };
-// Evita menciones (@everyone, @here) y formato raro en el canal del staff
-const clean = (s) => String(s || "").replace(/@/g, "@​").replace(/\r/g, "").trim();
-
-async function handleWhitelist(request, env) {
-  const url = new URL(request.url);
-  const origin = request.headers.get("Origin");
-  if (origin && origin !== url.origin) return json({ error: "Origen no permitido." }, 403);
-  if (!authConfigured(env)) return json({ error: "El login con Discord no está configurado." }, 500);
-  if (!env.DISCORD_WEBHOOK_WHITELIST) return json({ error: "El staff todavía no ha activado las solicitudes de whitelist." }, 503);
-
-  const user = await getUser(request, env);
-  if (!user) return json({ error: "Tu sesión caducó. Vuelve a iniciar sesión con Discord." }, 401);
-  if (user.member === false) return json({ error: "Primero únete al Discord de Auren." }, 403);
-  if (user.verified === true) return json({ error: "Tu whitelist ya está aprobada." }, 409);
-  if (getCookie(request, WL_COOKIE)) return json({ error: "Ya enviaste una solicitud. Podrás mandar otra pasadas 24 horas." }, 429);
-
-  let body;
-  try { body = await request.json(); } catch { return json({ error: "Solicitud no válida." }, 400); }
-  const data = {};
-  for (const [k, [min, max]] of Object.entries(LIMITS)) {
-    const v = clean(body[k]);
-    if (v.length < min) return json({ error: `Falta completar: ${LABELS[k]}.` }, 400);
-    data[k] = v.slice(0, max);
-  }
-  if (!/^\d{1,3}$/.test(data.edad)) return json({ error: "La edad debe ser un número." }, 400);
-
-  const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` : undefined;
-  const payload = {
-    username: "Auren RP · Whitelist",
-    allowed_mentions: { parse: [] },
-    content: `Nueva solicitud de whitelist de <@${user.id}>`,
-    embeds: [{
-      title: data.personaje,
-      color: 0x3d7bf2,
-      author: { name: `${clean(user.name)} (@${clean(user.username)})`, icon_url: avatar },
-      fields: [
-        { name: LABELS.edad, value: data.edad, inline: true },
-        { name: LABELS.experiencia, value: data.experiencia, inline: true },
-        { name: LABELS.conocio, value: data.conocio || "—", inline: true },
-        { name: LABELS.mg, value: data.mg.slice(0, 1024) },
-        { name: LABELS.pg, value: data.pg.slice(0, 1024) },
-        { name: LABELS.situacion, value: data.situacion.slice(0, 1024) },
-      ],
-      description: `**${LABELS.historia}**\n${data.historia}`,
-      footer: { text: `Discord ID: ${user.id}` },
-      timestamp: new Date().toISOString(),
-    }],
-  };
-
-  const res = await fetch(env.DISCORD_WEBHOOK_WHITELIST, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) return json({ error: "Discord no aceptó la solicitud. Inténtalo en unos minutos." }, 502);
-
-  return json({ ok: true }, 200, { "Set-Cookie": cookie(WL_COOKIE, String(Date.now()), 86400, false) });
 }
 
 /* ---------- estadísticas (con caché de 60 s) ---------- */
@@ -277,6 +217,199 @@ async function handleStats(request, env, ctx) {
   return res;
 }
 
+/* ---------- panel del staff ---------- */
+async function handleAdmin(request, env, sub) {
+  const url = new URL(request.url);
+  const hub = env.ADMIN_HUB.get(env.ADMIN_HUB.idFromName("auren"));
+  const isWs = (request.headers.get("Upgrade") || "").toLowerCase() === "websocket";
+
+  if (sub === "bridge") {
+    if (!isWs) return json({ error: "Se esperaba WebSocket." }, 426);
+    if (!env.ADMIN_BRIDGE_KEY) return json({ error: "Falta ADMIN_BRIDGE_KEY en Cloudflare." }, 503);
+    return hub.fetch(new Request("https://hub/bridge", { headers: { Upgrade: "websocket" } }));
+  }
+
+  if (!authConfigured(env)) return json({ error: "El login con Discord no está configurado." }, 500);
+  const user = await getUser(request, env);
+  if (!user) return json({ error: "Inicia sesión con Discord." }, 401);
+
+  if (sub === "status") {
+    return hub.fetch(new Request("https://hub/status"));
+  }
+
+  if (sub === "ws") {
+    if (!isWs) return json({ error: "Se esperaba WebSocket." }, 426);
+    const origin = request.headers.get("Origin");
+    if (origin && origin !== url.origin) return json({ error: "Origen no permitido." }, 403);
+    return hub.fetch(new Request("https://hub/viewer", {
+      headers: {
+        Upgrade: "websocket",
+        "X-Discord-Id": user.id,
+        "X-Name": encodeURIComponent(user.name || user.username || ""),
+      },
+    }));
+  }
+
+  return json({ error: "Ruta no encontrada" }, 404);
+}
+
+/* ---------- canal en vivo: servidor de FiveM ⇄ navegadores del staff ---------- */
+export class AdminHub extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.rate = new Map();
+    // Responde al ping sin despertar al objeto (no gasta peticiones)
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"type":"ping"}', '{"type":"pong"}'));
+  }
+
+  bridge(exclude) {
+    return this.ctx.getWebSockets("bridge").find((ws) => ws !== exclude && ws.deserializeAttachment()?.authed) || null;
+  }
+  staffViewers(exclude) {
+    return this.ctx.getWebSockets("viewer").filter((ws) => ws !== exclude && ws.deserializeAttachment()?.staff);
+  }
+  safeSend(ws, obj) {
+    try { ws.send(typeof obj === "string" ? obj : JSON.stringify(obj)); } catch {}
+  }
+  tellViewerCount(exclude) {
+    const b = this.bridge();
+    if (b) this.safeSend(b, { type: "viewers", n: this.staffViewers(exclude).length });
+  }
+  askWhoami(viewer) {
+    const a = viewer.deserializeAttachment();
+    const b = this.bridge();
+    if (!b) { this.safeSend(viewer, { type: "bridge", online: false }); return; }
+    this.safeSend(b, { type: "req", reqId: `${a.uid}|__whoami`, discordId: a.discordId, method: "auren:whoami" });
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/status") {
+      return json({ bridge: !!this.bridge(), viewers: this.staffViewers().length });
+    }
+
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+
+    if (url.pathname === "/bridge") {
+      this.ctx.acceptWebSocket(server, ["bridge"]);
+      server.serializeAttachment({ role: "bridge", authed: false, at: Date.now() });
+      await this.ctx.storage.setAlarm(Date.now() + 10000);
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    if (url.pathname === "/viewer") {
+      const discordId = request.headers.get("X-Discord-Id") || "";
+      const uid = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+      this.ctx.acceptWebSocket(server, ["viewer", `v:${uid}`, `d:${discordId}`]);
+      server.serializeAttachment({ role: "viewer", uid, discordId, name: decodeURIComponent(request.headers.get("X-Name") || ""), staff: null });
+      const b = this.bridge();
+      this.safeSend(server, { type: "bridge", online: !!b });
+      if (b) this.askWhoami(server);
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    return new Response("No encontrado", { status: 404 });
+  }
+
+  async webSocketMessage(ws, message) {
+    const a = ws.deserializeAttachment() || {};
+    let m;
+    try { m = JSON.parse(typeof message === "string" ? message : new TextDecoder().decode(message)); } catch { return; }
+
+    /* ---- mensajes del servidor de FiveM ---- */
+    if (a.role === "bridge") {
+      if (!a.authed) {
+        if (m.type === "hello" && safeEqual(m.key, this.env.ADMIN_BRIDGE_KEY)) {
+          for (const old of this.ctx.getWebSockets("bridge")) if (old !== ws) { try { old.close(4409, "otra conexión"); } catch {} }
+          ws.serializeAttachment({ ...a, authed: true, server: String(m.server || "FiveM").slice(0, 60) });
+          this.safeSend(ws, { type: "hello_ok" });
+          for (const v of this.ctx.getWebSockets("viewer")) { this.safeSend(v, { type: "bridge", online: true }); this.askWhoami(v); }
+          this.tellViewerCount();
+        } else {
+          try { ws.close(4401, "clave incorrecta"); } catch {}
+        }
+        return;
+      }
+
+      if (m.type === "res" && typeof m.reqId === "string") {
+        const [uid, id] = m.reqId.split("|");
+        const v = this.ctx.getWebSockets(`v:${uid}`)[0];
+        if (!v) return;
+        const va = v.deserializeAttachment() || {};
+        if (m.code === "not_staff") {
+          this.safeSend(v, { type: "denied", error: m.error });
+          v.serializeAttachment({ ...va, staff: null });
+          try { v.close(4403, "no es staff"); } catch {}
+          this.tellViewerCount();
+          return;
+        }
+        if (id === "__whoami") {
+          if (m.ok) {
+            v.serializeAttachment({ ...va, staff: { perms: m.result?.perms || {}, nickname: m.result?.nickname } });
+            this.safeSend(v, { type: "hello", me: m.result });
+            this.tellViewerCount();
+          } else {
+            this.safeSend(v, { type: "denied", error: m.error });
+          }
+          return;
+        }
+        this.safeSend(v, { type: "res", id, ok: !!m.ok, result: m.result, error: m.error });
+        return;
+      }
+
+      if (m.type === "event") {
+        const targets = m.target ? this.ctx.getWebSockets(`d:${m.target}`) : this.ctx.getWebSockets("viewer");
+        const out = JSON.stringify({ type: "event", kind: m.kind, key: m.key, method: m.method, params: m.params, value: m.value });
+        for (const v of targets) {
+          const va = v.deserializeAttachment();
+          if (!va?.staff) continue;
+          if (m.perm && !va.staff.perms?.[m.perm]) continue;
+          this.safeSend(v, out);
+        }
+      }
+      return;
+    }
+
+    /* ---- mensajes del navegador del staff ---- */
+    if (a.role === "viewer" && m.type === "req") {
+      const id = String(m.id ?? "").slice(0, 40);
+      if (!a.staff) { this.safeSend(ws, { type: "res", id, ok: false, error: "Todavía no se ha verificado tu rango." }); return; }
+      // Límite: 20 peticiones cada 10 segundos por pestaña
+      const now = Date.now(), r = this.rate.get(a.uid) || { n: 0, t: now };
+      if (now - r.t > 10000) { r.n = 0; r.t = now; }
+      r.n++; this.rate.set(a.uid, r);
+      if (r.n > 20) { this.safeSend(ws, { type: "res", id, ok: false, error: "Vas muy rápido. Espera unos segundos." }); return; }
+      const b = this.bridge();
+      if (!b) { this.safeSend(ws, { type: "res", id, ok: false, error: "El servidor de FiveM no está conectado ahora mismo." }); return; }
+      this.safeSend(b, { type: "req", reqId: `${a.uid}|${id}`, discordId: a.discordId, method: String(m.method || "").slice(0, 80), data: m.data });
+    }
+  }
+
+  async webSocketClose(ws, code, reason) {
+    const a = ws.deserializeAttachment() || {};
+    try { ws.close(code === 1005 || code === 1006 ? 1000 : code, reason); } catch {}
+    if (a.role === "bridge" && a.authed && !this.bridge(ws)) {
+      for (const v of this.ctx.getWebSockets("viewer")) this.safeSend(v, { type: "bridge", online: false });
+    }
+    if (a.role === "viewer") { this.rate.delete(a.uid); this.tellViewerCount(ws); }
+  }
+
+  async webSocketError(ws) {
+    const a = ws.deserializeAttachment() || {};
+    if (a.role === "viewer") this.tellViewerCount(ws);
+  }
+
+  async alarm() {
+    // Cierra conexiones del servidor que no se identificaron a tiempo
+    for (const ws of this.ctx.getWebSockets("bridge")) {
+      const a = ws.deserializeAttachment() || {};
+      if (!a.authed && Date.now() - (a.at || 0) > 9000) { try { ws.close(4401, "sin identificar"); } catch {} }
+    }
+  }
+}
+
 /* ---------- enrutado ---------- */
 export default {
   async fetch(request, env, ctx) {
@@ -286,10 +419,8 @@ export default {
       if (request.method !== "GET") return json({ error: "Método no permitido" }, 405);
       return handleAuth(request, env, m[1]);
     }
-    if (url.pathname === "/api/whitelist") {
-      if (request.method !== "POST") return json({ error: "Método no permitido" }, 405);
-      return handleWhitelist(request, env);
-    }
+    const ad = url.pathname.match(/^\/api\/admin\/([a-z]+)\/?$/);
+    if (ad) return handleAdmin(request, env, ad[1]);
     if (url.pathname === "/api/stats") return handleStats(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return json({ error: "Ruta no encontrada" }, 404);
     return env.ASSETS.fetch(request);

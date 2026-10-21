@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel del staff · Auren RP</title>
+<meta name="description" content="Panel del staff de Auren RP conectado en vivo al menú de administración del servidor.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* Panel de trabajo: menú lateral + contenido. Pensado para usarse muchas horas: letra grande y contraste alto */
+.adm-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:8.5rem 0 1.6rem}
+.adm-head h1{font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1}
+.adm-head .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.conn .dot{width:8px;height:8px}
+.conn.live .dot{background:var(--ok);box-shadow:0 0 0 3px rgba(74,222,128,.2)}
+.conn.wait .dot{background:var(--warn)}
+.conn.off .dot{background:var(--bad)}
+.demo-note{padding:12px 16px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fde4a3;font-size:.95rem;margin-bottom:16px}
+
+.adm{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:start}
+.adm > *{min-width:0}
+.side{position:sticky;top:96px;padding:8px;display:grid;gap:2px}
+.side button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border-radius:10px;border:0;background:transparent;color:var(--soft);font-size:.98rem;text-align:left;cursor:pointer}
+.side button svg{width:18px;height:18px;flex:none;opacity:.85}
+.side button:hover{background:var(--surface-2);color:var(--ink)}
+.side button[aria-current="page"]{background:rgba(255,255,255,.09);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.side .badge{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--on-accent);font-size:.8rem;font-weight:600;display:grid;place-items:center}
+.view{padding:clamp(18px,2.6vw,30px);min-height:60vh}
+.view > h2{font-size:clamp(1.5rem,2.4vw,1.9rem);line-height:1.1}
+.view > .sub{color:var(--soft);margin-top:6px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0 16px}
+.bar .search{flex:1;min-width:220px;max-width:420px}
+.bar .grow{flex:1}
+
+/* números */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.tile{padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2)}
+.tile b{display:block;font-size:2.3rem;font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.tile span{display:block;margin-top:8px;color:var(--soft);font-size:.95rem}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.box{padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2);min-width:0}
+.box h3{font-size:1.08rem;margin-bottom:12px}
+.rows{list-style:none;display:grid;gap:2px}
+.rows li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.98rem}
+.rows li:last-child{border-bottom:0}
+.rows .muted{color:var(--muted)}
+.feed{list-style:none;display:grid;gap:8px;max-height:420px;overflow:auto}
+.feed li{padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.25);font-size:.95rem;line-height:1.5}
+.feed time{display:block;color:var(--muted);font-size:.85rem;margin-bottom:2px}
+
+/* tablas */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:.98rem}
+caption{text-align:left;padding:12px 14px;color:var(--soft);font-size:.92rem}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;font-size:.88rem;color:var(--soft);background:rgba(255,255,255,.03);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+td .two{display:grid;line-height:1.35}
+td .two small{color:var(--muted);font-size:.86rem}
+.chk{width:20px;height:20px;accent-color:#f3f4f6}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:.84rem;border:1px solid var(--line-2);color:var(--soft);white-space:nowrap}
+.tag.ok{color:#bbf7d0;border-color:rgba(74,222,128,.4)}
+.tag.bad{color:#fecaca;border-color:rgba(248,113,113,.4)}
+.tag.warn{color:#fde68a;border-color:rgba(251,191,36,.4)}
+.empty{padding:28px 14px;color:var(--soft);text-align:center}
+.bulk{position:sticky;bottom:70px;z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:10px;border-radius:14px;background:#0f1218;border:1px solid var(--line-2)}
+.bulk b{margin-right:auto;padding-left:6px}
+
+/* ficha del jugador */
+dialog{color:var(--ink);background:#0d1016;border:1px solid var(--line-2);border-radius:20px;padding:0;max-width:min(560px,calc(100% - 24px));width:100%;margin:auto}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.dlg-in{padding:22px;display:grid;gap:16px}
+.dlg-in h3{font-size:1.35rem}
+.dlg-in .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+dialog.drawer{max-width:min(820px,calc(100% - 24px));height:calc(100vh - 24px);max-height:none;margin:12px 12px 12px auto}
+@media (max-width:700px){dialog.drawer{margin:auto;height:calc(100vh - 16px);max-width:calc(100% - 16px)}}
+.p-head{display:flex;gap:14px;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}
+.p-head .pid{width:56px;height:56px;border-radius:14px;background:#1b1f27;display:grid;place-items:center;font-weight:600;font-size:1.1rem;flex:none}
+.p-head h3{font-size:1.4rem;line-height:1.15}
+.p-head p{color:var(--soft);font-size:.95rem}
+.p-head .icon-btn{margin-left:auto}
+.ptabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.ptabs button{min-height:42px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:none;color:var(--soft);cursor:pointer;font-size:.96rem;white-space:nowrap}
+.ptabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.pbody{padding:20px 22px;overflow:auto;max-height:calc(100vh - 200px)}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kv div{padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.kv dt{color:var(--muted);font-size:.86rem}
+.kv dd{font-weight:500;margin-top:2px;overflow-wrap:anywhere}
+.agroup + .agroup{margin-top:18px}
+.agroup h4{font-size:.92rem;color:var(--soft);font-weight:500;margin-bottom:8px}
+.agroup .btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn-danger{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fecaca}
+.btn-danger:hover{background:rgba(248,113,113,.2)}
+.form-grid{display:grid;gap:14px}
+.form-err{color:#fecaca;font-size:.92rem}
+
+/* chats */
+.chat{display:grid;grid-template-columns:280px 1fr;gap:14px;margin-top:16px;min-height:480px}
+.chat > *{min-width:0}
+.chat-list{display:grid;gap:4px;align-content:start;max-height:560px;overflow:auto}
+.chat-list button{display:grid;gap:2px;text-align:left;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;color:var(--ink)}
+.chat-list button[aria-current="true"]{border-color:var(--line-2);background:rgba(255,255,255,.08)}
+.chat-list small{color:var(--muted)}
+.chat-pane{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.chat-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.chat-top b{margin-right:auto}
+.msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:10px;align-content:start;max-height:420px}
+.msg{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);max-width:80%}
+.msg b{font-size:.9rem}
+.msg time{color:var(--muted);font-size:.82rem;margin-left:6px}
+.msg p{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-send{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.console{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:.92rem;background:#000;border:1px solid var(--line-2);border-radius:12px;padding:12px;white-space:pre-wrap;max-height:260px;overflow:auto;color:#e5e7eb}
+
+.state-box{text-align:center;display:grid;justify-items:center;gap:14px;padding:clamp(36px,6vw,64px) 22px}
+.state-box h2{font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.1}
+.state-box p{max-width:52ch;color:var(--soft)}
+
+@media (max-width:1060px){ .tiles{grid-template-columns:repeat(2,1fr)} .cols{grid-template-columns:1fr} }
+@media (max-width:900px){
+  .adm{grid-template-columns:1fr}
+  .side{position:static;display:flex;overflow-x:auto;gap:4px}
+  .side button{width:auto;white-space:nowrap}
+  .chat{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body data-page="staff" data-city="dim">
+<header id="siteHeader"></header>
+
+<main class="wrap" id="contenido" tabindex="-1">
+  <div class="adm-head">
+    <div>
+      <p class="eyebrow">Solo para el equipo</p>
+      <h1>Panel del staff</h1>
+    </div>
+    <div class="meta">
+      <span class="pill conn wait" id="conn" role="status"><span class="dot"></span><span id="connText">Conectando…</span></span>
+      <span class="pill" id="meTag" hidden></span>
+    </div>
+  </div>
+  <div id="root"><div class="card state-box"><p>Cargando…</p></div></div>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"></dialog>
+<dialog id="pdlg" class="drawer" aria-labelledby="pTitle"></dialog>
+
+<footer id="siteFooter"></footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script src="assets/staff.js"></script>
+</body>
+</html>

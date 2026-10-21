@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Auren RP</title>
-<meta name="description" content="Auren RP: servidor de roleplay en Nueva York con sabor dominicano. Guía para empezar, normativas y whitelist.">
+<meta name="description" content="Auren RP: servidor de roleplay en Nueva York con sabor dominicano. Guía para empezar, normativas y comunidad.">
 <meta property="og:title" content="Auren RP">
 <meta property="og:description" content="Nueva York con sabor dominicano. Servidor de roleplay en FiveM.">
 <meta name="theme-color" content="#06070a">
@@ -18,7 +18,7 @@
 .hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(90deg,rgba(6,7,10,.82) 0%,rgba(6,7,10,.45) 45%,transparent 75%),linear-gradient(0deg,rgba(6,7,10,.7),transparent 45%)}
 .hero .wrap{position:relative;z-index:1}
-.live-pill{display:inline-flex;align-items:center;gap:10px;height:32px;padding:0 12px;border-radius:999px;font-size:.82rem;color:var(--soft);
+.live-pill{display:inline-flex;align-items:center;gap:10px;height:32px;padding:0 12px;border-radius:999px;font-size:.88rem;color:var(--soft);
   background:rgba(255,255,255,.05);border:1px solid var(--line-2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .live-pill .dot{width:7px;height:7px;border-radius:50%;background:#6b7280}
 .live-pill .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(74,222,128,.18)}
@@ -41,7 +41,7 @@
 .gstep[aria-selected="true"] .gnum{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .gt{display:grid;color:var(--muted);line-height:1.35}
 .gt b{font-weight:500;font-size:1rem;color:var(--soft)}
-.gt small{font-size:.8rem}
+.gt small{font-size:.86rem}
 .gstep[aria-selected="true"] .gt b{color:var(--ink)}
 .gpanel{padding:clamp(22px,3.5vw,40px);min-height:430px;display:flex;flex-direction:column}
 .gtop{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
@@ -59,7 +59,7 @@
 .reqs div{padding:14px 16px}
 .reqs div+div{border-left:1px solid var(--line)}
 .reqs b{display:block;font-weight:600;font-size:1.05rem;color:var(--ink)}
-.reqs span{font-size:.8rem;color:var(--muted)}
+.reqs span{font-size:.86rem;color:var(--muted)}
 .cmd{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border-radius:12px;background:rgba(0,0,0,.45);border:1px solid var(--line-2);font-family:ui-monospace,'SF Mono','Cascadia Mono',Consolas,monospace;font-size:.9rem;color:var(--ink);max-width:480px}
 .cmd code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
 .gnav{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
@@ -90,7 +90,7 @@
   border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;padding:18px;transition:border-color .15s,background .15s;
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .stream:hover{border-color:var(--line-2);background:rgba(20,23,30,.8)}
-.plat{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--soft);width:max-content}
+.plat{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;color:var(--soft);width:max-content}
 .plat::before{content:"";width:7px;height:7px;border-radius:50%;background:#a970ff}
 .plat.kick::before{background:#53fc18}
 .stream .ch{font-weight:600;font-size:1.35rem;letter-spacing:-.02em}
@@ -150,7 +150,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div><p class="eyebrow">Empieza aquí</p><h2>Cómo jugar</h2></div>
-      <p>Cinco pasos y estás dentro. Si te trabas en alguno, abre un ticket en el Discord y el staff te ayuda.</p>
+      <p>Cuatro pasos y estás dentro. Si te trabas en alguno, abre un ticket en el Discord y el staff te ayuda.</p>
     </div>
     <div class="guide">
       <ol class="gsteps" role="tablist" aria-label="Pasos para empezar" aria-orientation="vertical" id="gsteps"></ol>
@@ -192,7 +192,7 @@
       </ul>
       <aside class="card sign" aria-label="Antes de entrar">
         <h3>Antes de entrar, lee las normas</h3>
-        <p>El staff te pregunta por ellas en la whitelist. Son cortas y tienen buscador.</p>
+        <p>Conocerlas te evita sanciones. Son cortas y tienen buscador.</p>
         <div class="stores">
           <a class="btn btn-primary" href="normativas.html">Normativas</a>
           <a class="btn btn-ghost" href="ayuda.html">Ayuda</a>
@@ -218,7 +218,7 @@
       <div class="cta-head">
         <p class="eyebrow">Únete a la comunidad</p>
         <h2>Tu historia empieza en el bloque</h2>
-        <p>Inicia sesión con Discord, manda tu whitelist desde el panel y nos vemos en las calles de Auren.</p>
+        <p>Sin whitelist: únete al Discord, conéctate y nos vemos en las calles de Auren.</p>
         <div class="ctas" style="margin-top:0">
           <a class="btn btn-primary" href="/api/auth/login" data-auth="login" id="ctaLogin"></a>
           <a class="btn btn-ghost" href="#jugar">Ver la guía</a>
@@ -227,8 +227,8 @@
       <div class="feats">
         <div class="feat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
-          <h3>Whitelist rápida</h3>
-          <p>Mandas la solicitud desde tu panel y el staff la revisa en Discord. Te avisamos cuando esté lista.</p>
+          <h3>Entrada directa</h3>
+          <p>No hay whitelist. Instala FiveM, conéctate y empieza a rolear el mismo día.</p>
         </div>
         <div class="feat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -290,12 +290,8 @@
           <a class="btn btn-ghost" href="${esc(C.discord)}" target="_blank" rel="noopener">${I.discord}Unirse al Discord</a>
           <a class="btn btn-primary" href="/api/auth/login" data-auth="login">Iniciar sesión</a>
         </div>` },
-    { t:"Pasa la whitelist", s:"Solicitud al staff", body:`
-        <p>Rellena la solicitud desde tu panel: tu personaje, su historia y unas preguntas de rol. El staff la revisa y te responde por Discord.</p>
-        <p>Antes de mandarla, lee las <a class="inl" href="normativas.html">normativas</a>. Te van a preguntar por ellas.</p>
-        <div class="stores"><a class="btn btn-primary" href="panel.html">Ir a mi panel</a></div>` },
     { t:"Conéctate", s:"Nos vemos en la calle", body:`
-        <p>Con la whitelist aprobada, pulsa el botón y FiveM abrirá Auren directamente.</p>
+        <p>Pulsa el botón y FiveM abrirá Auren directamente. Antes de entrar, échale un ojo a las <a class="inl" href="normativas.html">normativas</a>.</p>
         <div class="stores"><a class="btn btn-primary" href="#" data-connect>Conectar al servidor</a></div>
         <p>¿No se abre? En FiveM pulsa <b>F8</b> y escribe:</p>
         <div class="cmd"><code>connect cfx.re/join/${esc(C.cfxCode)}</code><button class="btn btn-ghost btn-sm" type="button" data-copy="connect cfx.re/join/${esc(C.cfxCode)}">Copiar</button></div>` }

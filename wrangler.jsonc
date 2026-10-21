@@ -8,6 +8,11 @@
     "directory": "./public",
     "binding": "ASSETS"
   },
+  // Canal en vivo del Panel del staff (gratis en el plan Free, tipo SQLite)
+  "durable_objects": {
+    "bindings": [{ "name": "ADMIN_HUB", "class_name": "AdminHub" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AdminHub"] }],
   // Mantiene las variables que pongas en el panel de Cloudflare al volver a desplegar
   "keep_vars": true,
   "workers_dev": true,

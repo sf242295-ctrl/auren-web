@@ -14,7 +14,7 @@ window.AUREN_CONFIG = {
   // Redes (deja "" para ocultar)
   kick:   "",
   tiktok: "",
-  ticker: ["Bienvenidos a Auren NYC", "Whitelist abierta", "Únete al Discord", "Staff 24/7", "Compras VIP por Discord"],
+  ticker: ["Bienvenidos a Auren NYC", "Entrada directa, sin whitelist", "Únete al Discord", "Staff 24/7", "Compras VIP por Discord"],
   // Streamers: plataforma "twitch" o "kick" + canal
   streamers: [
     { name: "Streamer1", platform: "twitch", role: "Policía de Auren" },
@@ -33,9 +33,42 @@ window.AUREN_CONFIG = {
     set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   };
 
-  // Tamaño de letra guardado (antes de pintar)
-  const savedSize = store.get("auren_text");
-  if(savedSize === "lg" || savedSize === "xl") document.documentElement.dataset.text = savedSize;
+  /* ---------- preferencias de lectura (se guardan en este navegador) ---------- */
+  const root = document.documentElement;
+  const PREFS = {
+    text:     { key:"auren_text",     values:["md","lg","xl"], def:"md" },
+    font:     { key:"auren_font",     values:["normal","legible"], def:"normal" },
+    contrast: { key:"auren_contrast", values:["normal","high"], def:"normal" },
+    motion:   { key:"auren_motion",   values:["normal","reduce"], def:"normal" }
+  };
+  function loadLegibleFont(){
+    if(document.getElementById("legibleFont")) return;
+    const l = document.createElement("link");
+    l.id = "legibleFont"; l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap";
+    document.head.appendChild(l);
+  }
+  function applyPref(name, value){
+    const P = PREFS[name];
+    if(!P.values.includes(value)) value = P.def;
+    if(value === P.def && name !== "contrast") delete root.dataset[name];
+    else root.dataset[name] = value;
+    if(name === "font" && value === "legible") loadLegibleFont();
+    store.set(P.key, value);
+    document.dispatchEvent(new CustomEvent("auren:prefs", {detail:{name, value}}));
+  }
+  const getPref = name => root.dataset[name] || PREFS[name].def;
+  Object.entries(PREFS).forEach(([name,P])=>{
+    const v = store.get(P.key);
+    if(v && v !== P.def){ root.dataset[name] = v; if(name === "font" && v === "legible") loadLegibleFont(); }
+  });
+  // Si el sistema pide alto contraste y la persona no eligió nada, lo respetamos
+  if(!store.get(PREFS.contrast.key) && matchMedia("(prefers-contrast: more)").matches) root.dataset.contrast = "high";
+
+  // Enlace para saltar directo al contenido (lectores de pantalla y teclado)
+  document.body.insertAdjacentHTML("afterbegin", '<a class="skip-link" href="#contenido">Saltar al contenido</a>');
+  const mainEl = document.querySelector("main");
+  if(mainEl && !mainEl.id){ mainEl.id = "contenido"; mainEl.tabIndex = -1; }
 
   const ICON = {
     mark:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5 L58 58 H45 L32 31 L19 58 H6 Z" fill="currentColor"/><path d="M23 45 H41" stroke="#06070a" stroke-width="4"/></svg>',
@@ -60,12 +93,15 @@ window.AUREN_CONFIG = {
       ${links.map(([k,h,t])=>`<a href="${h}"${k===page?' aria-current="page"':''}>${t}</a>`).join("")}
     </nav>
     <div class="textsize">
-      <button class="icon-btn aa" id="aaBtn" aria-label="Tamaño de letra" aria-expanded="false" aria-controls="aaPop"><span>A<b>A</b></span></button>
-      <div class="pop" id="aaPop" hidden>
-        <p>Tamaño de letra</p>
-        <div class="seg" role="group" aria-label="Tamaño de letra">
-          <button data-size="md">Normal</button><button data-size="lg">Grande</button><button data-size="xl">Enorme</button>
+      <button class="icon-btn aa" id="aaBtn" aria-label="Opciones de lectura" aria-expanded="false" aria-controls="aaPop" title="Opciones de lectura"><span aria-hidden="true">A<b>A</b></span></button>
+      <div class="pop" id="aaPop" role="dialog" aria-label="Opciones de lectura" hidden>
+        <p id="sizeLbl">Tamaño de letra</p>
+        <div class="seg" role="group" aria-labelledby="sizeLbl">
+          <button type="button" data-pref="text" data-val="md">Normal</button><button type="button" data-pref="text" data-val="lg">Grande</button><button type="button" data-pref="text" data-val="xl">Enorme</button>
         </div>
+        <button type="button" class="opt" data-toggle="font" data-on="legible"><span>Letra fácil de leer<small>Pensada para baja visión</small></span><span class="sw" aria-hidden="true"></span></button>
+        <button type="button" class="opt" data-toggle="contrast" data-on="high"><span>Alto contraste<small>Fondo negro y texto blanco</small></span><span class="sw" aria-hidden="true"></span></button>
+        <button type="button" class="opt" data-toggle="motion" data-on="reduce"><span>Menos movimiento<small>Detiene la ciudad animada</small></span><span class="sw" aria-hidden="true"></span></button>
       </div>
     </div>
     <div class="auth" id="authSlot"></div>
@@ -75,18 +111,24 @@ window.AUREN_CONFIG = {
   menuBtn.addEventListener("click", ()=>{ const o = navLinks.classList.toggle("open"); menuBtn.setAttribute("aria-expanded", o); });
   navLinks.querySelectorAll("a").forEach(a=>a.addEventListener("click", ()=>{ navLinks.classList.remove("open"); menuBtn.setAttribute("aria-expanded", false); }));
 
-  // control AA
+  // opciones de lectura
   const aaBtn = document.getElementById("aaBtn"), aaPop = document.getElementById("aaPop");
-  const markSize = ()=> aaPop.querySelectorAll("[data-size]").forEach(b=> b.setAttribute("aria-pressed", (document.documentElement.dataset.text || "md") === b.dataset.size));
-  markSize();
-  aaBtn.addEventListener("click", e=>{ e.stopPropagation(); aaPop.hidden = !aaPop.hidden; aaBtn.setAttribute("aria-expanded", !aaPop.hidden); });
+  function markPrefs(){
+    aaPop.querySelectorAll("[data-pref]").forEach(b=> b.setAttribute("aria-pressed", getPref(b.dataset.pref) === b.dataset.val));
+    aaPop.querySelectorAll("[data-toggle]").forEach(b=> b.setAttribute("aria-pressed", getPref(b.dataset.toggle) === b.dataset.on));
+  }
+  markPrefs();
+  const closePop = ()=>{ aaPop.hidden = true; aaBtn.setAttribute("aria-expanded", false); };
+  aaBtn.addEventListener("click", e=>{ e.stopPropagation(); aaPop.hidden = !aaPop.hidden; aaBtn.setAttribute("aria-expanded", !aaPop.hidden); if(!aaPop.hidden) aaPop.querySelector("button").focus(); });
   aaPop.addEventListener("click", e=>{
     e.stopPropagation();
-    const b = e.target.closest("[data-size]"); if(!b) return;
-    if(b.dataset.size === "md") delete document.documentElement.dataset.text; else document.documentElement.dataset.text = b.dataset.size;
-    store.set("auren_text", b.dataset.size); markSize();
+    const b = e.target.closest("[data-pref],[data-toggle]"); if(!b) return;
+    if(b.dataset.pref) applyPref(b.dataset.pref, b.dataset.val);
+    else { const n = b.dataset.toggle; applyPref(n, getPref(n) === b.dataset.on ? PREFS[n].def : b.dataset.on); }
+    markPrefs();
   });
-  document.addEventListener("click", ()=>{ aaPop.hidden = true; aaBtn.setAttribute("aria-expanded", false); });
+  aaPop.addEventListener("keydown", e=>{ if(e.key === "Escape"){ closePop(); aaBtn.focus(); } });
+  document.addEventListener("click", closePop);
 
   /* ---------- pie ---------- */
   const footer = document.getElementById("siteFooter");
@@ -106,7 +148,8 @@ window.AUREN_CONFIG = {
           <li><a href="#" data-connect>Conectar</a></li></ul></div>
         <div class="foot-col"><h4>Cuenta</h4><ul>
           <li><a href="/api/auth/login" data-auth="login">Iniciar sesión</a></li>
-          <li><a href="panel.html">Panel y whitelist</a></li>
+          <li><a href="panel.html">Mi cuenta</a></li>
+          <li><a href="staff.html">Panel del staff</a></li>
           <li><a href="ayuda.html">Ayuda</a></li></ul></div>
         <div class="foot-col"><h4>Comunidad</h4><ul>
           ${social.map(([n,u])=>`<li><a href="${esc(u)}" target="_blank" rel="noopener">${n}</a></li>`).join("")}
@@ -171,8 +214,6 @@ window.AUREN_CONFIG = {
 
   function statusPill(u){
     if(u.member === false) return `<span class="pill bad"><span class="dot"></span>No estás en el Discord</span>`;
-    if(u.verified === true) return `<span class="pill ok"><span class="dot"></span>Whitelist aprobada</span>`;
-    if(u.verified === false) return `<span class="pill warn"><span class="dot"></span>Whitelist pendiente</span>`;
     return `<span class="pill ok"><span class="dot"></span>Cuenta vinculada</span>`;
   }
 
@@ -187,7 +228,8 @@ window.AUREN_CONFIG = {
       <div class="pop user-menu" id="userMenu" hidden>
         <div class="who">${avatarHTML(u)}<div><b>${esc(u.name)}</b><small>@${esc(u.username)}</small></div></div>
         ${statusPill(u)}
-        <a href="panel.html">Mi panel y whitelist</a>
+        <a href="panel.html">Mi cuenta</a>
+        <a href="staff.html">Panel del staff</a>
         ${u.member === false ? `<a href="${esc(C.discord)}" target="_blank" rel="noopener">Unirse al Discord de Auren</a>` : ""}
         <a href="/api/auth/logout">Cerrar sesión</a>
       </div>`;
@@ -223,6 +265,6 @@ window.AUREN_CONFIG = {
   // Estadísticas en vivo (FiveM + Discord), compartidas por las páginas
   const statsPromise = fetch("/api/stats").then(r=> r.ok ? r.json() : null).catch(()=> null);
 
-  window.Auren = { config:C, esc, toast, copy, avatarHTML, statusPill, user:userPromise, stats:statsPromise,
+  window.Auren = { config:C, esc, toast, copy, avatarHTML, statusPill, user:userPromise, stats:statsPromise, getPref,
     isAuthReady: ()=> authReady, loginHref, store };
 })();

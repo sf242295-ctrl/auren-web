@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auren RP</title>
+<meta name="description" content="Auren RP — servidor de roleplay en Nueva York. Únete por Discord y empieza tu historia.">
+<meta property="og:title" content="Auren RP">
+<meta property="og:description" content="Nueva York con sabor dominicano. Servidor de roleplay en FiveM.">
+<meta property="og:url" content="https://aurenroleplay.com/">
+<meta name="theme-color" content="#040a17">
+<link rel="canonical" href="https://aurenroleplay.com/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#000000;
+  --night:#040a17;
+  --navy:#071226;
+  --navy-2:#0c1d3d;
+  --blue:#3D7BF2;
+  --sky:#8CC4FF;
+  --ink:#F4F8FF;
+  --muted:#93a3c0;
+  --line:rgba(140,196,255,.14);
+  --display:'Big Shoulders Display', Impact, sans-serif;
+  --body:'Archivo', system-ui, sans-serif;
+  --ok:#4ade80;
+  --warn:#fbbf24;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img,svg{display:block}
+:focus-visible{outline:2px solid var(--sky);outline-offset:3px;border-radius:6px}
+.wrap{width:min(1180px,100% - 32px);margin-inline:auto}
+
+/* ---------- NAV ---------- */
+.nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:50;width:min(1100px,100% - 24px);
+  display:flex;align-items:center;gap:20px;padding:10px 10px 10px 20px;border-radius:999px;
+  background:rgba(4,10,23,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.14em}
+.brand svg{width:30px;height:30px}
+.nav-links{display:flex;gap:28px;margin-left:auto;font-size:15px;color:var(--muted)}
+.nav-links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-weight:600;font-size:15px;
+  transition:background .2s,border-color .2s,transform .2s;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 0 0 1px rgba(140,196,255,.35) inset,0 10px 40px -10px rgba(61,123,242,.8)}
+.btn-primary:hover{background:#5590ff}
+.btn-ghost{border:1px solid rgba(244,248,255,.25);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--sky);background:rgba(140,196,255,.06)}
+.nav .btn{padding:10px 18px}
+.menu-btn{display:none;background:none;border:0;color:var(--ink);width:40px;height:40px;cursor:pointer}
+
+/* ---------- CIUDAD VIVA (fondo animado) ---------- */
+#city{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+main,footer{position:relative;z-index:1}
+.radio{position:fixed;z-index:40;left:max(16px, env(safe-area-inset-left, 0px));bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+  display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:6px 6px 6px 14px;border-radius:999px;
+  background:rgba(4,10,23,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);font-size:13px}
+.radio .live{width:8px;height:8px;border-radius:50%;background:#ff3b4f;box-shadow:0 0 8px #ff3b4f;flex:none;animation:pulse 1.6s infinite}
+.radio .lbl{color:var(--muted);white-space:nowrap}
+.radio .msg{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;transition:opacity .4s}
+.radio button{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.radio button:hover{border-color:var(--sky)}
+@keyframes pulse{50%{opacity:.35}}
+@media (max-width:560px){.radio .lbl{display:none}}
+
+/* ---------- AUTH (Discord) ---------- */
+.auth{position:relative}
+.user-chip{display:flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(12,29,61,.7);color:var(--ink);font:600 15px var(--body);cursor:pointer}
+.user-chip:hover{border-color:var(--sky)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);display:grid;place-items:center;overflow:hidden;
+  font-family:var(--display);font-weight:900;font-size:18px;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.user-menu{position:absolute;right:0;top:calc(100% + 10px);width:260px;padding:16px;border-radius:16px;
+  background:var(--night);border:1px solid var(--line);box-shadow:0 20px 50px -10px rgba(0,0,0,.8);display:grid;gap:12px}
+.user-menu .who{display:flex;gap:12px;align-items:center}
+.user-menu .who .avatar{width:44px;height:44px}
+.user-menu .who b{display:block;font-size:16px}
+.user-menu .who small{color:var(--muted);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill .dot{width:7px;height:7px}
+.pill.ok{color:var(--ok);border-color:rgba(74,222,128,.35)}
+.pill.ok .dot{background:var(--ok)}
+.pill.warn{color:var(--warn);border-color:rgba(251,191,36,.35)}
+.pill.warn .dot{background:var(--warn);box-shadow:none}
+.user-menu a{font-size:14px;color:var(--muted)}
+.user-menu a:hover{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;max-width:min(460px,100% - 32px);
+  padding:14px 20px;border-radius:14px;background:var(--navy-2);border:1px solid var(--line);color:var(--ink);font-size:15px;
+  box-shadow:0 20px 50px -10px rgba(0,0,0,.8)}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;overflow:hidden;background:transparent}
+.hero::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(60% 50% at 50% 50%, rgba(0,0,0,.7), rgba(0,0,0,.25) 60%, transparent 85%)}
+.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(244,248,255,.55) 1px,transparent 1px);
+  background-size:3px 3px;opacity:.05;pointer-events:none;z-index:2}
+.hero-inner{position:relative;z-index:3;padding:140px 16px 160px}
+.hero-mark{width:74px;height:74px;margin:0 auto 18px;filter:drop-shadow(0 0 24px rgba(61,123,242,.7))}
+.hero h1{font-family:var(--display);font-weight:900;font-size:clamp(96px,22vw,300px);line-height:.82;letter-spacing:.04em;white-space:nowrap;
+  color:var(--ink);text-shadow:0 0 60px rgba(61,123,242,.45)}
+.hero h1 span{display:inline-block;opacity:0;transform:translateY(40px);animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards}
+.hero-sub{margin-top:18px;font-family:var(--display);font-weight:500;font-size:clamp(16px,2.2vw,22px);letter-spacing:.5em;color:var(--sky)}
+.hero p.lead{max-width:520px;margin:22px auto 0;color:#c4d0e6;font-size:18px}
+.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+.status{display:inline-flex;align-items:center;gap:10px;margin-top:26px;padding:8px 16px;border-radius:999px;font-size:14px;color:var(--muted);
+  background:rgba(7,18,38,.6);border:1px solid var(--line)}
+.dot{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80}
+.dot.off{background:#64748b;box-shadow:none}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---------- TICKER ---------- */
+.ticker{background:var(--blue);color:#fff;overflow:hidden;border-block:1px solid rgba(255,255,255,.2)}
+.ticker-track{display:flex;width:max-content;animation:scroll 40s linear infinite}
+.ticker span{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.08em;padding:14px 28px;white-space:nowrap}
+.ticker span::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-left:56px;vertical-align:middle}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* ---------- SECTIONS ---------- */
+section{padding:120px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:56px;flex-wrap:wrap}
+.sec-head h2{font-family:var(--display);font-weight:900;font-size:clamp(48px,8vw,104px);line-height:.9;letter-spacing:.01em}
+.sec-head p{max-width:420px;color:var(--muted)}
+
+/* how to play — subway-line steps */
+.steps{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);position:relative}
+.steps::before{content:"";position:absolute;top:31px;left:32px;right:32px;height:4px;background:linear-gradient(90deg,var(--blue),var(--sky));border-radius:4px}
+.step{position:relative;padding-right:28px}
+.bullet{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;
+  font-family:var(--display);font-weight:900;font-size:34px;border:5px solid var(--black);position:relative}
+.step h3{font-family:var(--display);font-weight:700;font-size:30px;margin:22px 0 8px;letter-spacing:.02em}
+.step p{color:var(--muted);font-size:16px}
+.step a.inline{color:var(--sky);border-bottom:1px solid rgba(140,196,255,.4)}
+
+/* city */
+.city{background:linear-gradient(180deg,transparent,rgba(7,18,38,.5) 50%,transparent)}
+.borough{display:grid;grid-template-columns:1.1fr 1fr;gap:0;border-top:1px solid var(--line)}
+.borough-list{list-style:none}
+.borough-list li{display:grid;grid-template-columns:150px 1fr;gap:24px;padding:28px 0;border-bottom:1px solid var(--line)}
+.borough-list b{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.03em;color:var(--sky)}
+.borough-list span{color:#c4d0e6}
+.sign{margin-left:56px;margin-top:28px;align-self:start;position:sticky;top:110px;border-radius:14px;overflow:hidden;
+  background:rgba(11,27,56,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);padding:34px}
+.sign .plate{background:#000;border-radius:8px;padding:26px 24px;border:1px solid rgba(255,255,255,.08)}
+.sign .plate .top{display:flex;gap:8px;margin-bottom:18px}
+.sign .plate .top i{width:38px;height:38px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font-style:normal;
+  font-family:var(--display);font-weight:900;font-size:22px}
+.sign .plate .top i:nth-child(2){background:var(--sky);color:#04122b}
+.sign .plate .top i:nth-child(3){background:#fff;color:#04122b}
+.sign .plate strong{display:block;font-family:var(--display);font-weight:900;font-size:44px;line-height:1}
+.sign .plate small{display:block;margin-top:8px;color:var(--muted);font-size:15px}
+.sign .stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;text-align:center}
+.sign .stats div{padding:6px}
+.sign .stats div+div{border-left:1px solid var(--line)}
+.sign .stats b{display:block;font-family:var(--display);font-weight:900;font-size:40px;color:var(--ink);line-height:1}
+.sign .stats span{font-size:13px;color:var(--muted)}
+
+/* streams */
+.streams{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.stream{position:relative;aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,rgba(12,29,61,.88),rgba(4,10,23,.88));
+  border:1px solid var(--line);display:flex;flex-direction:column;justify-content:flex-end;padding:20px;transition:border-color .2s}
+.stream:hover{border-color:var(--blue)}
+.stream .live{position:absolute;top:16px;left:16px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;background:#e11d48}
+.stream .ch{font-family:var(--display);font-weight:700;font-size:28px}
+.stream .meta{color:var(--muted);font-size:14px}
+.stream .glyph{position:absolute;right:-20px;top:-30px;font-family:var(--display);font-weight:900;font-size:200px;color:rgba(61,123,242,.08);line-height:1}
+
+/* rules */
+.rules{border-top:1px solid var(--line)}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:28px 0;
+  font-family:var(--display);font-weight:700;font-size:clamp(26px,3.4vw,38px);letter-spacing:.02em}
+summary::-webkit-details-marker{display:none}
+summary .plus{width:36px;height:36px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:transform .25s,background .25s}
+details[open] summary .plus{transform:rotate(45deg);background:var(--blue);border-color:var(--blue)}
+details ul{padding:0 0 30px 20px;max-width:760px;color:#c4d0e6}
+details li{margin:8px 0}
+
+/* community CTA */
+.cta{position:relative;overflow:hidden;border-radius:24px;padding:90px 40px;text-align:center;
+  background:radial-gradient(80% 120% at 50% 0%, rgba(26,63,143,.9) 0%, rgba(7,18,38,.88) 55%, rgba(4,10,23,.9) 100%);border:1px solid var(--line)}
+.cta h2{font-family:var(--display);font-weight:900;font-size:clamp(54px,9vw,120px);line-height:.88}
+.cta p{max-width:520px;margin:20px auto 34px;color:#c4d0e6}
+.cta .hero-ctas{margin-top:0}
+
+footer{padding:60px 0 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:120px}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.foot nav{display:flex;gap:22px}
+.foot nav a:hover{color:var(--ink)}
+.legal{margin-top:24px;font-size:12px;opacity:.7}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:900px){
+  .nav-links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;gap:0;padding:8px;border-radius:20px;
+    background:rgba(4,10,23,.96);border:1px solid var(--line)}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:14px 16px}
+  .menu-btn{display:block}
+  .nav{gap:10px;padding-left:16px}
+  .auth{margin-left:auto}
+  .nav .btn{padding:9px 14px;font-size:14px}
+  .user-chip .uname{display:none}
+  .user-chip{padding-right:5px}
+  .steps{grid-template-columns:1fr;gap:36px}
+  .steps::before{top:32px;bottom:32px;left:31px;right:auto;width:4px;height:auto}
+  .step{display:grid;grid-template-columns:66px 1fr;column-gap:22px;padding:0}
+  .step h3{margin-top:12px}
+  .step p{grid-column:2}
+  .borough{grid-template-columns:1fr}
+  .sign{margin:40px 0 0;position:static}
+  .streams{grid-template-columns:1fr}
+  section{padding:90px 0}
+}
+@media (max-width:560px){
+  .borough-list li{grid-template-columns:1fr;gap:4px}
+  .hero-sub{letter-spacing:.3em}
+  .cta{padding:64px 22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .hero h1 span{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<canvas id="city" aria-hidden="true"></canvas>
+<div class="radio" id="radio" aria-hidden="true">
+  <span class="live"></span><span class="lbl">Radio de la ciudad</span><span class="msg" id="radioMsg">Noche tranquila en Auren NYC</span>
+  <button id="cityPause" type="button" aria-label="Pausar animación de la ciudad" title="Pausar ciudad">
+    <svg viewBox="0 0 24 24" width="14" height="14"><path id="pauseIcon" d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>
+  </button>
+</div>
+
+<!-- ==== Marca (logo) — cámbialo por tu logo si quieres: <img src="logo.png"> ==== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8CC4FF"/><stop offset="1" stop-color="#3D7BF2"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 64 64">
+      <path d="M32 4 L58 58 H44 L32 30 L20 58 H6 Z" fill="url(#g)"/>
+      <path d="M22 44 H42" stroke="#F4F8FF" stroke-width="4"/>
+      <path d="M32 4 V18" stroke="#F4F8FF" stroke-width="2"/>
+    </symbol>
+    <symbol id="discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.3 18.3 0 0 0-5.5 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9.1-.3 13.6.1 18.1a19.9 19.9 0 0 0 6 3l1.3-2a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.7ZM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="Auren RP inicio"><svg><use href="#mark"/></svg>AUREN</a>
+  <nav class="nav-links" id="navLinks">
+    <a href="#como-jugar">Cómo jugar</a>
+    <a href="#ciudad">La ciudad</a>
+    <a href="#directos">Directos</a>
+    <a href="#normativas">Normativas</a>
+    <a href="#" data-link="tienda">Tienda VIP</a>
+  </nav>
+  <div class="auth" id="authSlot">
+    <a class="btn btn-primary" href="/api/auth/login" data-auth="login"><svg><use href="#discord"/></svg>Iniciar sesión</a>
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="26" height="26"><path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</header>
+
+<main>
+<section class="hero" style="padding:0">
+  <div class="hero-inner">
+    <svg class="hero-mark" aria-hidden="true"><use href="#mark"/></svg>
+    <h1 aria-label="Auren"><span style="animation-delay:.05s">A</span><span style="animation-delay:.12s">U</span><span style="animation-delay:.19s">R</span><span style="animation-delay:.26s">E</span><span style="animation-delay:.33s">N</span></h1>
+    <div class="hero-sub">ROLEPLAY NUEVA YORK</div>
+    <p class="lead">Nueva York con sabor dominicano. Del bloque a Manhattan, tu historia la escribes tú.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#" data-link="connect">Conectar al servidor</a>
+      <a class="btn btn-ghost" href="#" data-link="discord"><svg><use href="#discord"/></svg>Unirse al Discord</a>
+    </div>
+    <div class="status" id="status"><span class="dot off" id="statusDot"></span><span id="statusText">Comprobando servidor…</span></div>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+<section id="como-jugar">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Cómo jugar</h2>
+      <p>Cuatro paradas y estás dentro. Si te trabas en alguna, el staff te ayuda en el Discord.</p>
+    </div>
+    <ol class="steps">
+      <li class="step"><div class="bullet">1</div><h3>Instala FiveM</h3><p>Necesitas GTA V original en PC. Descarga el cliente gratis en <a class="inline" href="https://fivem.net" target="_blank" rel="noopener">fivem.net</a>.</p></li>
+      <li class="step"><div class="bullet">2</div><h3>Vincula tu Discord</h3><p>Únete al servidor de Discord y pulsa “Iniciar sesión” aquí para autorizar tu cuenta.</p></li>
+      <li class="step"><div class="bullet">3</div><h3>Lee la normativa</h3><p>Conocer las reglas evita sanciones y hace que el rol sea mejor para todos.</p></li>
+      <li class="step"><div class="bullet">4</div><h3>Conéctate</h3><p>Pulsa “Conectar al servidor” o busca Auren RP en la lista de FiveM.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section id="ciudad" class="city">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>La ciudad</h2>
+      <p>Liberty City completa, con sistemas hechos a medida para que cada calle tenga algo que contar.</p>
+    </div>
+    <div class="borough">
+      <ul class="borough-list">
+        <li><b>Trabajos</b><span>Policía, EMS de Auren Medical, mecánicos, camioneros y más. Legal o ilegal, tú eliges tu camino.</span></li>
+        <li><b>Auren Phone</b><span>Un teléfono propio con apps, mensajes, música en Aurenify y pedidos a domicilio con Auren Eats.</span></li>
+        <li><b>Vehículos</b><span>Concesionarios, garajes, matrícula y seguro en el DMV, y licencias normales o CDL para camiones.</span></li>
+        <li><b>Economía</b><span>Banco, multas, gasolineras y negocios. Lo que ganas y pierdes tiene peso.</span></li>
+        <li><b>Staff</b><span>Un equipo activo que responde, con tickets y soporte en Discord.</span></li>
+      </ul>
+      <aside class="sign" aria-label="Datos del servidor">
+        <div class="plate">
+          <div class="top"><i>A</i><i>R</i><i>P</i></div>
+          <strong>Auren NYC</strong>
+          <small>Servidor ESX en Liberty City</small>
+        </div>
+        <div class="stats">
+          <div><b id="statPlayers">—</b><span>en línea</span></div>
+          <div><b id="statSlots">—</b><span>cupos</span></div>
+          <div><b>24/7</b><span>abierto</span></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="directos">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Directos</h2>
+      <p>Streamers de la comunidad jugando en Auren. ¿Quieres salir aquí? Pídelo en el Discord.</p>
+    </div>
+    <div class="streams" id="streams"></div>
+  </div>
+</section>
+
+<section id="normativas">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Normativas</h2>
+      <p>Lo básico para empezar. La normativa completa está en el Discord y manda sobre este resumen.</p>
+    </div>
+    <div class="rules">
+      <details open>
+        <summary>Rol general <span class="plus">+</span></summary>
+        <ul>
+          <li>Mantén el personaje en todo momento (no salirse de rol).</li>
+          <li>Prohibido el metagaming: no uses información de fuera del juego.</li>
+          <li>Prohibido el powergaming: nada de acciones imposibles o sin dar opción al otro.</li>
+          <li>Valora tu vida: actúa con miedo realista ante armas y amenazas.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Combate y crimen <span class="plus">+</span></summary>
+        <ul>
+          <li>Prohibido el RDM y VDM: toda agresión necesita un rol previo.</li>
+          <li>Robos y secuestros con el mínimo de policías conectados que marque el staff.</li>
+          <li>Zonas seguras: hospital, comisaría y concesionarios.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Comunidad <span class="plus">+</span></summary>
+        <ul>
+          <li>Respeto a todos los jugadores y al staff, dentro y fuera del juego.</li>
+          <li>Nada de bugs, exploits ni programas externos. Si encuentras un bug, repórtalo.</li>
+          <li>Los reportes y apelaciones se hacen por ticket en Discord.</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="comunidad" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="cta">
+      <h2>Tu historia empieza en el bloque</h2>
+      <p>Inicia sesión con Discord, verifica tu cuenta y nos vemos en las calles de Auren.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="/api/auth/login" data-auth="login"><svg><use href="#discord"/></svg>Iniciar sesión con Discord</a>
+        <a class="btn btn-ghost" href="#" data-link="tienda">Tienda VIP</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="#top"><svg><use href="#mark"/></svg>AUREN RP</a>
+      <nav>
+        <a href="#como-jugar">Cómo jugar</a>
+        <a href="#normativas">Normativas</a>
+        <a href="#" data-link="discord">Discord</a>
+        <a href="#" data-link="tienda">Tienda</a>
+      </nav>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <p class="legal">© <span id="year"></span> Auren RP · aurenroleplay.com. No estamos afiliados a Rockstar Games ni a Take-Two Interactive.</p>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — cambia solo esto
+   ========================================================= */
+const CONFIG = {
+  discord: "https://discord.gg/aurenrp",
+  // Las compras VIP se hacen por el Discord
+  tienda:  "https://discord.gg/aurenrp",
+  // Código cfx.re de tu servidor (lo ves en la lista de FiveM, ej: "abc123")
+  cfxCode: "lee9965",
+  maxSlots: 128,
+  ticker: ["Bienvenidos a Auren NYC", "Nueva temporada abierta", "Únete al Discord", "Staff 24/7", "Compras VIP por Discord"],
+  // Streamers: plataforma "twitch" o "kick" + canal
+  streamers: [
+    { name: "Streamer1", platform: "twitch", role: "Policía de Auren" },
+    { name: "Streamer2", platform: "kick",   role: "Mecánico del bloque" },
+    { name: "Streamer3", platform: "twitch", role: "EMS Auren Medical" }
+  ]
+};
+/* ========================================================= */
+
+// Enlaces
+document.querySelectorAll("[data-link]").forEach(a=>{
+  const k = a.dataset.link;
+  if(k==="connect") a.href = "fivem://connect/cfx.re/join/" + CONFIG.cfxCode;
+  else { a.href = CONFIG[k]; a.target = "_blank"; a.rel = "noopener"; }
+});
+
+// Menú móvil
+const menuBtn = document.getElementById("menuBtn"), navLinks = document.getElementById("navLinks");
+menuBtn.addEventListener("click",()=>{
+  const open = navLinks.classList.toggle("open");
+  menuBtn.setAttribute("aria-expanded", open);
+});
+navLinks.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>navLinks.classList.remove("open")));
+
+// Ticker
+const t = document.getElementById("ticker");
+t.innerHTML = [...CONFIG.ticker, ...CONFIG.ticker].map(s=>`<span>${s}</span>`).join("");
+
+// Directos
+document.getElementById("streams").innerHTML = CONFIG.streamers.map(s=>{
+  const url = s.platform==="kick" ? `https://kick.com/${s.name}` : `https://twitch.tv/${s.name}`;
+  return `<a class="stream" href="${url}" target="_blank" rel="noopener">
+    <span class="live">${s.platform==="kick"?"KICK":"TWITCH"}</span>
+    <span class="glyph">${s.name[0]}</span>
+    <span class="ch">${s.name}</span><span class="meta">${s.role}</span></a>`;
+}).join("");
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+// ---------- Login con Discord ----------
+const toastEl = document.getElementById("toast");
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg; toastEl.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=> toastEl.hidden = true, 5000);
+}
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let authReady = false;
+
+function avatarHTML(u){
+  if(u.avatar) return `<span class="avatar"><img src="https://cdn.discordapp.com/avatars/${esc(u.id)}/${esc(u.avatar)}.png?size=96" alt=""></span>`;
+  return `<span class="avatar">${esc((u.name||"?")[0].toUpperCase())}</span>`;
+}
+
+function renderAuth(u){
+  const slot = document.getElementById("authSlot");
+  if(!u){
+    slot.innerHTML = `<a class="btn btn-primary" href="/api/auth/login" data-auth="login"><svg><use href="#discord"/></svg>Iniciar sesión</a>`;
+    return;
+  }
+  let status;
+  if(u.member === false) status = `<span class="pill warn"><span class="dot"></span>No estás en el Discord</span>`;
+  else if(u.member && !u.verified) status = `<span class="pill warn"><span class="dot"></span>Pendiente de verificar</span>`;
+  else status = `<span class="pill ok"><span class="dot"></span>Cuenta vinculada</span>`;
+  slot.innerHTML = `
+    <button class="user-chip" id="userChip" aria-expanded="false" aria-controls="userMenu">${avatarHTML(u)}<span class="uname">${esc(u.name)}</span></button>
+    <div class="user-menu" id="userMenu" hidden>
+      <div class="who">${avatarHTML(u)}<div><b>${esc(u.name)}</b><small>@${esc(u.username)}</small></div></div>
+      ${status}
+      ${u.member === false ? `<a href="${esc(CONFIG.discord)}" target="_blank" rel="noopener">Unirse al Discord de Auren</a>` : ""}
+      <a href="/api/auth/logout">Cerrar sesión</a>
+    </div>`;
+  const chip = document.getElementById("userChip"), menu = document.getElementById("userMenu");
+  chip.addEventListener("click", e=>{ e.stopPropagation(); menu.hidden = !menu.hidden; chip.setAttribute("aria-expanded", !menu.hidden); });
+  document.addEventListener("click", e=>{ if(!menu.contains(e.target)){ menu.hidden = true; chip.setAttribute("aria-expanded", false); } });
+}
+
+// Si la web aún no está en Cloudflare (por ejemplo, en la vista previa), avisamos en vez de romper el enlace
+document.addEventListener("click", e=>{
+  const a = e.target.closest('[data-auth="login"]');
+  if(a && !authReady){ e.preventDefault(); toast("El inicio de sesión con Discord se activa cuando la web esté publicada en aurenroleplay.com."); }
+});
+
+(async ()=>{
+  try{
+    const r = await fetch("/api/auth/me", {credentials:"same-origin"});
+    if(!r.ok || !(r.headers.get("content-type")||"").includes("json")) throw 0;
+    authReady = true;
+    const { user } = await r.json();
+    renderAuth(user);
+  }catch(e){ authReady = false; }
+  const p = new URLSearchParams(location.search);
+  if(p.has("login")){
+    toast(p.get("login")==="ok" ? "Sesión iniciada con Discord." : "No se pudo iniciar sesión con Discord. Inténtalo de nuevo.");
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
+})();
+
+// Estado del servidor (API pública de FiveM; si falla, muestra "Servidor 24/7")
+(async ()=>{
+  const dot = document.getElementById("statusDot"), txt = document.getElementById("statusText");
+  document.getElementById("statSlots").textContent = CONFIG.maxSlots;
+  try{
+    const r = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${CONFIG.cfxCode}`);
+    if(!r.ok) throw 0;
+    const d = (await r.json()).Data;
+    const n = d.clients ?? d.players?.length ?? 0, max = d.sv_maxclients ?? CONFIG.maxSlots;
+    dot.classList.remove("off");
+    txt.textContent = `En línea · ${n}/${max} jugadores`;
+    document.getElementById("statPlayers").textContent = n;
+    document.getElementById("statSlots").textContent = max;
+  }catch(e){
+    txt.textContent = "Servidor abierto 24/7";
+    dot.classList.remove("off");
+  }
+})();
+
+// =========================================================
+//  CIUDAD VIVA — fondo animado de Nueva York
+//  Tráfico, taxis, persecuciones, tren elevado, helicóptero,
+//  apagones, lluvia y ventanas que se prenden y apagan.
+// =========================================================
+(function city(){
+  const cv = document.getElementById("city");
+  const ctx = cv.getContext("2d");
+  const radioMsg = document.getElementById("radioMsg");
+  const pauseBtn = document.getElementById("cityPause");
+  const pauseIcon = document.getElementById("pauseIcon");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rnd = (a,b)=> a + Math.random()*(b-a);
+  const pick = a => a[Math.random()*a.length|0];
+
+  let W=0, H=0, DPR=1, groundY=0, trackY=0, skyGrad=null;
+  let layers=[], stars=[], lamps=[], cars=[], steam=[], drops=[], sparks=[], timers=[];
+  let train=null, heli=null, plane=null, neon=null, flash=0, rain=0, rainTarget=0;
+  let scrollY=0, mx=0, tmx=0, t=0, last=0, paused=false, running=false, lastW=0, nextEvent=2.5, lastEvent="";
+  const mobile = matchMedia("(max-width:700px)").matches;
+
+  const LAYER_CFG = [
+    {name:"far",  color:"#0c1e40", lit:.26, wmin:40, wmax:90,  hmin:.30, hmax:.58, gap:4, win:[3,4,7,10],  cols:["#2f5aa8","#4a72bd"], warm:.05, par:.03, mpar:.25},
+    {name:"mid",  color:"#081631", lit:.2,  wmin:50, wmax:110, hmin:.22, hmax:.48, gap:6, win:[4,5,9,12],  cols:["#6fa3f0","#86b6ff"], warm:.12, par:.06, mpar:.55},
+    {name:"near", color:"#030914", lit:.16, wmin:60, wmax:130, hmin:.14, hmax:.40, gap:10,win:[5,7,11,15], cols:["#a9d0ff","#cfe3ff"], warm:.18, par:.1,  mpar:1, landmarks:true}
+  ];
+
+  function setRadio(text){
+    radioMsg.style.opacity = 0;
+    setTimeout(()=>{ radioMsg.textContent = text; radioMsg.style.opacity = 1; }, 350);
+  }
+  const after = (s, fn)=> timers.push({at:t+s, fn});
+
+  /* ---------- construcción ---------- */
+  function buildLayer(cfg){
+    const w = W + 60;
+    const c = document.createElement("canvas");
+    c.width = Math.ceil(w*DPR); c.height = Math.ceil(H*DPR);
+    const g = c.getContext("2d"); g.scale(DPR,DPR);
+    g.fillStyle = cfg.color;
+    const blds = [], windows = [];
+    const addBuilding = (x, tiers, opts={})=>{
+      const b = {x, tiers, windows:[], ...opts};
+      let base = groundY;
+      tiers.forEach(tr=>{
+        const left = x + (tiers[0].w - tr.w)/2;
+        g.fillRect(left, base - tr.h, tr.w, tr.h);
+        tr.left = left; tr.top = base - tr.h; tr.bottom = base;
+        base -= tr.h;
+      });
+      b.top = base;
+      if(opts.spire){ g.fillRect(x + tiers[0].w/2 - 1.5, base - opts.spire, 3, opts.spire); b.antenna = {x:x+tiers[0].w/2, y:base-opts.spire}; }
+      if(opts.crown){ // corona tipo Chrysler
+        const cx = x + tiers[0].w/2, top = base;
+        g.beginPath(); g.moveTo(cx - tiers.at(-1).w/2, top); g.lineTo(cx, top - opts.crown); g.lineTo(cx + tiers.at(-1).w/2, top); g.fill();
+        g.fillRect(cx-1, top-opts.crown-30, 2, 30);
+        b.antenna = {x:cx, y:top-opts.crown-30};
+        g.strokeStyle = "rgba(169,208,255,.25)"; g.lineWidth = 1;
+        for(let i=1;i<4;i++){ g.beginPath(); g.arc(cx, top, tiers.at(-1).w/2 * (1 - i*.22), Math.PI, 0); g.stroke(); }
+      }
+      const [ww, wh, sx, sy] = cfg.win;
+      tiers.forEach(tr=>{
+        for(let y = tr.top + 8; y < tr.bottom - wh - 4; y += sy){
+          for(let xx = tr.left + 6; xx < tr.left + tr.w - ww - 4; xx += sx){
+            const on = Math.random() < cfg.lit;
+            const col = Math.random() < cfg.warm ? "#ffe2a8" : pick(cfg.cols);
+            const win = {x:xx, y, w:ww, h:wh, on, col, b};
+            b.windows.push(win); windows.push(win);
+          }
+        }
+      });
+      blds.push(b);
+      return b;
+    };
+
+    const reserved = [];
+    if(cfg.landmarks){
+      const s = Math.max(.7, Math.min(1.2, H/900));
+      // Estilo Empire State
+      let x = W*.24; reserved.push([x-10, x+100*s]);
+      addBuilding(x, [{w:90*s,h:H*.26},{w:66*s,h:H*.06},{w:44*s,h:H*.05},{w:24*s,h:H*.04}], {spire:70*s, landmark:true});
+      // Estilo Chrysler
+      x = W*.52; reserved.push([x-10, x+80*s]);
+      addBuilding(x, [{w:70*s,h:H*.24},{w:52*s,h:H*.07},{w:36*s,h:H*.03}], {crown:46*s, landmark:true});
+      // Estilo One World Trade
+      x = W*.8; reserved.push([x-10, x+90*s]);
+      addBuilding(x, [{w:84*s,h:H*.12},{w:72*s,h:H*.1},{w:60*s,h:H*.1},{w:46*s,h:H*.08},{w:30*s,h:H*.06}], {spire:90*s, landmark:true});
+    }
+    let x = -20;
+    while(x < w){
+      const bw = rnd(cfg.wmin, cfg.wmax) * (mobile ? .8 : 1);
+      if(reserved.some(([a,b])=> x+bw > a && x < b)){ x += 14; continue; }
+      const bh = rnd(cfg.hmin, cfg.hmax) * H;
+      const tiers = [{w:bw, h:bh}];
+      if(Math.random() < .3) tiers.push({w:bw*.6, h:rnd(14,40)});
+      addBuilding(x, tiers, {water: cfg.name==="near" && Math.random()<.25});
+      x += bw + rnd(1, cfg.gap);
+    }
+    // tanques de agua en techos (detalle NYC)
+    blds.forEach(b=>{
+      if(!b.water) return;
+      const tr = b.tiers.at(-1), cx = tr.left + tr.w*rnd(.25,.7), top = tr.top;
+      g.fillRect(cx-7, top-16, 14, 12);
+      g.beginPath(); g.moveTo(cx-8, top-16); g.lineTo(cx, top-23); g.lineTo(cx+8, top-16); g.fill();
+      g.fillRect(cx-6, top-4, 2, 4); g.fillRect(cx+4, top-4, 2, 4);
+    });
+    windows.forEach(wi=> drawWindow(g, cfg, wi));
+    return {cfg, canvas:c, g, blds, windows};
+  }
+
+  function drawWindow(g, cfg, wi){
+    g.fillStyle = wi.on ? wi.col : (cfg.name==="near" ? "#0a1426" : cfg.color);
+    g.fillRect(wi.x, wi.y, wi.w, wi.h);
+  }
+  function setWindow(layer, wi, on){
+    if(wi.on === on) return;
+    wi.on = on; drawWindow(layer.g, layer.cfg, wi);
+  }
+
+  function build(){
+    DPR = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5);
+    W = window.innerWidth; H = window.innerHeight; lastW = W;
+    cv.width = Math.ceil(W*DPR); cv.height = Math.ceil(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    groundY = Math.round(H * .84);
+    trackY = groundY - Math.max(46, H*.085);
+    skyGrad = ctx.createLinearGradient(0,0,0,groundY);
+    skyGrad.addColorStop(0, "#000000");
+    skyGrad.addColorStop(.45, "#040a17");
+    skyGrad.addColorStop(.82, "#0a1c40");
+    skyGrad.addColorStop(1, "#163a7c");
+    layers = LAYER_CFG.map(buildLayer);
+    stars = Array.from({length: mobile ? 50 : 110}, ()=>({x:Math.random()*W, y:Math.random()*H*.45, r:Math.random()*1.1+.2, p:Math.random()*6}));
+    lamps = [];
+    for(let x = 60; x < W; x += mobile ? 170 : 240) lamps.push({x, flick:0});
+    const nearLayer = layers[2];
+    const candidates = nearLayer.blds.filter(b=>!b.landmark && b.tiers[0].w > 60 && b.tiers[0].h > H*.22);
+    const nb = candidates.length ? pick(candidates) : null;
+    neon = nb ? {x: nb.tiers[0].left + nb.tiers[0].w - 4, y: nb.top + 30, off:-1, flicker:0} : null;
+    cars = []; steam = []; drops = []; sparks = [];
+    for(let i=0;i<(mobile?3:6);i++){ spawnCar(0, Math.random()*W); spawnCar(1, Math.random()*W); }
+  }
+
+  /* ---------- tráfico ---------- */
+  const laneY = l => groundY + (H - groundY) * (l === 0 ? .36 : .78);
+  function spawnCar(lane, x, type){
+    const dir = lane === 0 ? 1 : -1;
+    type = type || (Math.random() < .42 ? "taxi" : "car");
+    const s = lane === 0 ? .78 : 1;
+    const speeds = {taxi:rnd(70,110), car:rnd(60,100), police:400, flee:380, ambulance:300};
+    const colors = {taxi:"#f2b705", car:pick(["#0d1426","#1a2238","#2b3550","#121a2e","#3a3f4f"]), police:"#e6edf8", flee:"#0b0f1a", ambulance:"#f3f5fa"};
+    if(x === undefined) x = dir > 0 ? -80 : W + 80;
+    cars.push({lane, dir, s, type, x, y:laneY(lane), len:(type==="ambulance"?50:42)*s, speed:speeds[type], color:colors[type], special: ["police","flee","ambulance"].includes(type)});
+  }
+
+  function updateCars(dt){
+    [0,1].forEach(lane=>{
+      const inLane = cars.filter(c=>c.lane===lane && !c.special).sort((a,b)=> (a.x-b.x)*a.dir);
+      for(let i=0;i<inLane.length-1;i++){
+        const back = inLane[i], front = inLane[i+1];
+        if(Math.abs(front.x - back.x) < back.len + 22) back.speed = Math.min(back.speed, front.speed);
+      }
+      const target = Math.max(3, Math.round(W / (mobile ? 170 : 210)));
+      const edgeClear = !cars.some(c=>c.lane===lane && (lane===0 ? c.x < 40 : c.x > W-40));
+      if(inLane.length < target && edgeClear && Math.random() < dt*1.2) spawnCar(lane);
+    });
+    cars.forEach(c=>{ c.x += c.dir * c.speed * dt; c.y = laneY(c.lane); });
+    cars = cars.filter(c=> c.x > -160 && c.x < W + 160);
+  }
+
+  function drawCar(c){
+    const s=c.s, L=c.len, x=c.x, y=c.y, d=c.dir;
+    const h = 13*s;
+    ctx.fillStyle = c.color;
+    roundRect(x-L/2, y-h*.62, L, h*.5, 3*s);
+    const cabW = L*.5, cabX = x - cabW/2 - d*L*.04;
+    if(c.type==="ambulance") roundRect(x-L/2+ (d>0?0:L*.3), y-h, L*.7, h*.6, 2*s);
+    else roundRect(cabX, y-h, cabW, h*.45, 4*s);
+    ctx.fillStyle = "#24365c";
+    if(c.type!=="ambulance") ctx.fillRect(cabX+3*s, y-h+2*s, cabW-6*s, h*.3);
+    if(c.type==="police"){ ctx.fillStyle="#13306b"; ctx.fillRect(x-L/2, y-h*.42, L, 2.5*s); }
+    if(c.type==="ambulance"){ ctx.fillStyle="#d81e2c"; ctx.fillRect(x-L/2, y-h*.4, L, 2.5*s); }
+    if(c.type==="taxi"){ ctx.fillStyle="#fff3c4"; ctx.fillRect(x-4*s, y-h-3*s, 8*s, 3*s); }
+    // sirenas
+    if(c.type==="police" || c.type==="ambulance"){
+      const ph = Math.floor(t*8)%2;
+      ctx.fillStyle = c.type==="police" ? (ph ? "#ff2a3d" : "#2f7bff") : (ph ? "#ff2a3d" : "#ffffff");
+      ctx.fillRect(x-6*s, y-h-3*s, 12*s, 3*s);
+    }
+    // ruedas
+    ctx.fillStyle = "#000";
+    [-.3,.3].forEach(o=>{ ctx.beginPath(); ctx.arc(x+o*L, y-3*s, 3.4*s, 0, 7); ctx.fill(); });
+    // luces
+    ctx.fillStyle = "#eaf4ff"; ctx.fillRect(x + d*L/2 - (d>0?2:0)*s, y-h*.55, 2*s, 2.5*s);
+    ctx.fillStyle = "#ff2a3d"; ctx.fillRect(x - d*L/2 - (d>0?0:2)*s, y-h*.55, 2*s, 2.5*s);
+  }
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,y,w,h,r) : ctx.rect(x,y,w,h); ctx.fill(); }
+
+  function carGlows(c, k){
+    const s=c.s, d=c.dir, fx=c.x + d*c.len/2, fy=c.y - 13*s*.5;
+    const beam = ctx.createLinearGradient(fx, fy, fx + d*90*s, fy);
+    beam.addColorStop(0, `rgba(220,236,255,${.32*k})`); beam.addColorStop(1, "rgba(220,236,255,0)");
+    ctx.fillStyle = beam;
+    ctx.beginPath(); ctx.moveTo(fx, fy-2); ctx.lineTo(fx + d*90*s, fy-12*s); ctx.lineTo(fx + d*90*s, fy+10*s); ctx.closePath(); ctx.fill();
+    glow(c.x - d*c.len/2, fy, 12*s, `rgba(255,42,61,${.45*k})`);
+    if(c.type==="police" || c.type==="ambulance"){
+      const ph = Math.floor(t*8)%2;
+      const col = c.type==="police" ? (ph ? "255,42,61" : "47,123,255") : (ph ? "255,42,61" : "230,240,255");
+      glow(c.x, c.y - 16*s, 170, `rgba(${col},${.42*k})`);
+    }
+  }
+  function glow(x,y,r,col){
+    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,col); g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.fillRect(x-r,y-r,r*2,r*2);
+  }
+
+  /* ---------- eventos de la calle ---------- */
+  const EVENTS = {
+    chase(){
+      setRadio("Persecución policial bajando por la 5ta Avenida");
+      const lane = Math.random()<.5 ? 0 : 1;
+      spawnCar(lane, undefined, "flee");
+      after(.7, ()=> spawnCar(lane, undefined, "police"));
+      after(1.5, ()=> spawnCar(lane, undefined, "police"));
+    },
+    ambulance(){
+      setRadio("Ambulancia de Auren Medical en camino a Harlem");
+      spawnCar(Math.random()<.5 ? 0 : 1, undefined, "ambulance");
+    },
+    train(){
+      setRadio("Pasa el tren de la línea 7 por Queens");
+      const dir = Math.random()<.5 ? 1 : -1, carL = mobile ? 70 : 96, n = 6;
+      train = {dir, carL, n, x: dir>0 ? -carL*n - 20 : W + 20, speed: mobile ? 360 : 520};
+    },
+    heli(){
+      setRadio("Helicóptero de la policía sobre Midtown");
+      const dir = Math.random()<.5 ? 1 : -1;
+      heli = {dir, x: dir>0 ? -60 : W+60, y: H*rnd(.12,.2), speed: rnd(55,80), sweep: Math.random()*6};
+    },
+    plane(){
+      setRadio("Vuelo de llegada aterrizando en JFK");
+      const dir = Math.random()<.5 ? 1 : -1;
+      plane = {dir, x: dir>0 ? -20 : W+20, y: H*rnd(.06,.13), speed: rnd(45,65)};
+    },
+    blackout(){
+      setRadio("Apagón en un edificio de Washington Heights");
+      const L = layers[2];
+      const list = L.blds.filter(b=>b.windows.length > 25);
+      if(!list.length) return;
+      const b = pick(list), before = b.windows.map(w=>w.on);
+      // parpadeo y se va la luz
+      b.windows.forEach(w=> setWindow(L, w, true));
+      after(.12, ()=> b.windows.forEach(w=> setWindow(L, w, false)));
+      after(.25, ()=> b.windows.forEach(w=> setWindow(L, w, Math.random()<.5)));
+      after(.4,  ()=> b.windows.forEach(w=> setWindow(L, w, false)));
+      after(rnd(5,8), ()=> b.windows.forEach((w,i)=> after(Math.random()*1.6, ()=> setWindow(L, w, before[i] || Math.random()<.3))));
+    },
+    wave(){
+      setRadio("Se encienden las oficinas en Wall Street");
+      const L = layers[Math.random()<.6 ? 2 : 1];
+      const list = L.blds.filter(b=>b.windows.length > 20);
+      if(!list.length) return;
+      const b = pick(list);
+      const rows = [...new Set(b.windows.map(w=>w.y))].sort((a,c)=>c-a);
+      rows.forEach((y,i)=> after(i*.09, ()=> b.windows.filter(w=>w.y===y).forEach(w=> setWindow(L, w, true))));
+      after(rows.length*.09 + rnd(4,7), ()=> b.windows.forEach(w=> after(Math.random()*3, ()=> setWindow(L, w, Math.random()<L.cfg.lit))));
+    },
+    rain(){
+      setRadio("Empieza a llover en Manhattan");
+      rainTarget = 1;
+      after(rnd(14,20), ()=>{ rainTarget = 0; setRadio("Para la lluvia, las calles siguen mojadas"); });
+      [3,8,12].forEach(s=> after(s + rnd(0,2), ()=>{ if(rainTarget) { flash = 1; after(.12, ()=> flash = .7); } }));
+    }
+  };
+
+  function triggerEvent(){
+    const options = Object.keys(EVENTS).filter(k=>{
+      if(k===lastEvent) return false;
+      if(k==="train" && train) return false;
+      if(k==="heli" && heli) return false;
+      if(k==="plane" && plane) return false;
+      if(k==="rain" && rainTarget) return false;
+      return true;
+    });
+    const k = pick(options); lastEvent = k; EVENTS[k]();
+  }
+
+  /* ---------- actualización ---------- */
+  function update(dt){
+    t += dt;
+    for(let i=timers.length-1;i>=0;i--) if(timers[i].at <= t){ const f = timers[i].fn; timers.splice(i,1); f(); }
+    nextEvent -= dt;
+    if(nextEvent <= 0){ triggerEvent(); nextEvent = rnd(7,13); }
+
+    // ventanas prendiendo y apagando
+    const rate = dt * (mobile ? 6 : 12);
+    const toggles = Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0);
+    for(let i=0;i<toggles;i++){
+      const L = layers[Math.random()<.5 ? 2 : Math.random()<.7 ? 1 : 0];
+      const w = pick(L.windows); if(!w) continue;
+      if(w.on) setWindow(L, w, false);
+      else if(Math.random() < L.cfg.lit/(1-L.cfg.lit)) setWindow(L, w, true);
+    }
+
+    updateCars(dt);
+    mx += (tmx - mx) * Math.min(1, dt*3);
+
+    if(train){ train.x += train.dir*train.speed*dt; if(train.dir>0 ? train.x > W+20 : train.x < -train.carL*train.n-20) train = null;
+      else if(Math.random()<dt*10) sparks.push({x: train.x + Math.random()*train.carL*train.n, y: trackY, vx: rnd(-40,40), vy: rnd(-80,-20), life: .35}); }
+    sparks.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=300*dt; p.life-=dt; }); sparks = sparks.filter(p=>p.life>0);
+
+    if(heli){ heli.x += heli.dir*heli.speed*dt; heli.sweep += dt*.9; if(heli.x < -120 || heli.x > W+120) heli = null; }
+    if(plane){ plane.x += plane.dir*plane.speed*dt; if(plane.x < -40 || plane.x > W+40) plane = null; }
+
+    // vapor de la chimenea de Con Ed
+    if(Math.random() < dt*14) steam.push({x: W*.66 + rnd(-2,2), y: 0, r: rnd(3,5), a: .14, vx: rnd(6,16), vy: rnd(-34,-22)});
+    steam.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=dt*8; p.a-=dt*.05; }); steam = steam.filter(p=>p.a>0);
+
+    // lluvia
+    rain += (rainTarget - rain) * Math.min(1, dt*.8);
+    const want = Math.round(rain * (mobile ? 110 : 240));
+    while(drops.length < want) drops.push({x: Math.random()*(W+100), y: Math.random()*-H, v: rnd(700,1000)});
+    if(drops.length > want) drops.length = want;
+    drops.forEach(d=>{ d.y += d.v*dt; d.x -= d.v*dt*.18; if(d.y > H){ d.y = rnd(-60,0); d.x = Math.random()*(W+100); } });
+    flash = Math.max(0, flash - dt*3);
+
+    // farolas y neón que fallan
+    lamps.forEach(l=>{ if(l.flick > 0) l.flick -= dt; else if(Math.random() < dt*.03) l.flick = rnd(.6,1.6); });
+    if(neon){ if(neon.flicker > 0) neon.flicker -= dt; else if(Math.random() < dt*.15){ neon.flicker = rnd(.2,.7); neon.off = Math.random()<.5 ? (Math.random()*5|0) : -1; } }
+  }
+
+  /* ---------- dibujo ---------- */
+  function draw(){
+    const sy = Math.min(scrollY, H*1.5);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = skyGrad; ctx.fillRect(0,0,W,H);
+
+    // estrellas y luna
+    if(rain < .5){
+      stars.forEach(s=>{ ctx.globalAlpha = (.35 + .35*Math.sin(t*1.5 + s.p)) * (1-rain); ctx.fillStyle = "#cfe3ff"; ctx.fillRect(s.x, s.y - sy*.01, s.r, s.r); });
+      ctx.globalAlpha = 1 - rain;
+      glow(W*.86, H*.12 - sy*.015, 70, "rgba(140,196,255,.12)");
+      ctx.fillStyle = "#dbe8ff"; ctx.beginPath(); ctx.arc(W*.86, H*.12 - sy*.015, 16, 0, 7); ctx.fill();
+      ctx.fillStyle = "#040a17"; ctx.beginPath(); ctx.arc(W*.86 + 7, H*.12 - 4 - sy*.015, 14, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // avión
+    if(plane){
+      const blink = Math.floor(t*1.6)%2;
+      ctx.fillStyle = "#1a2a4a"; ctx.fillRect(plane.x-8, plane.y-1, 16, 2);
+      ctx.fillStyle = "#ff2a3d"; ctx.fillRect(plane.x - plane.dir*8, plane.y-1, 2, 2);
+      if(blink){ ctx.fillStyle = "#ffffff"; ctx.fillRect(plane.x + plane.dir*7, plane.y-1, 2, 2); }
+    }
+
+    // capas de edificios con parallax
+    layers.forEach(L=>{
+      ctx.drawImage(L.canvas, -30 + mx*12*L.cfg.mpar, -sy*L.cfg.par, (W+60), H);
+    });
+    const nearOff = -sy*layers[2].cfg.par, nearX = -30 + mx*12;
+
+    // antenas con luz roja
+    if(Math.floor(t*1.2)%2===0) layers[2].blds.forEach(b=>{ if(b.antenna){ ctx.fillStyle="#ff2a3d"; ctx.beginPath(); ctx.arc(b.antenna.x + nearX + 30 - 30, b.antenna.y + nearOff, 2.2, 0, 7); ctx.fill(); } });
+
+    // neón vertical AUREN
+    if(neon){
+      const nx = neon.x + nearX, ny = neon.y + nearOff;
+      ctx.fillStyle = "#050b18"; ctx.fillRect(nx - 2, ny - 4, 22, 96);
+      ctx.font = "900 15px 'Big Shoulders Display', Impact, sans-serif"; ctx.textAlign = "center";
+      "AUREN".split("").forEach((ch,i)=>{
+        const dark = neon.flicker > 0 && (neon.off === i || (neon.off === -1 && Math.random()<.5));
+        ctx.fillStyle = dark ? "#16305e" : "#8CC4FF";
+        ctx.fillText(ch, nx + 9, ny + 13 + i*18);
+      });
+    }
+
+    // helicóptero
+    if(heli){
+      const blink = Math.floor(t*2)%2;
+      ctx.fillStyle = "#0b1426";
+      ctx.beginPath(); ctx.ellipse(heli.x, heli.y, 13, 6, 0, 0, 7); ctx.fill();
+      ctx.fillRect(heli.x - heli.dir*24, heli.y-2, 16, 3);
+      ctx.fillStyle = "rgba(160,190,230,.5)"; ctx.fillRect(heli.x - 18 + Math.sin(t*40)*3, heli.y - 9, 36, 1.5);
+      if(blink){ ctx.fillStyle = "#ff2a3d"; ctx.fillRect(heli.x - heli.dir*25, heli.y-3, 2.5, 2.5); }
+    }
+
+    ctx.save(); ctx.translate(0, nearOff);
+
+    // vía elevada del tren
+    ctx.fillStyle = "#08101f"; ctx.fillRect(0, trackY, W, 7);
+    ctx.fillStyle = "#16233d"; ctx.fillRect(0, trackY, W, 1.5);
+    for(let x = (nearX % 110 + 110) % 110 - 110; x < W + 110; x += 110){
+      ctx.fillStyle = "#060c18"; ctx.fillRect(x, trackY+7, 6, groundY - trackY - 7);
+      ctx.beginPath(); ctx.moveTo(x-14, trackY+7); ctx.lineTo(x+20, trackY+7); ctx.lineTo(x+6, trackY+20); ctx.lineTo(x, trackY+20); ctx.fill();
+    }
+    if(train){
+      for(let i=0;i<train.n;i++){
+        const cx = train.x + i*train.carL;
+        ctx.fillStyle = "#1b2a45"; ctx.fillRect(cx+2, trackY-24, train.carL-4, 22);
+        ctx.fillStyle = "#8a97ad"; ctx.fillRect(cx+2, trackY-6, train.carL-4, 2);
+        ctx.fillStyle = "#cfe3ff";
+        for(let wx = cx+8; wx < cx+train.carL-14; wx += 13) ctx.fillRect(wx, trackY-19, 8, 7);
+      }
+      const head = train.dir>0 ? train.x + train.carL*train.n - 4 : train.x + 2;
+      ctx.fillStyle = "#fff6d8"; ctx.fillRect(head, trackY-12, 3, 4);
+      // círculo de la línea 7
+      ctx.fillStyle = "#3D7BF2"; ctx.beginPath(); ctx.arc(head - train.dir*16, trackY-14, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "900 9px 'Big Shoulders Display', sans-serif"; ctx.textAlign="center"; ctx.fillText("7", head - train.dir*16, trackY-11);
+    }
+    sparks.forEach(p=>{ ctx.fillStyle = `rgba(255,236,170,${p.life*2.5})`; ctx.fillRect(p.x, p.y, 2, 2); });
+
+    // acera y calle
+    ctx.fillStyle = "#0b1222"; ctx.fillRect(0, groundY-2, W, 8);
+    ctx.fillStyle = "#04070e"; ctx.fillRect(0, groundY+6, W, H - groundY + 400);
+    ctx.fillStyle = "rgba(140,160,200,.22)";
+    const midY = groundY + (H-groundY)*.56;
+    for(let x = -40; x < W; x += 46) ctx.fillRect(x, midY, 22, 2);
+    if(rain > .05){ // reflejo mojado
+      const g = ctx.createLinearGradient(0, groundY, 0, H);
+      g.addColorStop(0, `rgba(61,123,242,${.12*rain})`); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(0, groundY+6, W, H-groundY);
+    }
+
+    // farolas
+    lamps.forEach(l=>{
+      ctx.fillStyle = "#0e1830"; ctx.fillRect(l.x, groundY-58, 3, 58); ctx.fillRect(l.x, groundY-58, 14, 3);
+      const on = !(l.flick > 0 && Math.random() < .5);
+      ctx.fillStyle = on ? "#e6f1ff" : "#2a3854"; ctx.fillRect(l.x+10, groundY-55, 6, 3);
+      l.on = on;
+    });
+
+    // semáforo
+    const tlx = W*.4, cycle = t % 14, light = cycle < 6 ? 2 : cycle < 8 ? 1 : 0;
+    ctx.fillStyle = "#0e1830"; ctx.fillRect(tlx, groundY-50, 3, 50);
+    ctx.fillStyle = "#05080f"; ctx.fillRect(tlx-3, groundY-74, 9, 26);
+    ["#ff2a3d","#ffb020","#2bd67b"].forEach((c,i)=>{ ctx.fillStyle = i===light ? c : "#141c2c"; ctx.beginPath(); ctx.arc(tlx+1.5, groundY-69+i*8, 2.6, 0, 7); ctx.fill(); });
+
+    // chimenea de vapor (Con Ed)
+    const sx = W*.66, sbase = groundY + (H-groundY)*.2;
+    for(let i=0;i<4;i++){ ctx.fillStyle = i%2 ? "#f4f8ff" : "#ff7a1a"; ctx.fillRect(sx-6+i*.8, sbase-26+i*6.5, 12-i*1.6, 6.5); }
+    steam.forEach(p=>{ ctx.fillStyle = `rgba(190,206,230,${p.a})`; ctx.beginPath(); ctx.arc(sx + p.x - W*.66, sbase - 26 + p.y, p.r, 0, 7); ctx.fill(); });
+
+    cars.forEach(drawCar);
+    ctx.restore();
+
+    // lluvia
+    if(drops.length){
+      ctx.strokeStyle = `rgba(170,200,240,${.35*rain})`; ctx.lineWidth = 1; ctx.beginPath();
+      drops.forEach(d=>{ ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + 4, d.y - 18); }); ctx.stroke();
+      ctx.fillStyle = `rgba(4,10,23,${.25*rain})`; ctx.fillRect(0,0,W,H);
+    }
+
+    // oscurecer al bajar para que se lea el contenido
+    const dim = .08 + Math.min(scrollY / (H*.9), 1) * .5;
+    ctx.fillStyle = `rgba(0,0,0,${dim})`; ctx.fillRect(0,0,W,H);
+
+    // luces (encima, para que se vean aunque esté oscuro)
+    const k = 1 - dim*.4;
+    ctx.globalCompositeOperation = "lighter";
+    ctx.save(); ctx.translate(0, nearOff);
+    lamps.forEach(l=>{ if(l.on) glow(l.x+13, groundY-50, 70, `rgba(170,205,255,${.16*k})`); });
+    cars.forEach(c=> carGlows(c, k));
+    if(train) glow(train.x + train.carL*train.n/2, trackY-14, train.carL*train.n*.45, `rgba(170,205,255,${.07*k})`);
+    ctx.restore();
+    if(neon){
+      const nx = neon.x + nearX + 9, ny = neon.y + nearOff + 44;
+      const nk = neon.flicker > 0 ? .4 : 1;
+      glow(nx, ny, 70, `rgba(61,123,242,${.32*k*nk})`);
+    }
+    if(heli){
+      const gx = heli.x + Math.sin(heli.sweep)*Math.min(220, W*.25), gy = groundY + nearOff;
+      const cone = ctx.createLinearGradient(heli.x, heli.y, gx, gy);
+      cone.addColorStop(0, `rgba(220,235,255,${.28*k})`); cone.addColorStop(1, `rgba(220,235,255,${.04*k})`);
+      ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(heli.x-2, heli.y+4); ctx.lineTo(gx-48, gy); ctx.lineTo(gx+48, gy); ctx.lineTo(heli.x+2, heli.y+4); ctx.closePath(); ctx.fill();
+      glow(gx, gy, 60, `rgba(220,235,255,${.18*k})`);
+    }
+    if(flash > 0){ ctx.fillStyle = `rgba(200,220,255,${flash*.18})`; ctx.fillRect(0,0,W,H); }
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  /* ---------- bucle ---------- */
+  function loop(now){
+    if(!running) return;
+    const dt = Math.min((now - last)/1000, .05); last = now;
+    update(dt); draw();
+    requestAnimationFrame(loop);
+  }
+  function start(){ if(running || paused || reduce) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
+  function stop(){ running = false; }
+
+  build(); draw();
+  if(reduce){ paused = true; setRadio("Animación en pausa (movimiento reducido)"); pauseIcon.setAttribute("d","M8 5v14l11-7z"); }
+  else start();
+
+  addEventListener("scroll", ()=>{ scrollY = window.scrollY; if(!running) draw(); }, {passive:true});
+  addEventListener("pointermove", e=>{ if(e.pointerType==="mouse") tmx = (e.clientX / W - .5) * 2; }, {passive:true});
+  let rt; addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if(window.innerWidth !== lastW || Math.abs(window.innerHeight - H) > 160){ build(); draw(); } }, 200); });
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden) stop(); else start(); });
+  pauseBtn.addEventListener("click", ()=>{
+    paused = !paused;
+    pauseBtn.setAttribute("aria-label", paused ? "Reanudar animación de la ciudad" : "Pausar animación de la ciudad");
+    pauseBtn.title = paused ? "Reanudar ciudad" : "Pausar ciudad";
+    pauseIcon.setAttribute("d", paused ? "M8 5v14l11-7z" : "M7 5h3v14H7zM14 5h3v14h-3z");
+    if(paused) stop(); else start();
+  });
+  // redibuja cuando cargue la fuente del neón
+  document.fonts && document.fonts.ready.then(()=>{ if(!running) draw(); });
+})();
+</script>
+</body>
+</html>

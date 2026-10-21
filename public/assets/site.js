@@ -20,6 +20,12 @@ window.AUREN_CONFIG = {
     { name: "Streamer1", platform: "twitch", role: "Policía de Auren" },
     { name: "Streamer2", platform: "kick",   role: "Mecánico del bloque" },
     { name: "Streamer3", platform: "twitch", role: "EMS Auren Medical" }
+  ],
+  // The GOATs: los owners de Auren. La foto, el banner y el nombre salen solos de su Discord.
+  goats: [
+    { id: "1270133887372230718", name: "Gandy",       rank: "Owner principal",         desc: "El mérito principal de Auren RP y la cabeza de la ciudad.", main: true },
+    { id: "457432500768210945",  name: "RichDinero",  rank: "Segundo owner principal", desc: "Encargado de los ingresos, los negocios y el progreso del servidor." },
+    { id: "808082230320693338",  name: "MagicBullet", rank: "Owner",                   desc: "Owner de Auren RP." }
   ]
 };
 /* ------------------------------------------------------------------ */
@@ -80,7 +86,7 @@ window.AUREN_CONFIG = {
   /* ---------- cabecera ---------- */
   const links = [
     ["home#jugar", "index.html#jugar", "Cómo jugar"],
-    ["home#directos", "index.html#directos", "Directos"],
+    ["streamers", "streamers.html", "Streamers"],
     ["home#comunidad", "index.html#comunidad", "Comunidad"],
     ["normativas", "normativas.html", "Normativas"],
     ["ayuda", "ayuda.html", "Ayuda"]
@@ -143,7 +149,7 @@ window.AUREN_CONFIG = {
         </div>
         <div class="foot-col"><h4>Servidor</h4><ul>
           <li><a href="index.html#jugar">Cómo jugar</a></li>
-          <li><a href="index.html#directos">Directos</a></li>
+          <li><a href="streamers.html">Streamers</a></li>
           <li><a href="normativas.html">Normativas</a></li>
           <li><a href="#" data-connect>Conectar</a></li></ul></div>
         <div class="foot-col"><h4>Cuenta</h4><ul>
@@ -267,4 +273,9 @@ window.AUREN_CONFIG = {
 
   window.Auren = { config:C, esc, toast, copy, avatarHTML, statusPill, user:userPromise, stats:statsPromise, getPref,
     isAuthReady: ()=> authReady, loginHref, store };
+
+  // GandyDev, el asistente que camina por la web
+  if(!document.querySelector('script[src$="gandy.js"]')){
+    const gs = document.createElement("script"); gs.src = "assets/gandy.js"; gs.defer = true; document.body.appendChild(gs);
+  }
 })();

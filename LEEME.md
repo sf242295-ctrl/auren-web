@@ -3,18 +3,21 @@
 ```
 auren-worker/
 ├── wrangler.jsonc            ← configuración de Cloudflare (no lo toques)
-├── src/worker.js             ← login con Discord, estadísticas y canal en vivo del staff (no lo toques)
+├── src/worker.js             ← login con Discord, estadísticas, panel del staff, GandyDev y streamers (no lo toques)
 └── public/                   ← LA WEB
     ├── index.html            ← portada (guía, números en vivo, directos…)
     ├── normativas.html       ← reglas con buscador
     ├── ayuda.html            ← preguntas frecuentes
     ├── panel.html            ← Mi cuenta
-    ├── staff.html            ← PANEL DEL STAFF (en vivo con el admin menu)
+    ├── streamers.html        ← STREAMERS: en directo, top por seguidores y el más activo
+    ├── staff.html            ← PANEL DEL STAFF (en vivo con el admin menu + monitor de pantallas)
     ├── privacidad.html, terminos.html
     ├── assets/site.js        ← CONFIGURACIÓN: Discord, cfx.re, streamers, frases…
     ├── assets/site.css       ← colores, letra y modos de lectura
     ├── assets/city.js        ← la ciudad animada del fondo
     ├── assets/staff.js       ← lógica del panel del staff
+    ├── assets/gandy.js       ← GandyDev, el asistente que camina y salta por la web
+    ├── assets/tour.js        ← recorrido de bienvenida (abre The GOATs)
     ├── data/normativas.js    ← AQUÍ editas las reglas
     └── data/ayuda.js         ← AQUÍ editas las preguntas frecuentes
 ```
@@ -34,6 +37,54 @@ En GitHub abre el archivo → lápiz (Edit) → cambia → **Commit changes**. E
 | `SESSION_SECRET` | 40+ letras y números al azar | Secret |
 | `DISCORD_GUILD_ID` | ID de tu servidor de Discord (opcional) | Text |
 | `ADMIN_BRIDGE_KEY` | La clave de `web_panel.key` en `auren_admin/config/auren_server.json` | **Secret** |
+| `DISCORD_BOT_TOKEN` | Token de tu bot de Discord (el mismo bot de Auren sirve) | **Secret** |
+| `WEB_ADMIN_IDS` | IDs de Discord de los admins de la web, separados por comas | Text |
+| `WEB_ADMIN_ROLE_IDS` | (opcional) IDs de roles de Discord que también gestionan streamers | Text |
+| `STREAMER_ROLE_ID` | (opcional) ya viene puesto `1553781042383552687` | Text |
+| `TWITCH_CLIENT_ID` | Client ID de una app de dev.twitch.tv | **Secret** |
+| `TWITCH_CLIENT_SECRET` | Client Secret de esa app | **Secret** |
+| `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | (opcional) app de kick.com para detectar directos de Kick | **Secret** |
+| `GOAT_IDS` | (opcional) IDs de Discord de The GOATs; ya vienen puestos Gandy, RichDinero y MagicBullet | Text |
+
+Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID` tiene que estar puesto.
+
+## Streamers (`/streamers`)
+- La lista sale sola de las personas con el rol **1553781042383552687** en tu Discord, con su foto y su apodo.
+- **Bot de Discord:** discord.com/developers → tu bot → *Bot* → activa **Server Members Intent**. El bot tiene
+  que estar dentro de tu servidor. Copia su token como Secret `DISCORD_BOT_TOKEN` (nunca en GitHub ni en el chat).
+- **Admins de la web:** pon tu ID de Discord (y el de quien quieras) en `WEB_ADMIN_IDS`. Al entrar a
+  /streamers con sesión iniciada sale el botón **Gestionar streamers**: ahí pegas el enlace de Twitch,
+  Kick, YouTube y TikTok de cada uno y marcas quién va **Destacado**.
+- **Twitch (directos y seguidores):** dev.twitch.tv/console → *Register Your Application* → nombre "Auren Web",
+  OAuth Redirect `https://auren-rp.sf242295.workers.dev`, categoría *Website Integration*, cliente *Confidential*.
+  Copia el Client ID y genera un Client Secret.
+- **Kick (opcional):** kick.com → Settings → Developer → crea una app y copia Client ID y Secret.
+  Los seguidores de Kick se leen de su página pública y a veces Kick lo bloquea; los directos sí van por la API oficial.
+- Cada 10 minutos la web actualiza sola quién está en vivo, los seguidores y las horas en directo
+  (el "más activo" es quien más horas hizo en los últimos 7 días, contando desde que pones los canales).
+
+## Recorrido de bienvenida y The GOATs
+- La primera vez que alguien abre la portada, GandyDev le enseña la web en 8 pasos con una barra de progreso.
+  Al terminar se abre **The GOATs** (portada, al final): Gandy destacado en dorado como Owner principal y mérito
+  principal, RichDinero (segundo owner principal: ingresos, negocios y progreso) y MagicBullet (owner).
+- La foto (también animada), el banner, el apodo, la decoración de avatar y desde cuándo están en Discord salen
+  solos de su Discord con el bot (`DISCORD_BOT_TOKEN`). La "Sobre mí" de Discord no se puede leer con un bot,
+  por eso el texto de cada uno se escribe en `assets/site.js` → `goats`.
+- Si alguien salta el recorrido, la sección sale bloqueada con su barra de progreso y un botón para abrirla.
+  Se puede repetir el recorrido diciéndole "tutorial" a GandyDev.
+
+## GandyDev
+- El muñequito camina, salta encima de las tarjetas y botones, baila, da vueltas, mira el cursor y hasta se
+  duerme si nadie le hace caso. Lo puedes arrastrar y lanzar (si lo tocas en el aire, lo atrapas).
+- Al tocarlo te saluda con animación y abre el chat. Escribe sus respuestas letra a letra mientras mueve la boca,
+  y tiene un botón de altavoz para que además las lea en voz alta.
+- Entiende jerga ("klk", "qlq"…) y faltas de ortografía: si escribes "robbo" o "polisia" te dice
+  "¿Quisiste decir «robo»?" y te responde sobre eso; si no encuentra nada, te propone palabras parecidas.
+- Responde sobre las reglas y la web y te da accesos directos. Cita el código de la regla (por ejemplo `CON-04`) con enlace.
+- Usa la IA gratis de Cloudflare (Workers AI, 10.000 "neuronas" al día en el plan Free; da para cientos de preguntas).
+  Ya está activada en `wrangler.jsonc` (`"ai"`). Si un día se acaba el cupo, GandyDev sigue respondiendo con
+  el buscador de reglas de la web.
+- Solo usa las reglas de `data/normativas.js` y la ayuda de `data/ayuda.js`: si cambias las reglas, él lo sabe al momento.
 
 ## Panel del staff
 - Está en `/staff` (también en el pie de página → Cuenta → Panel del staff).
@@ -42,6 +93,8 @@ En GitHub abre el archivo → lápiz (Edit) → cambia → **Commit changes**. E
 - La conexión la abre el servidor de FiveM hacia la web: no hay que abrir puertos.
 - Si el servidor está apagado, el panel lo dice y se conecta solo cuando vuelva.
 - El canal en vivo usa Durable Objects de Cloudflare, incluidos gratis en el plan Free.
+- **Monitor de pantallas:** en el menú del panel. Elige hasta 4 jugadores y ves sus pantallas cada 6 segundos;
+  pulsa una para verla en grande. Hace falta el permiso de monitoreo o de spectate en tu rango. Queda en los logs.
 
 ## Lectura y accesibilidad
 El botón **AA** de arriba abre las opciones de lectura: tamaño de letra, letra fácil de leer

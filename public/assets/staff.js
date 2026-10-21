@@ -33,7 +33,8 @@
     carcel:'<path d="M5 3v18M10 3v18M15 3v18M20 3v18M3 3h18M3 21h18"/>',
     registros:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8"/>',
     staff:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',
-    servidor:'<path d="M2 4h20v6H2zM2 14h20v6H2zM6 7h.01M6 17h.01"/>'
+    servidor:'<path d="M2 4h20v6H2zM2 14h20v6H2zM6 7h.01M6 17h.01"/>',
+    monitor:'<path d="M2 4h20v13H2zM8 21h8M12 17v4"/>'
   };
   const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
 
@@ -144,15 +145,16 @@
 
   /* ---------- estructura ---------- */
   const VIEWS = [
-    ["resumen", "Resumen", null],
-    ["jugadores", "Jugadores", null],
-    ["chats", "Chats y reportes", "chats.view"],
-    ["baneos", "Baneos", ["moderation.view.bans","player.unban","player.ban"]],
-    ["advertencias", "Advertencias", ["moderation.view.warnings","player.warn"]],
-    ["carcel", "Cárcel", ["moderation.view.jail","player.jail"]],
-    ["registros", "Registros", "logs.view"],
-    ["staff", "Staff", "staff.view"],
-    ["servidor", "Servidor", ["announcements.create","weather.change","console.execute","resources.read"]]
+    ["resumen", "Resumen", null, "Lo que pasa ahora mismo"],
+    ["jugadores", "Jugadores", null, "Lista en vivo y acciones"],
+    ["monitor", "Monitor de pantallas", ["player.monitoring","player.spectate"], "Ver pantallas en vivo"],
+    ["chats", "Chats y reportes", "chats.view", "Habla con jugadores y staff"],
+    ["baneos", "Baneos", ["moderation.view.bans","player.unban","player.ban"], "Quién está baneado"],
+    ["advertencias", "Advertencias", ["moderation.view.warnings","player.warn"], "Avisos a jugadores"],
+    ["carcel", "Cárcel", ["moderation.view.jail","player.jail"], "Presos ahora mismo"],
+    ["registros", "Registros", "logs.view", "Todo lo que hace el staff"],
+    ["staff", "Staff", "staff.view", "Actividad del equipo"],
+    ["servidor", "Servidor", ["announcements.create","weather.change","console.execute","resources.read"], "Anuncios, clima y consola"]
   ];
   const allowed = v => !v[2] || (Array.isArray(v[2]) ? canAny(...v[2]) : can(v[2]));
 
@@ -165,7 +167,7 @@
       ${RT.demo ? `<div class="demo-note" role="note"><b>Vista de demostración.</b> Los datos son de ejemplo y los botones no hacen nada. En tu web publicada en Cloudflare, el panel se conecta en vivo a tu servidor.</div>` : ""}
       <div class="adm">
         <nav class="card side" aria-label="Secciones del panel">
-          ${VIEWS.filter(allowed).map(([k,t])=>`<button type="button" data-view="${k}">${icon(k)}<span>${t}</span>${k==="chats"?'<span class="badge" id="chatBadge" hidden></span>':""}</button>`).join("")}
+          ${VIEWS.filter(allowed).map(([k,t,,d])=>`<button type="button" data-view="${k}">${icon(k)}<span class="lbl"><span>${t}</span><small>${d}</small></span>${k==="chats"?'<span class="badge" id="chatBadge" hidden></span>':""}</button>`).join("")}
         </nav>
         <section class="card view" id="view" aria-live="polite"></section>
       </div>`;
@@ -179,13 +181,14 @@
   function updateBadge(){ const b = $("#chatBadge"); if(b){ b.hidden = chatsUnread === 0; b.textContent = chatsUnread; } }
 
   function show(view){
+    WallScreens.stopAll();
     current = view;
     root.querySelectorAll("[data-view]").forEach(b=> b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false"));
     try{ history.replaceState(null, "", "#" + view); }catch{}
     const v = $("#view");
     v.onclick = null;
     v.innerHTML = `<p class="sub">Cargando…</p>`;
-    ({resumen:viewResumen, jugadores:viewJugadores, chats:viewChats, baneos:viewBaneos, advertencias:viewAdvertencias, carcel:viewCarcel, registros:viewRegistros, staff:viewStaff, servidor:viewServidor}[view] || viewResumen)(v);
+    ({resumen:viewResumen, jugadores:viewJugadores, monitor:viewMonitor, chats:viewChats, baneos:viewBaneos, advertencias:viewAdvertencias, carcel:viewCarcel, registros:viewRegistros, staff:viewStaff, servidor:viewServidor}[view] || viewResumen)(v);
   }
 
   async function run(method, data, okMsg){
@@ -200,7 +203,15 @@
   /* ---------- RESUMEN ---------- */
   let ov = null;
   async function viewResumen(v){
-    v.innerHTML = `<h2>Resumen</h2><p class="sub">Lo que pasa ahora mismo en Auren.</p>
+    const quick = [
+      ["jugadores", "Ver jugadores", "Busca a alguien y abre su ficha", true],
+      ["monitor", "Monitor de pantallas", "Mira en vivo lo que ven", canMonitor()],
+      ["chats", "Chats y reportes", "Responde a quien pide ayuda", can("chats.view")],
+      ["servidor", "Mandar un anuncio", "Un mensaje para toda la ciudad", can("announcements.create")],
+      ["registros", "Registros", "Qué ha hecho el staff", can("logs.view")]
+    ].filter(q=>q[3]);
+    v.innerHTML = `<h2>Resumen</h2><p class="sub">Lo que pasa ahora mismo en Auren. Todo se actualiza solo, no hace falta recargar.</p>
+      <div class="quick">${quick.map(q=>`<button class="qk" type="button" data-go="${q[0]}"><b>${q[1]}</b><span>${q[2]}</span></button>`).join("")}</div>
       <div class="tiles">
         <div class="tile"><b id="tPlayers">—</b><span>jugadores conectados</span></div>
         <div class="tile"><b id="tStaff">—</b><span>staff en el servidor</span></div>
@@ -213,6 +224,7 @@
       </div>
       ${can("logs.view") ? `<div class="box" style="margin-top:16px"><h3>Actividad del staff en vivo</h3><ul class="feed" id="feed"></ul></div>` : ""}`;
     renderFeed();
+    v.onclick = e=>{ const b = e.target.closest("[data-go]"); if(b) show(b.dataset.go); };
     try{
       ov = await RT.call("auren:overview");
       $("#tPlayers").textContent = `${ov.players}/${ov.maxPlayers}`;
@@ -233,7 +245,8 @@
   /* ---------- JUGADORES ---------- */
   const selected = new Set();
   function viewJugadores(v){
-    v.innerHTML = `<h2>Jugadores</h2><p class="sub">Lista en vivo. Pulsa “Gestionar” para ver su ficha y las acciones.</p>
+    v.innerHTML = `<h2>Jugadores</h2><p class="sub">Todos los que están conectados ahora, en vivo.</p>
+      <p class="howto"><b>Cómo se usa:</b> pulsa <b>Abrir ficha</b> para ver a un jugador y hacer cualquier acción. Para hacer algo con varios a la vez, marca sus casillas y usa la barra que aparece abajo.</p>
       <div class="bar">
         <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input class="input" id="pq" type="search" placeholder="Buscar por ID, nombre o trabajo" aria-label="Buscar jugadores" autocomplete="off"></div>
@@ -265,7 +278,7 @@
         <td><span class="two"><span>${esc(pChar(p) || p.name || "—")}</span><small>${esc(p.name || "")}</small></span></td>
         <td class="hide-sm">${esc(pJob(p) || "—")}</td>
         <td class="hide-sm">${p.groupLabel || p.group ? `<span class="tag">${esc(p.groupLabel || p.group)}</span>` : "—"}</td>
-        <td style="text-align:right"><button class="btn btn-ghost btn-sm" type="button" data-open="${pid(p)}">Gestionar</button></td>
+        <td style="text-align:right"><button class="btn btn-ghost btn-sm" type="button" data-open="${pid(p)}">Abrir ficha</button></td>
       </tr>`).join("") : `<tr><td colspan="6" class="empty">${players.size ? "Nadie coincide con la búsqueda." : "No hay jugadores conectados."}</td></tr>`;
     renderBulk();
   }
@@ -284,9 +297,10 @@
     b.hidden = selected.size === 0;
     if(!selected.size) return;
     const acts = BULK.filter(a=>can(a.perm));
-    b.innerHTML = `<b>${selected.size} seleccionados</b>${acts.map((a,i)=>`<button class="btn ${a.danger?"btn-danger":"btn-ghost"} btn-sm" type="button" data-bulk="${i}">${a.label}</button>`).join("")}<button class="btn btn-ghost btn-sm" type="button" data-clear>Quitar selección</button>`;
+    b.innerHTML = `<b>${selected.size} seleccionados</b>${canMonitor() ? '<button class="btn btn-primary btn-sm" type="button" data-watch>Ver sus pantallas</button>' : ""}${acts.map((a,i)=>`<button class="btn ${a.danger?"btn-danger":"btn-ghost"} btn-sm" type="button" data-bulk="${i}">${a.label}</button>`).join("")}<button class="btn btn-ghost btn-sm" type="button" data-clear>Quitar selección</button>`;
     b.onclick = e=>{
       if(e.target.closest("[data-clear]")){ selected.clear(); renderPlayersTable(); return; }
+      if(e.target.closest("[data-watch]")){ monitorIds = [...selected].slice(0,4); if(selected.size > 4) A.toast("Se muestran las primeras 4 pantallas."); show("monitor"); return; }
       const x = e.target.closest("[data-bulk]"); if(!x) return;
       const a = acts[Number(x.dataset.bulk)], targets = [...selected];
       actionDialog({...a, title:`${a.label} · ${targets.length} jugadores`, confirm:a.danger}, vals=> run("action:" + a.id, {...(a.data||{}), ...vals, targets}, `${a.label}: hecho.`));
@@ -352,37 +366,37 @@
   function playerActions(p){
     const id = pid(p);
     return [
-      {g:"Comunicación", id:"send_message", label:"Enviar mensaje", perm:"player.notify", fields:[{n:"message", l:"Mensaje", t:"textarea", req:true}], ok:"Mensaje enviado."},
-      {g:"Moderación", id:"warn", label:"Advertir", perm:"player.warn", fields:[{n:"reason", l:"Motivo", req:true}], ok:"Advertencia enviada.", note: cfg.maxWarnings ? `Con ${cfg.maxWarnings} advertencias el menú banea automáticamente.` : ""},
-      {g:"Moderación", id:"kick", label:"Expulsar", perm:"player.kick", danger:true, fields:[{n:"reason", l:"Motivo", req:true}], ok:"Jugador expulsado."},
-      {g:"Moderación", id:"ban", label:"Banear", perm:"player.ban", danger:true, fields:[{n:"reason", l:"Motivo", req:true},{n:"duration", l:"Duración", t:"select", opts:BAN_TIMES}], map:v=>({reason:v.reason, duration:Number(v.duration)}), ok:"Jugador baneado."},
-      {g:"Moderación", id:"jail", label:"Encarcelar", perm:"player.jail", fields:[{n:"reason", l:"Motivo", req:true},{n:"minutes", l:"Minutos", t:"number", min:1, v:10, req:true}, ...(cfg.jailCells?.length ? [{n:"cell", l:"Celda", t:"select", opts:cfg.jailCells}] : [])], map:v=>({reason:v.reason, duration:v.minutes*60000, cell:v.cell || cfg.jailCells?.[0], bucket:0}), ok:"Jugador encarcelado."},
-      {g:"Moderación", id:"freeze", label:"Congelar", perm:"player.freeze", data:{state:true}, ok:"Congelado."},
-      {g:"Moderación", id:"freeze", label:"Descongelar", perm:"player.freeze", data:{state:false}, ok:"Descongelado."},
-      {g:"Moderación", id:"handcuff", label:"Esposar", perm:"player.handcuff", data:{state:true}, ok:"Esposado."},
-      {g:"Moderación", id:"handcuff", label:"Quitar esposas", perm:"player.handcuff", data:{state:false}, ok:"Esposas quitadas."},
-      {g:"Salud", id:"revive", label:"Revivir", perm:"player.revive", ok:"Revivido."},
-      {g:"Salud", id:"heal", label:"Curar", perm:"player.heal", ok:"Curado."},
-      {g:"Salud", id:"give_armor", label:"Dar chaleco", perm:"player.give_armor", ok:"Chaleco dado."},
-      {g:"Salud", id:"give_food_and_water", label:"Dar comida y agua", perm:"player.give_food_and_water", ok:"Hecho."},
-      {g:"Salud", id:"kill", label:"Matar", perm:"player.kill", danger:true, confirm:true, ok:"Hecho."},
-      {g:"Posición", id:"teleport_last_location", label:"Devolver a su última posición", perm:"player.teleport", data:{keepVehicle:true}, ok:"Teletransportado."},
-      {g:"Posición", id:"teleport_to_coords", label:"Llevar a coordenadas", perm:"player.teleport", fields:[{n:"x", l:"X", t:"number", step:"any", req:true},{n:"y", l:"Y", t:"number", step:"any", req:true},{n:"z", l:"Z", t:"number", step:"any", req:true}], map:v=>({coords:{x:v.x, y:v.y, z:v.z}, keepVehicle:true}), ok:"Teletransportado."},
-      {g:"Posición", id:"routing_bucket", label:"Cambiar dimensión", perm:"player.routing_bucket", fields:[{n:"bucket", l:"Dimensión (0 = normal)", t:"number", min:0, v:0, req:true}], ok:"Dimensión cambiada."},
-      {g:"Dinero", id:"update_money_account", label:"Fijar saldo", perm:"player.manage_accounts", fields:[{n:"account", l:"Cuenta", t:"select", opts:()=> Object.keys(p._accounts || {money:1, bank:1, black_money:1}).map(k=>[k, {money:"Efectivo", bank:"Banco", black_money:"Dinero negro"}[k] || k])},{n:"amount", l:"Nuevo saldo", t:"number", min:0, req:true}], ok:"Saldo actualizado."},
-      {g:"Inventario", id:"give_item", label:"Dar objeto", perm:"inventory.give", fields:[{n:"item", l:"Objeto (nombre interno)", list:"itemList", req:true},{n:"amount", l:"Cantidad", t:"number", min:1, v:1, req:true}], extra:'<datalist id="itemList"></datalist>', ok:"Objeto entregado.", prep:fillItems},
-      {g:"Trabajo", id:"update_job", label:"Cambiar trabajo", perm:"player.update_job", fields:[{n:"job", l:"Trabajo", list:"jobList", req:true},{n:"grade", l:"Rango (número)", t:"number", min:0, v:0, req:true}], extra:'<datalist id="jobList"></datalist>', ok:"Trabajo actualizado.", prep:fillJobs},
-      {g:"Vehículos", id:"spawn_vehicle", label:"Darle un vehículo", perm:"vehicles.spawn", fields:[{n:"model", l:"Modelo", list:"vehList", req:true}], extra:'<datalist id="vehList"></datalist>', ok:"Vehículo creado.", prep:fillVehicles},
-      {g:"Vehículos", id:"fix_vehicle", label:"Reparar su vehículo", perm:"vehicles.repair", ok:"Reparado."},
-      {g:"Vehículos", id:"flip_vehicle", label:"Voltear su vehículo", perm:"vehicles.repair", ok:"Volteado."},
-      {g:"Vehículos", id:"give_vehicle_key", label:"Dar llave por matrícula", perm:"vehicles.give_key", fields:[{n:"plate", l:"Matrícula", req:true}], ok:"Llave entregada."},
-      {g:"Personaje", id:"change_ped_model", label:"Cambiar modelo", perm:"player.change_ped", fields:[{n:"model", l:"Modelo de ped", req:true}], ok:"Modelo cambiado."},
-      {g:"Personaje", id:"reset_ped_model", label:"Restaurar modelo", perm:"player.change_ped", ok:"Modelo restaurado."},
-      {g:"Castigos", id:"slap", label:"Bofetada", perm:"player.slap", ok:"Hecho."},
-      {g:"Castigos", id:"ragdoll", label:"Tirar al suelo", perm:"player.ragdoll", ok:"Hecho."},
-      {g:"Castigos", id:"burn", label:"Prender fuego", perm:"player.burn", danger:true, confirm:true, ok:"Hecho."},
-      {g:"Castigos", id:"explosion", label:"Explosión", perm:"player.explosion", danger:true, confirm:true, ok:"Hecho."},
-      {g:"Zona peligrosa", id:"delete_character", label:"Borrar personaje", perm:"player.delete_character", danger:true, typed:String(id), note:"Esto borra el personaje para siempre. No se puede deshacer.", ok:"Personaje borrado."}
+      {g:"Comunicación", id:"send_message", label:"Enviar mensaje", d:"Le aparece un mensaje privado del staff en pantalla.", perm:"player.notify", fields:[{n:"message", l:"Mensaje", t:"textarea", req:true}], ok:"Mensaje enviado."},
+      {g:"Moderación", id:"warn", label:"Advertir", d:"Queda guardado en su historial de advertencias.", perm:"player.warn", fields:[{n:"reason", l:"Motivo", req:true}], ok:"Advertencia enviada.", note: cfg.maxWarnings ? `Con ${cfg.maxWarnings} advertencias el menú banea automáticamente.` : ""},
+      {g:"Moderación", id:"kick", label:"Expulsar", d:"Lo saca del servidor. Puede volver a entrar.", perm:"player.kick", danger:true, fields:[{n:"reason", l:"Motivo", req:true}], ok:"Jugador expulsado."},
+      {g:"Moderación", id:"ban", label:"Banear", d:"No podrá entrar durante el tiempo que elijas.", perm:"player.ban", danger:true, fields:[{n:"reason", l:"Motivo", req:true},{n:"duration", l:"Duración", t:"select", opts:BAN_TIMES}], map:v=>({reason:v.reason, duration:Number(v.duration)}), ok:"Jugador baneado."},
+      {g:"Moderación", id:"jail", label:"Encarcelar", d:"Lo manda a una celda los minutos que digas.", perm:"player.jail", fields:[{n:"reason", l:"Motivo", req:true},{n:"minutes", l:"Minutos", t:"number", min:1, v:10, req:true}, ...(cfg.jailCells?.length ? [{n:"cell", l:"Celda", t:"select", opts:cfg.jailCells}] : [])], map:v=>({reason:v.reason, duration:v.minutes*60000, cell:v.cell || cfg.jailCells?.[0], bucket:0}), ok:"Jugador encarcelado."},
+      {g:"Moderación", id:"freeze", label:"Congelar", d:"No se puede mover hasta que lo descongeles.", perm:"player.freeze", data:{state:true}, ok:"Congelado."},
+      {g:"Moderación", id:"freeze", label:"Descongelar", d:"Vuelve a poder moverse.", perm:"player.freeze", data:{state:false}, ok:"Descongelado."},
+      {g:"Moderación", id:"handcuff", label:"Esposar", d:"Le pone esposas.", perm:"player.handcuff", data:{state:true}, ok:"Esposado."},
+      {g:"Moderación", id:"handcuff", label:"Quitar esposas", d:"Le quita las esposas.", perm:"player.handcuff", data:{state:false}, ok:"Esposas quitadas."},
+      {g:"Salud", id:"revive", label:"Revivir", d:"Lo levanta si está muerto o abatido.", perm:"player.revive", ok:"Revivido."},
+      {g:"Salud", id:"heal", label:"Curar", d:"Le llena la vida.", perm:"player.heal", ok:"Curado."},
+      {g:"Salud", id:"give_armor", label:"Dar chaleco", d:"Le pone el chaleco al máximo.", perm:"player.give_armor", ok:"Chaleco dado."},
+      {g:"Salud", id:"give_food_and_water", label:"Dar comida y agua", d:"Le llena el hambre y la sed.", perm:"player.give_food_and_water", ok:"Hecho."},
+      {g:"Salud", id:"kill", label:"Matar", d:"Mata al personaje al momento.", perm:"player.kill", danger:true, confirm:true, ok:"Hecho."},
+      {g:"Posición", id:"teleport_last_location", label:"Devolver a su última posición", d:"Lo regresa a donde estaba antes de un TP.", perm:"player.teleport", data:{keepVehicle:true}, ok:"Teletransportado."},
+      {g:"Posición", id:"teleport_to_coords", label:"Llevar a coordenadas", d:"Lo mueve a un punto exacto del mapa.", perm:"player.teleport", fields:[{n:"x", l:"X", t:"number", step:"any", req:true},{n:"y", l:"Y", t:"number", step:"any", req:true},{n:"z", l:"Z", t:"number", step:"any", req:true}], map:v=>({coords:{x:v.x, y:v.y, z:v.z}, keepVehicle:true}), ok:"Teletransportado."},
+      {g:"Posición", id:"routing_bucket", label:"Cambiar dimensión", d:"Lo pasa a otro mundo separado (0 es el normal).", perm:"player.routing_bucket", fields:[{n:"bucket", l:"Dimensión (0 = normal)", t:"number", min:0, v:0, req:true}], ok:"Dimensión cambiada."},
+      {g:"Dinero", id:"update_money_account", label:"Fijar saldo", d:"Cambia el dinero de una cuenta al número que pongas.", perm:"player.manage_accounts", fields:[{n:"account", l:"Cuenta", t:"select", opts:()=> Object.keys(p._accounts || {money:1, bank:1, black_money:1}).map(k=>[k, {money:"Efectivo", bank:"Banco", black_money:"Dinero negro"}[k] || k])},{n:"amount", l:"Nuevo saldo", t:"number", min:0, req:true}], ok:"Saldo actualizado."},
+      {g:"Inventario", id:"give_item", label:"Dar objeto", d:"Le añade un objeto a su inventario.", perm:"inventory.give", fields:[{n:"item", l:"Objeto (nombre interno)", list:"itemList", req:true},{n:"amount", l:"Cantidad", t:"number", min:1, v:1, req:true}], extra:'<datalist id="itemList"></datalist>', ok:"Objeto entregado.", prep:fillItems},
+      {g:"Trabajo", id:"update_job", label:"Cambiar trabajo", d:"Le pone un trabajo y un rango.", perm:"player.update_job", fields:[{n:"job", l:"Trabajo", list:"jobList", req:true},{n:"grade", l:"Rango (número)", t:"number", min:0, v:0, req:true}], extra:'<datalist id="jobList"></datalist>', ok:"Trabajo actualizado.", prep:fillJobs},
+      {g:"Vehículos", id:"spawn_vehicle", label:"Darle un vehículo", d:"Le aparece un vehículo al lado.", perm:"vehicles.spawn", fields:[{n:"model", l:"Modelo", list:"vehList", req:true}], extra:'<datalist id="vehList"></datalist>', ok:"Vehículo creado.", prep:fillVehicles},
+      {g:"Vehículos", id:"fix_vehicle", label:"Reparar su vehículo", d:"Arregla el vehículo en el que va.", perm:"vehicles.repair", ok:"Reparado."},
+      {g:"Vehículos", id:"flip_vehicle", label:"Voltear su vehículo", d:"Pone el vehículo sobre sus ruedas.", perm:"vehicles.repair", ok:"Volteado."},
+      {g:"Vehículos", id:"give_vehicle_key", label:"Dar llave por matrícula", d:"Le da la llave de un vehículo.", perm:"vehicles.give_key", fields:[{n:"plate", l:"Matrícula", req:true}], ok:"Llave entregada."},
+      {g:"Personaje", id:"change_ped_model", label:"Cambiar modelo", d:"Cambia el aspecto del personaje por otro modelo.", perm:"player.change_ped", fields:[{n:"model", l:"Modelo de ped", req:true}], ok:"Modelo cambiado."},
+      {g:"Personaje", id:"reset_ped_model", label:"Restaurar modelo", d:"Le devuelve su aspecto normal.", perm:"player.change_ped", ok:"Modelo restaurado."},
+      {g:"Castigos", id:"slap", label:"Bofetada", d:"Un golpe que lo empuja.", perm:"player.slap", ok:"Hecho."},
+      {g:"Castigos", id:"ragdoll", label:"Tirar al suelo", d:"Lo hace caer al suelo un momento.", perm:"player.ragdoll", ok:"Hecho."},
+      {g:"Castigos", id:"burn", label:"Prender fuego", d:"Le prende fuego al personaje.", perm:"player.burn", danger:true, confirm:true, ok:"Hecho."},
+      {g:"Castigos", id:"explosion", label:"Explosión", d:"Crea una explosión donde está.", perm:"player.explosion", danger:true, confirm:true, ok:"Hecho."},
+      {g:"Zona peligrosa", id:"delete_character", label:"Borrar personaje", d:"Borra el personaje para siempre.", perm:"player.delete_character", danger:true, typed:String(id), note:"Esto borra el personaje para siempre. No se puede deshacer.", ok:"Personaje borrado."}
     ].filter(a=>can(a.perm));
   }
 
@@ -397,13 +411,13 @@
       <div class="p-head"><span class="pid">${id}</span><div><h3 id="pTitle">${esc(pChar(base) || base.name || "Jugador " + id)}</h3><p>${esc(base.name || "")}${pJob(base) ? " · " + esc(pJob(base)) : ""}</p></div>
         <button class="icon-btn" type="button" data-close aria-label="Cerrar ficha"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div class="ptabs" role="tablist" aria-label="Ficha del jugador">
-        ${[["info","Información"],["acciones","Acciones"],["inventario","Inventario","inventory.view"],["vehiculos","Vehículos","vehicles.view"],["avisos","Advertencias","player.warn"]].filter(t=>!t[2]||can(t[2])).map(([k,t],i)=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${i===0}">${t}</button>`).join("")}
+        ${[["info","Información"],["acciones","Acciones"],["pantalla","Pantalla",["player.monitoring","player.spectate"]],["inventario","Inventario","inventory.view"],["vehiculos","Vehículos","vehicles.view"],["avisos","Advertencias","player.warn"]].filter(t=>!t[2]||(Array.isArray(t[2])?canAny(...t[2]):can(t[2]))).map(([k,t],i)=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${i===0}">${t}</button>`).join("")}
       </div>
       <div class="pbody" id="pBodyTab" role="tabpanel"></div>`;
     pdlg.querySelector("[data-close]").onclick = ()=> pdlg.close();
-    pdlg.onclose = ()=>{ openPlayerId = null; };
+    pdlg.onclose = ()=>{ openPlayerId = null; SheetScreens.stopAll(); };
     const tabs = pdlg.querySelector(".ptabs");
-    tabs.onclick = e=>{ const b = e.target.closest("[data-tab]"); if(!b) return; tabs.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected", x===b)); renderTab(b.dataset.tab); };
+    tabs.onclick = e=>{ const b = e.target.closest("[data-tab]"); if(!b) return; tabs.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected", x===b)); SheetScreens.stopAll(); renderTab(b.dataset.tab); };
     pdlg.showModal();
     renderTab("info");
 
@@ -436,13 +450,21 @@
         else if(tab === "acciones"){
           const acts = playerActions(base);
           const groups = [...new Set(acts.map(a=>a.g))];
-          box.innerHTML = groups.map(g=>`<div class="agroup"><h4>${g}</h4><div class="btns">${acts.map((a,i)=>a.g===g ? `<button class="btn ${a.danger?"btn-danger":"btn-ghost"} btn-sm" type="button" data-act="${i}">${a.label}</button>` : "").join("")}</div></div>`).join("") || `<p class="sub">Tu rango no tiene acciones sobre jugadores.</p>`;
+          box.innerHTML = groups.map(g=>`<div class="agroup"><h4>${g}</h4><div class="btns">${acts.map((a,i)=>a.g===g ? `<button class="acard${a.danger?" danger":""}" type="button" data-act="${i}"><b>${a.label}</b><span>${a.d||""}</span></button>` : "").join("")}</div></div>`).join("") || `<p class="sub">Tu rango no tiene acciones sobre jugadores.</p>`;
           box.onclick = e=>{
             const b = e.target.closest("[data-act]"); if(!b) return;
             const a = acts[Number(b.dataset.act)];
             actionDialog({...a, title:`${a.label} · ${pChar(base) || base.name || id}`}, vals=> run("action:" + a.id, {...(a.data||{}), ...vals, target:id}, a.ok));
             if(a.prep) a.prep();
           };
+        }
+        else if(tab === "pantalla"){
+          box.innerHTML = `<div class="screen"><div class="bar2"><span class="live-dot" aria-hidden="true"></span><b>En vivo · se actualiza cada 4 segundos</b><button class="btn btn-ghost btn-sm" type="button" id="shotNow">Capturar ahora</button></div><div class="shot" id="pShot"><span>Pidiendo la primera captura…</span></div></div>
+            <p class="howto">Ves lo mismo que ve el jugador en su juego. Queda registrado en los logs que miraste su pantalla.</p>`;
+          const sb = $("#pShot", pdlg);
+          SheetScreens.loop(id, sb, 4000);
+          $("#shotNow", pdlg).onclick = ()=> SheetScreens.load(id, sb);
+          sb.onclick = ()=> openBig(id);
         }
         else if(tab === "inventario"){
           const inv = list(await RT.call("auren:inventory", {id}));
@@ -473,6 +495,103 @@
         }
       }catch(e){ box.innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
     }
+  }
+
+  /* ---------- MONITOREO DE PANTALLA ---------- */
+  const canMonitor = ()=> canAny("player.monitoring","player.spectate");
+  function makeScreens(){
+    return {
+      timers:new Set(), gen:0,
+      stopAll(){ this.timers.forEach(t=>clearTimeout(t)); this.timers.clear(); this.gen++; },
+      async load(id, box){
+        try{
+          const r = await RT.call("auren:screenshot", {id});
+          if(!box.isConnected) return true;
+          let img = box.querySelector("img");
+          if(!img){ box.innerHTML = `<img alt="Pantalla de ${esc(nameOf(id))}"><span class="when"></span>`; img = box.querySelector("img"); }
+          img.src = r.image; box.dataset.src = r.image;
+          box.querySelector(".when").textContent = "Captura de las " + new Date(r.at || Date.now()).toLocaleTimeString("es", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+          return true;
+        }catch(e){
+          if(box.isConnected && !box.querySelector("img")) box.innerHTML = `<span style="padding:16px;text-align:center">${esc(e.message)}</span>`;
+          else if(box.isConnected) box.querySelector(".when").textContent = e.message;
+          return !/ya no está conectado|permiso/.test(e.message);
+        }
+      },
+      loop(id, box, every){
+        const g = this.gen;
+        const tick = async ()=>{
+          if(g !== this.gen || !box.isConnected) return;
+          const keep = await this.load(id, box);
+          if(!keep || g !== this.gen || !box.isConnected) return;
+          const t = setTimeout(tick, every); this.timers.add(t);
+        };
+        tick();
+      }
+    };
+  }
+  const WallScreens = makeScreens(), SheetScreens = makeScreens(), BigScreens = makeScreens();
+  const nameOf = id => { const p = players.get(Number(id)); return p ? (pChar(p) || p.name || `Jugador ${id}`) : `Jugador ${id}`; };
+  let monitorIds = [], monitorPaused = false;
+
+  function openBig(id){
+    const bd = $("#bigdlg");
+    bd.innerHTML = `<div class="p-head"><span class="pid">${id}</span><div><h3>${esc(nameOf(id))}</h3><p>Pantalla en grande · se actualiza cada 3 segundos</p></div>
+        <button class="icon-btn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="screen" style="border:0;border-radius:0"><div class="shot" id="bigShot" style="cursor:default"><span>Pidiendo captura…</span></div></div>
+      <div class="dlg-in"><div class="actions"><button class="btn btn-ghost" type="button" id="bigNow">Capturar ahora</button>${pdlg.open ? "" : '<button class="btn btn-primary" type="button" id="bigSheet">Abrir ficha</button>'}</div></div>`;
+    bd.querySelector("[data-close]").onclick = ()=> bd.close();
+    bd.onclose = ()=> BigScreens.stopAll();
+    const box = $("#bigShot", bd);
+    $("#bigNow", bd).onclick = ()=> BigScreens.load(id, box);
+    const sh = $("#bigSheet", bd); if(sh) sh.onclick = ()=>{ bd.close(); openPlayer(id); };
+    bd.showModal();
+    BigScreens.loop(id, box, 3000);
+  }
+
+  function viewMonitor(v){
+    v.innerHTML = `<h2>Monitor de pantallas</h2><p class="sub">Mira en vivo lo que ven hasta 4 jugadores a la vez. Cada pantalla se actualiza sola cada 6 segundos.</p>
+      <p class="howto"><b>Cómo se usa:</b> elige jugadores en la lista de abajo. Pulsa una pantalla para verla en grande. Cada vez que empiezas a mirar a alguien queda registrado en los logs.</p>
+      <div class="bar">
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="input" id="mq" type="search" placeholder="Buscar jugador para añadir" aria-label="Buscar jugador para añadir" autocomplete="off"></div>
+        <button class="btn btn-ghost btn-sm" type="button" id="mPause">${monitorPaused ? "Reanudar" : "Pausar"}</button>
+      </div>
+      <div class="pick" id="mPick" role="group" aria-label="Elegir jugadores"></div>
+      <div class="screens" id="mGrid"></div>`;
+    const drawPick = ()=>{
+      const q = ($("#mq").value || "").trim().toLowerCase();
+      const list = [...players.values()].sort((a,b)=>pid(a)-pid(b)).filter(p=>!q || String(pid(p)) === q || [p.name, pChar(p)].join(" ").toLowerCase().includes(q)).slice(0,40);
+      $("#mPick").innerHTML = list.length ? list.map(p=>`<button type="button" data-pick="${pid(p)}" aria-pressed="${monitorIds.includes(pid(p))}">${pid(p)} · ${esc(pChar(p) || p.name)}</button>`).join("") : `<span style="color:var(--soft)">Nadie conectado con ese nombre.</span>`;
+    };
+    const drawGrid = ()=>{
+      WallScreens.stopAll();
+      monitorIds = monitorIds.filter(id=> players.has(id) || RT.demo);
+      const g = $("#mGrid");
+      g.innerHTML = monitorIds.length ? monitorIds.map(id=>`<div class="screen"><div class="bar2"><span class="live-dot" aria-hidden="true"></span><b>${id} · ${esc(nameOf(id))}</b>
+          <button class="btn btn-ghost btn-sm" type="button" data-sheet="${id}">Ficha</button><button class="btn btn-ghost btn-sm" type="button" data-unpick="${id}">Quitar</button></div>
+          <div class="shot" data-big="${id}" role="button" tabindex="0" aria-label="Ver la pantalla de ${esc(nameOf(id))} en grande"><span>Pidiendo captura…</span></div></div>`).join("")
+        : `<p class="empty" style="grid-column:1/-1">Elige uno o varios jugadores arriba para ver sus pantallas.</p>`;
+      if(!monitorPaused) g.querySelectorAll("[data-big]").forEach((box,i)=> setTimeout(()=> WallScreens.loop(Number(box.dataset.big), box, 6000), i*700));
+      else g.querySelectorAll("[data-big]").forEach(box=> box.innerHTML = "<span>En pausa</span>");
+    };
+    $("#mq").addEventListener("input", drawPick);
+    $("#mPick").onclick = e=>{
+      const b = e.target.closest("[data-pick]"); if(!b) return;
+      const id = Number(b.dataset.pick);
+      if(monitorIds.includes(id)) monitorIds = monitorIds.filter(x=>x!==id);
+      else if(monitorIds.length >= 4) return A.toast("Máximo 4 pantallas a la vez. Quita una para añadir otra.");
+      else monitorIds.push(id);
+      drawPick(); drawGrid();
+    };
+    $("#mGrid").onclick = e=>{
+      const u = e.target.closest("[data-unpick]"); if(u){ monitorIds = monitorIds.filter(x=>x!==Number(u.dataset.unpick)); drawPick(); drawGrid(); return; }
+      const s = e.target.closest("[data-sheet]"); if(s){ openPlayer(Number(s.dataset.sheet)); return; }
+      const bg = e.target.closest("[data-big]"); if(bg) openBig(Number(bg.dataset.big));
+    };
+    $("#mGrid").onkeydown = e=>{ const bg = e.target.closest("[data-big]"); if(bg && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openBig(Number(bg.dataset.big)); } };
+    $("#mPause").onclick = ()=>{ monitorPaused = !monitorPaused; $("#mPause").textContent = monitorPaused ? "Reanudar" : "Pausar"; drawGrid(); };
+    drawPick(); drawGrid();
   }
 
   /* ---------- CHATS Y REPORTES ---------- */
@@ -665,11 +784,22 @@
         case "action:get_jobs": return {police:{name:"police", label:"Policía"}, ambulance:{name:"ambulance", label:"EMS"}, mechanic:{name:"mechanic", label:"Mecánico"}};
         case "call:inventory:getItemList": return [{name:"water", label:"Agua"},{name:"bread", label:"Pan"},{name:"phone", label:"Auren Phone"}];
         case "call:getAllVehicleModels": return ["sultan","faggio","adder","police","ambulance"];
+        case "auren:screenshot": return {image: Demo.fakeShot(data.id), at: Date.now()};
         default:
           if(method.startsWith("action:") || method.startsWith("call:")) throw new Error("Modo demostración: en tu web real esta acción se ejecuta en el servidor.");
           return null;
       }
     }
+  };
+  Demo.fakeShot = id=>{
+    const c = document.createElement("canvas"); c.width = 640; c.height = 360;
+    const g = c.getContext("2d"), hue = (Number(id) * 47) % 360;
+    const gr = g.createLinearGradient(0,0,640,360); gr.addColorStop(0, `hsl(${hue},35%,22%)`); gr.addColorStop(1, "#05070b");
+    g.fillStyle = gr; g.fillRect(0,0,640,360);
+    for(let i=0;i<14;i++){ g.fillStyle = "rgba(255,255,255,.06)"; const w = 30 + (i*37)%60, h = 80 + (i*53)%180; g.fillRect(i*48, 360-h, w, h); }
+    g.fillStyle = "#fff"; g.font = "600 26px system-ui"; g.fillText("Pantalla de ejemplo", 32, 60);
+    g.font = "18px system-ui"; g.fillStyle = "rgba(255,255,255,.75)"; g.fillText(`${nameOf(id)} · ${new Date().toLocaleTimeString("es")}`, 32, 92);
+    return c.toDataURL("image/jpeg", .8);
   };
   function startDemo(){
     RT.demo = true;

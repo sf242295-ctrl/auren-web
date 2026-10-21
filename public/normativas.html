@@ -37,6 +37,24 @@
 .rule h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
 .rule p{color:var(--soft);margin-top:4px;max-width:68ch;font-size:.95rem}
 mark{background:rgba(255,255,255,.16);color:var(--ink);border-radius:4px;padding:0 2px}
+.parte{font-size:.86rem;color:var(--muted);width:100%}
+.callout{margin-top:16px;padding:16px 18px;border-radius:14px;border:1px solid rgba(248,113,113,.4);border-left:4px solid #f87171;background:rgba(248,113,113,.07);color:var(--ink);line-height:1.7}
+kbd{display:inline-block;min-width:2.2em;padding:1px 8px;border-radius:7px;border:1px solid rgba(255,255,255,.5);border-bottom-width:3px;background:#f3f4f6;color:#0a0b0e;font:600 .85em/1.5 var(--font);text-align:center;margin:0 2px}
+.sub-h{font-size:1.02rem;font-weight:600;margin:22px 0 4px}
+.ejemplos{display:grid;gap:10px;margin-top:10px}
+.ejemplo{padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.ejemplo b{display:block;margin-bottom:4px}
+.ejemplo p{color:var(--soft);font-size:.95rem}
+.ejemplo code{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:.88em;padding:1px 6px;border-radius:6px;background:#000;border:1px solid var(--line-2);color:#fde68a;margin-right:6px}
+.nota{margin-top:14px;padding:12px 16px;border-radius:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);color:#fde68a;font-weight:500}
+.tabla{margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tabla h3{font-size:1.02rem;padding:12px 16px;background:rgba(255,255,255,.04);border-bottom:1px solid var(--line)}
+.tabla dl{display:grid;grid-template-columns:minmax(160px,1fr) 1.3fr}
+.tabla dt,.tabla dd{padding:11px 16px;border-bottom:1px solid var(--line)}
+.tabla dt{color:var(--soft)}
+.tabla dd{font-weight:600}
+.tabla dd.no{color:#fca5a5}
+.tabla dl > :nth-last-child(-n+2){border-bottom:0}
 .empty{padding:2rem 0;color:var(--muted)}
 @media (max-width:960px){
   .rules-layout{grid-template-columns:1fr;gap:16px}
@@ -45,6 +63,9 @@ mark{background:rgba(255,255,255,.16);color:var(--ink);border-radius:4px;padding
   .cats a{white-space:nowrap;border:1px solid var(--line)}
   .cats .n{display:none}
   .rule{grid-template-columns:1fr;gap:4px}
+  .tabla dl{grid-template-columns:1fr}
+  .tabla dt{border-bottom:0;padding-bottom:0}
+  .tabla dl > :nth-last-child(2){border-bottom:0}
 }
 </style>
 </head>
@@ -94,29 +115,49 @@ mark{background:rgba(255,255,255,.16);color:var(--ink);border-radius:4px;padding
   }
   const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 
+  // [[END]] → tecla, **texto** → negrita (después de escapar)
+  const rich = txt => esc(txt).replace(/\[\[([^\]]+)\]\]/g, "<kbd>$1</kbd>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  const example = txt => { const m = String(txt).match(/^(\+\/\d+)\s+(.*)$/s); return m ? `<code>${esc(m[1])}</code>${esc(m[2])}` : esc(txt); };
+  const extrasText = c => [c.nombre, c.intro, ...(c.ejemplos||[]).map(e=>e.t+" "+e.d), c.nota, c.tabla?.titulo, ...(c.tabla?.filas||[]).map(f=>f.slice(0,2).join(" "))].filter(Boolean).join(" ");
+
+  function extras(c){
+    let h = "";
+    if(c.intro) h += `<div class="callout">${rich(c.intro)}</div>`;
+    if(c.ejemplos?.length) h += `<h3 class="sub-h">Ejemplos de entorno</h3><div class="ejemplos">${c.ejemplos.map(e=>`<div class="ejemplo"><b>${esc(e.t)}</b><p>${example(e.d)}</p></div>`).join("")}</div>`;
+    return h;
+  }
+  function after(c){
+    let h = "";
+    if(c.nota) h += `<p class="nota">Nota: ${esc(c.nota)}</p>`;
+    if(c.tabla) h += `<div class="tabla"><h3>${esc(c.tabla.titulo)}</h3><dl>${c.tabla.filas.map(f=>`<dt>${esc(f[0])}</dt><dd${f[2]==="no"?' class="no"':""}>${esc(f[1])}</dd>`).join("")}</dl></div>`;
+    return h;
+  }
+
   function render(term=""){
     const t = norm(term.trim());
-    let shown = 0;
     const cats = N.categorias.map(c=>{
       const rules = c.reglas.map((r,i)=>({...r, code:`${c.id}-${pad(i+1)}`}))
         .filter(r=> !t || norm(r.t + " " + r.d + " " + r.code).includes(t));
-      shown += rules.length;
-      return {c, rules};
-    }).filter(x=> x.rules.length);
+      const extraHit = !t || norm(extrasText(c)).includes(t);
+      return {c, rules, extraHit};
+    }).filter(x=> x.rules.length || (t && x.extraHit));
 
     catList.innerHTML = N.categorias.map(c=>{
       const hit = cats.find(x=>x.c===c);
       return `<li><a href="#${c.id}" data-cat="${c.id}"><span class="code">${c.id}</span><span class="nm">${esc(c.nombre)}</span><span class="n">${hit ? hit.rules.length : 0}</span></a></li>`;
     }).join("");
 
-    rulesEl.innerHTML = cats.length ? cats.map(({c,rules})=>`
+    rulesEl.innerHTML = cats.length ? cats.map(({c,rules,extraHit})=>`
       <section class="cat" id="${c.id}" style="padding:0" aria-labelledby="h-${c.id}">
-        <div class="cat-head"><span class="bullet">${c.id}</span><h2 id="h-${c.id}">${esc(c.nombre)}</h2><p>${esc(c.desc)} ${rules.length} ${rules.length===1?"regla":"reglas"}.</p></div>
+        <div class="cat-head"><span class="bullet">${c.id}</span><h2 id="h-${c.id}">${esc(c.nombre)}</h2>${c.parte ? `<span class="parte">${esc(c.parte)}</span>` : ""}<p>${esc(c.desc)} ${c.reglas.length} ${c.reglas.length===1?"regla":"reglas"}.</p></div>
+        ${extraHit ? extras(c) : ""}
+        ${c.subtitulo && rules.length ? `<h3 class="sub-h">${esc(c.subtitulo)}</h3>` : ""}
         ${rules.map(r=>`
           <article class="rule" id="${r.code}">
             <button class="rcode" type="button" data-rule="${r.code}" title="Copiar enlace a esta regla">${r.code}</button>
             <div><h3>${hi(r.t, term.trim())}</h3><p>${hi(r.d, term.trim())}</p></div>
           </article>`).join("")}
+        ${extraHit ? after(c) : ""}
       </section>`).join("")
       : `<p class="empty">No hay reglas que coincidan con “${esc(term)}”. Prueba con otra palabra, por ejemplo “robo” o “policía”.</p>`;
     spy();

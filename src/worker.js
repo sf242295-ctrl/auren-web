@@ -6,6 +6,9 @@
   - Panel del staff:     /api/admin/ws      (navegador del staff, en vivo)
                          /api/admin/bridge  (conexión que abre el servidor de FiveM)
                          /api/admin/status
+  - GandyDev (IA):       POST /api/gandy
+  - The GOATs:           /api/goats
+  - Streamers:           /api/streamers, /api/streamers/me, POST /api/streamers/channels
 
   Variables (Cloudflare > tu Worker > Settings > Variables and Secrets):
     DISCORD_CLIENT_ID      (Text)
@@ -13,6 +16,14 @@
     SESSION_SECRET         (Secret: 40+ letras y números al azar)
     DISCORD_GUILD_ID       (Text, opcional: ID de tu servidor de Discord)
     ADMIN_BRIDGE_KEY       (Secret: la misma clave que web_panel.key en auren_admin)
+    DISCORD_BOT_TOKEN      (Secret: token del bot de Discord, para leer el rol de Streamers)
+    STREAMER_ROLE_ID       (Text, opcional: por defecto 1553781042383552687)
+    WEB_ADMIN_IDS          (Text: IDs de Discord de los admins de la web, separados por comas)
+    WEB_ADMIN_ROLE_IDS     (Text, opcional: IDs de roles de Discord que también son admins de la web)
+    TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET  (Secret, opcional: directos y seguidores de Twitch)
+    KICK_CLIENT_ID / KICK_CLIENT_SECRET      (Secret, opcional: directos de Kick)
+    GANDY_MODEL            (Text, opcional: modelo de IA de GandyDev)
+    GOAT_IDS               (Text, opcional: IDs de Discord de The GOATs, separados por comas)
     CFX_CODE               (Text, opcional: por defecto lee9965)
     DISCORD_INVITE         (Text, opcional: por defecto aurenrp)
 */
@@ -410,10 +421,346 @@ export class AdminHub extends DurableObject {
   }
 }
 
+
+/* ---------- GandyDev: IA gratis de Cloudflare ---------- */
+const GANDY_SYSTEM = `Eres GandyDev, el asistente de la web de Auren RP, un servidor de roleplay de FiveM en Nueva York (Liberty City) con sabor dominicano.
+Respondes SIEMPRE en español, claro y breve: como mucho 5 frases o una lista corta.
+Usa SOLO la información de Auren que aparece abajo para hablar de reglas, del servidor o de la web. Si la respuesta no está ahí, dilo con sinceridad y sugiere preguntar en el Discord (discord.gg/aurenrp) abriendo un ticket.
+Cuando te apoyes en una regla, cita su código entre corchetes, por ejemplo [CON-04].
+No inventes reglas, números, precios ni fechas. No ayudes con trampas, cheats ni a saltarse las normas. Tutea a la persona.`;
+
+async function rateLimited(request, bucket, perMinute) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0";
+  const key = new Request(`https://rl.local/${bucket}/${ip}/${Math.floor(Date.now() / 60000)}`);
+  const cache = caches.default;
+  const hit = await cache.match(key);
+  const n = hit ? Number(await hit.text()) || 0 : 0;
+  if (n >= perMinute) return true;
+  await cache.put(key, new Response(String(n + 1), { headers: { "Cache-Control": "max-age=70" } }));
+  return false;
+}
+
+async function handleGandy(request, env) {
+  if (request.method !== "POST") return json({ error: "Método no permitido" }, 405);
+  if (!env.AI) return json({ error: "ai_off" }, 503);
+  const url = new URL(request.url);
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== url.origin) return json({ error: "Origen no permitido." }, 403);
+  if (await rateLimited(request, "gandy", 12)) return json({ error: "Demasiadas preguntas seguidas. Espera un minuto." }, 429);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Petición no válida." }, 400); }
+  const q = String(body.q || "").slice(0, 400).trim();
+  if (!q) return json({ error: "Pregunta vacía." }, 400);
+  const context = String(body.context || "").slice(0, 6000);
+  const history = (Array.isArray(body.history) ? body.history : []).slice(-6)
+    .filter((m) => m && (m.role === "user" || m.role === "assistant"))
+    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 600) }));
+  const messages = [{ role: "system", content: `${GANDY_SYSTEM}\n\nINFORMACIÓN DE AUREN:\n${context}` }, ...history, { role: "user", content: q }];
+  const models = [env.GANDY_MODEL || "@cf/meta/llama-3.1-8b-instruct-fp8", "@cf/meta/llama-3.2-3b-instruct"];
+  for (const model of models) {
+    try {
+      const r = await env.AI.run(model, { messages, max_tokens: 380, temperature: 0.3 });
+      const answer = String(r?.response ?? r?.result?.response ?? r?.choices?.[0]?.message?.content ?? "").trim();
+      if (answer) return json({ answer: answer.slice(0, 1600) });
+    } catch (e) { /* prueba el siguiente modelo */ }
+  }
+  return json({ error: "La IA no respondió." }, 502);
+}
+
+/* ---------- Streamers ---------- */
+const DEFAULT_STREAMER_ROLE = "1553781042383552687";
+const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
+
+async function isWebAdmin(env, user) {
+  if (!user) return false;
+  if (list(env.WEB_ADMIN_IDS).includes(user.id)) return true;
+  const roles = list(env.WEB_ADMIN_ROLE_IDS);
+  if (!roles.length || !env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID) return false;
+  const key = new Request(`https://admin.local/${user.id}`);
+  const hit = await caches.default.match(key);
+  if (hit) return (await hit.text()) === "1";
+  let ok = false;
+  try {
+    const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${user.id}`, { headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } });
+    if (r.ok) { const m = await r.json(); ok = (m.roles || []).some((x) => roles.includes(x)); }
+  } catch {}
+  await caches.default.put(key, new Response(ok ? "1" : "0", { headers: { "Cache-Control": "max-age=300" } }));
+  return ok;
+}
+
+// Acepta enlaces completos o solo el nombre del canal
+function cleanChannel(platform, v) {
+  v = String(v || "").trim();
+  if (!v) return "";
+  const pats = {
+    twitch: /(?:twitch\.tv\/)?@?([a-zA-Z0-9_]{3,25})\/?$/,
+    kick: /(?:kick\.com\/)?@?([a-zA-Z0-9_-]{3,30})\/?$/,
+    youtube: /(?:youtube\.com\/)?((?:@[\w.-]{3,40})|(?:channel\/[\w-]{10,40}))\/?$/,
+    tiktok: /(?:tiktok\.com\/)?@?([\w.]{2,30})\/?$/,
+  };
+  const m = v.replace(/^https?:\/\/(www\.|m\.)?/i, "").replace(/\?.*$/, "").match(pats[platform]);
+  if (!m) return "";
+  return platform === "youtube" && !m[1].startsWith("@") && !m[1].startsWith("channel/") ? "@" + m[1] : m[1];
+}
+
+async function handleStreamers(request, env, sub) {
+  const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+  if (!sub) {
+    if (await rateLimited(request, "streamers", 60)) return json({ error: "Demasiadas peticiones." }, 429);
+    return store.fetch("https://store/data");
+  }
+  const user = authConfigured(env) ? await getUser(request, env) : null;
+  if (sub === "me") return json({ admin: await isWebAdmin(env, user), logged: !!user });
+  if (sub === "channels" || sub === "refresh") {
+    if (request.method !== "POST") return json({ error: "Método no permitido" }, 405);
+    const url = new URL(request.url);
+    const origin = request.headers.get("Origin");
+    if (origin && origin !== url.origin) return json({ error: "Origen no permitido." }, 403);
+    if (!user) return json({ error: "Inicia sesión con Discord." }, 401);
+    if (!(await isWebAdmin(env, user))) return json({ error: "Solo los admins de la web pueden cambiar esto." }, 403);
+    if (sub === "refresh") return store.fetch("https://store/refresh", { method: "POST" });
+    let b; try { b = await request.json(); } catch { return json({ error: "Petición no válida." }, 400); }
+    if (!/^\d{5,25}$/.test(String(b.id || ""))) return json({ error: "Streamer no válido." }, 400);
+    const entry = {
+      twitch: cleanChannel("twitch", b.twitch), kick: cleanChannel("kick", b.kick),
+      youtube: cleanChannel("youtube", b.youtube), tiktok: cleanChannel("tiktok", b.tiktok),
+      featured: !!b.featured, by: user.name || user.username, at: Date.now(),
+    };
+    for (const k of ["twitch", "kick", "youtube", "tiktok"]) if (b[k] && !entry[k]) return json({ error: `El canal de ${k} no es válido. Pega el enlace completo o solo el nombre.` }, 400);
+    return store.fetch("https://store/save", { method: "POST", body: JSON.stringify({ id: String(b.id), entry }) });
+  }
+  return json({ error: "Ruta no encontrada" }, 404);
+}
+
+export class SiteStore extends DurableObject {
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/data") {
+      const data = await this.publicData();
+      const stale = !data.updatedAt || Date.now() - data.updatedAt > 12 * 60000;
+      if (stale) this.ctx.waitUntil(this.refresh().catch(() => {}));
+      return json(data, 200, { "Cache-Control": "public, max-age=30" });
+    }
+    if (url.pathname === "/save") {
+      const { id, entry } = await request.json();
+      const channels = (await this.ctx.storage.get("channels")) || {};
+      channels[id] = entry;
+      await this.ctx.storage.put("channels", channels);
+      this.ctx.waitUntil(this.refresh(true).catch(() => {}));
+      return json({ ok: true, entry });
+    }
+    if (url.pathname === "/refresh") {
+      await this.refresh(true);
+      return json({ ok: true });
+    }
+    return json({ error: "no encontrado" }, 404);
+  }
+
+  async publicData() {
+    const [members, channels, status, activity] = await Promise.all([
+      this.ctx.storage.get("members"), this.ctx.storage.get("channels"), this.ctx.storage.get("status"), this.ctx.storage.get("activity"),
+    ]);
+    const ch = channels || {}, st = status?.per || {}, act = activity || {};
+    const week = {};
+    for (const day of Object.keys(act)) for (const [id, m] of Object.entries(act[day])) week[id] = (week[id] || 0) + m;
+    const streamers = (members?.list || []).map((m) => {
+      const c = ch[m.id] || {}, s = st[m.id] || {};
+      return {
+        id: m.id, name: m.name, username: m.username, avatar: m.avatar,
+        channels: { twitch: c.twitch || "", kick: c.kick || "", youtube: c.youtube || "", tiktok: c.tiktok || "" },
+        featured: !!c.featured, live: s.live || null, followers: s.followers || {}, lastLive: s.lastLive || null,
+        weekMinutes: week[m.id] || 0,
+      };
+    });
+    const withF = streamers.map((x) => ({ id: x.id, f: (x.followers.twitch || 0) + (x.followers.kick || 0) })).filter((x) => x.f > 0).sort((a, b) => b.f - a.f);
+    const active = streamers.filter((x) => x.weekMinutes > 0).sort((a, b) => b.weekMinutes - a.weekMinutes)[0];
+    return {
+      updatedAt: status?.at || members?.at || null,
+      configured: { discord: !!(this.env.DISCORD_BOT_TOKEN && this.env.DISCORD_GUILD_ID), twitch: !!(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_CLIENT_SECRET), kick: !!(this.env.KICK_CLIENT_ID && this.env.KICK_CLIENT_SECRET) },
+      streamers,
+      top: { followers: withF.slice(0, 3).map((x) => x.id), active: active ? active.id : null },
+    };
+  }
+
+  async refresh(force = false) {
+    const lock = (await this.ctx.storage.get("refreshing")) || 0;
+    if (!force && Date.now() - lock < 60000) return;
+    await this.ctx.storage.put("refreshing", Date.now());
+    try {
+      await this.refreshMembers();
+      await this.refreshStatus();
+    } finally {
+      await this.ctx.storage.put("refreshing", 0);
+    }
+  }
+
+  async refreshMembers() {
+    const env = this.env;
+    if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID) return;
+    const role = env.STREAMER_ROLE_ID || DEFAULT_STREAMER_ROLE;
+    const out = [];
+    let after = "0";
+    for (let page = 0; page < 5; page++) {
+      const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members?limit=1000&after=${after}`, { headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } });
+      if (!r.ok) throw new Error(`Discord ${r.status}`);
+      const batch = await r.json();
+      for (const m of batch) {
+        if (!(m.roles || []).includes(role) || m.user?.bot) continue;
+        const u = m.user;
+        const avatar = m.avatar
+          ? `https://cdn.discordapp.com/guilds/${env.DISCORD_GUILD_ID}/users/${u.id}/avatars/${m.avatar}.png?size=256`
+          : u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=256`
+          : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
+        out.push({ id: u.id, name: m.nick || u.global_name || u.username, username: u.username, avatar });
+      }
+      if (batch.length < 1000) break;
+      after = batch[batch.length - 1].user.id;
+    }
+    await this.ctx.storage.put("members", { at: Date.now(), list: out });
+  }
+
+  async token(platform) {
+    const env = this.env;
+    const saved = await this.ctx.storage.get(`tok_${platform}`);
+    if (saved && saved.exp > Date.now() + 60000) return saved.token;
+    const cfg = platform === "twitch"
+      ? { url: "https://id.twitch.tv/oauth2/token", id: env.TWITCH_CLIENT_ID, secret: env.TWITCH_CLIENT_SECRET }
+      : { url: "https://id.kick.com/oauth/token", id: env.KICK_CLIENT_ID, secret: env.KICK_CLIENT_SECRET };
+    if (!cfg.id || !cfg.secret) return null;
+    const r = await fetch(cfg.url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: cfg.id, client_secret: cfg.secret, grant_type: "client_credentials" }) });
+    if (!r.ok) return null;
+    const j = await r.json();
+    await this.ctx.storage.put(`tok_${platform}`, { token: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000 });
+    return j.access_token;
+  }
+
+  async refreshStatus() {
+    const env = this.env;
+    const members = (await this.ctx.storage.get("members"))?.list || [];
+    const channels = (await this.ctx.storage.get("channels")) || {};
+    const prev = (await this.ctx.storage.get("status"))?.per || {};
+    const per = {};
+    const ids = members.map((m) => m.id);
+    for (const id of ids) per[id] = { live: null, followers: { ...(prev[id]?.followers || {}) }, lastLive: prev[id]?.lastLive || null };
+
+    // Twitch
+    const tw = ids.filter((id) => channels[id]?.twitch).map((id) => ({ id, login: channels[id].twitch.toLowerCase() }));
+    const ttok = tw.length ? await this.token("twitch").catch(() => null) : null;
+    if (ttok) {
+      const h = { "Client-Id": env.TWITCH_CLIENT_ID, Authorization: `Bearer ${ttok}` };
+      const qs = tw.slice(0, 100).map((x) => `user_login=${encodeURIComponent(x.login)}`).join("&");
+      const us = tw.slice(0, 100).map((x) => `login=${encodeURIComponent(x.login)}`).join("&");
+      const [streams, users] = await Promise.all([
+        fetch(`https://api.twitch.tv/helix/streams?${qs}&first=100`, { headers: h }).then((r) => (r.ok ? r.json() : { data: [] })).catch(() => ({ data: [] })),
+        fetch(`https://api.twitch.tv/helix/users?${us}`, { headers: h }).then((r) => (r.ok ? r.json() : { data: [] })).catch(() => ({ data: [] })),
+      ]);
+      const byLogin = new Map(tw.map((x) => [x.login, x.id]));
+      for (const st of streams.data || []) {
+        const id = byLogin.get(String(st.user_login).toLowerCase()); if (!id) continue;
+        per[id].live = { platform: "twitch", channel: st.user_login, title: st.title, game: st.game_name, viewers: st.viewer_count, startedAt: st.started_at, thumbnail: String(st.thumbnail_url || "").replace("{width}", "640").replace("{height}", "360") };
+      }
+      // seguidores: unos pocos por vuelta para no pasar el límite gratis de peticiones
+      const order = (await this.ctx.storage.get("tw_rot")) || 0;
+      const usersArr = users.data || [];
+      const slice = usersArr.length ? Array.from({ length: Math.min(12, usersArr.length) }, (_, i) => usersArr[(order + i) % usersArr.length]) : [];
+      await this.ctx.storage.put("tw_rot", order + slice.length);
+      await Promise.all(slice.map(async (u) => {
+        const id = byLogin.get(String(u.login).toLowerCase()); if (!id) return;
+        const r = await fetch(`https://api.twitch.tv/helix/channels/followers?broadcaster_id=${u.id}&first=1`, { headers: h }).catch(() => null);
+        if (r && r.ok) { const j = await r.json(); per[id].followers.twitch = Number(j.total) || 0; }
+      }));
+    }
+
+    // Kick (API oficial para directos; seguidores si se pueden leer)
+    const kk = ids.filter((id) => channels[id]?.kick).map((id) => ({ id, slug: channels[id].kick.toLowerCase() }));
+    const ktok = kk.length ? await this.token("kick").catch(() => null) : null;
+    if (ktok) {
+      const qs = kk.slice(0, 50).map((x) => `slug=${encodeURIComponent(x.slug)}`).join("&");
+      const r = await fetch(`https://api.kick.com/public/v1/channels?${qs}`, { headers: { Authorization: `Bearer ${ktok}`, Accept: "application/json" } }).catch(() => null);
+      if (r && r.ok) {
+        const j = await r.json().catch(() => ({}));
+        const bySlug = new Map(kk.map((x) => [x.slug, x.id]));
+        for (const c of j.data || []) {
+          const id = bySlug.get(String(c.slug || "").toLowerCase()); if (!id) continue;
+          if (c.stream?.is_live && !per[id].live) per[id].live = { platform: "kick", channel: c.slug, title: c.stream_title || "", game: c.category?.name || "", viewers: c.stream?.viewer_count ?? null, startedAt: c.stream?.start_time || null, thumbnail: c.stream?.thumbnail || "" };
+          const f = c.followers_count ?? c.followers ?? c.follower_count;
+          if (f != null) per[id].followers.kick = Number(f) || 0;
+        }
+      }
+    }
+    // respaldo para seguidores de Kick (página pública), unos pocos por vuelta
+    const needKick = kk;
+    const krot = (await this.ctx.storage.get("kk_rot")) || 0;
+    const kslice = needKick.length ? Array.from({ length: Math.min(6, needKick.length) }, (_, i) => needKick[(krot + i) % needKick.length]) : [];
+    await this.ctx.storage.put("kk_rot", krot + kslice.length);
+    for (const x of kslice) {
+      const r = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(x.slug)}`, { headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" } }).catch(() => null);
+      if (r && r.ok) { const j = await r.json().catch(() => null); if (j && j.followers_count != null) per[x.id].followers.kick = Number(j.followers_count) || 0; }
+    }
+
+    // actividad: minutos en directo por día (para "el más activo")
+    const now = Date.now(), last = (await this.ctx.storage.get("status"))?.at || now;
+    const mins = Math.max(0, Math.min(20, Math.round((now - last) / 60000)));
+    const day = new Date().toISOString().slice(0, 10);
+    const act = (await this.ctx.storage.get("activity")) || {};
+    act[day] = act[day] || {};
+    for (const id of ids) if (per[id].live) { per[id].lastLive = now; if (mins) act[day][id] = (act[day][id] || 0) + mins; }
+    for (const d of Object.keys(act).sort().slice(0, -7)) delete act[d];
+    await this.ctx.storage.put("activity", act);
+    await this.ctx.storage.put("status", { at: now, per });
+  }
+}
+
+
+/* ---------- The GOATs: perfiles de Discord de los owners ---------- */
+const GOAT_IDS_DEFAULT = ["1270133887372230718", "457432500768210945", "808082230320693338"];
+const snowflakeDate = (id) => { try { return new Date(Number((BigInt(id) >> 22n) + 1420070400000n)).toISOString(); } catch { return null; } };
+
+async function handleGoats(request, env) {
+  const ids = list(env.GOAT_IDS).length ? list(env.GOAT_IDS) : GOAT_IDS_DEFAULT;
+  const key = new Request(`https://goats.local/v2/${ids.join("-")}`);
+  const hit = await caches.default.match(key);
+  if (hit) return new Response(hit.body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300" } });
+  if (!env.DISCORD_BOT_TOKEN) return json({ configured: false, people: ids.map((id) => ({ id, createdAt: snowflakeDate(id) })) });
+  const H = { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` };
+  const cdn = "https://cdn.discordapp.com";
+  const people = await Promise.all(ids.map(async (id) => {
+    const out = { id, createdAt: snowflakeDate(id) };
+    try {
+      const [u, m] = await Promise.all([
+        fetch(`https://discord.com/api/v10/users/${id}`, { headers: H }).then((r) => (r.ok ? r.json() : null)),
+        env.DISCORD_GUILD_ID ? fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${id}`, { headers: H }).then((r) => (r.ok ? r.json() : null)) : null,
+      ]);
+      if (!u) return out;
+      out.username = u.username;
+      out.name = (m && m.nick) || u.global_name || u.username;
+      out.globalName = u.global_name || u.username;
+      const img = (path, hash, size) => hash ? { still: `${cdn}/${path}/${hash}.png?size=${size}`, anim: hash.startsWith("a_") ? `${cdn}/${path}/${hash}.gif?size=${size}` : null } : null;
+      out.avatar = (m && m.avatar && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/avatars`, m.avatar, 512)) || img(`avatars/${id}`, u.avatar, 512)
+        || { still: `${cdn}/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`, anim: null };
+      out.banner = (m && m.banner && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/banners`, m.banner, 1024)) || img(`banners/${id}`, u.banner, 1024);
+      out.accent = u.accent_color != null ? "#" + Number(u.accent_color).toString(16).padStart(6, "0") : (u.banner_color || null);
+      const deco = (m && m.avatar_decoration_data) || u.avatar_decoration_data;
+      out.decoration = deco && deco.asset ? `${cdn}/avatar-decoration-presets/${deco.asset}.png?size=240&passthrough=true` : null;
+      out.joinedAt = (m && m.joined_at) || null;
+      out.inServer = !!m;
+    } catch {}
+    return out;
+  }));
+  const body = JSON.stringify({ configured: true, people });
+  await caches.default.put(key, new Response(body, { headers: { "Cache-Control": "max-age=1800" } }));
+  return new Response(body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300" } });
+}
+
 /* ---------- enrutado ---------- */
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // www.aurenroleplay.com → aurenroleplay.com (una sola dirección para que el login no se líe)
+    if (url.hostname.startsWith("www.")) {
+      url.hostname = url.hostname.slice(4);
+      return Response.redirect(url.toString(), 301);
+    }
     const m = url.pathname.match(/^\/api\/auth\/([a-z]+)\/?$/);
     if (m) {
       if (request.method !== "GET") return json({ error: "Método no permitido" }, 405);
@@ -422,7 +769,16 @@ export default {
     const ad = url.pathname.match(/^\/api\/admin\/([a-z]+)\/?$/);
     if (ad) return handleAdmin(request, env, ad[1]);
     if (url.pathname === "/api/stats") return handleStats(request, env, ctx);
+    if (url.pathname === "/api/gandy") return handleGandy(request, env);
+    if (url.pathname === "/api/goats") return handleGoats(request, env);
+    const sm = url.pathname.match(/^\/api\/streamers(?:\/([a-z]+))?\/?$/);
+    if (sm) return handleStreamers(request, env, sm[1] || "");
     if (url.pathname.startsWith("/api/")) return json({ error: "Ruta no encontrada" }, 404);
     return env.ASSETS.fetch(request);
+  },
+  // Cada 10 minutos: actualiza miembros del rol, directos, seguidores y actividad
+  async scheduled(event, env, ctx) {
+    const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+    ctx.waitUntil(store.fetch("https://store/refresh", { method: "POST" }).catch(() => {}));
   },
 };

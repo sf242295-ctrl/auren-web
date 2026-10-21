@@ -128,6 +128,73 @@
   .hero::before{background:linear-gradient(0deg,rgba(6,7,10,.9) 10%,rgba(6,7,10,.3) 70%)}
   .stat{padding:1.6rem 1.1rem}
 }
+
+/* ---------- The GOATs ---------- */
+@property --gang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes gspin{to{--gang:360deg}}
+@keyframes gsweep{0%{transform:translateX(-120%) skewX(-18deg)}60%,100%{transform:translateX(320%) skewX(-18deg)}}
+@keyframes gfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes gtwinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+@keyframes greveal{from{opacity:0;transform:translateY(30px) scale(.96);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes gcrown{0%,100%{transform:translateX(-50%) rotate(-6deg)}50%{transform:translateX(-50%) rotate(6deg) translateY(-3px)}}
+.goats-wrap{position:relative}
+.goats{display:grid;grid-template-columns:1fr 1fr;gap:16px;transition:filter .6s,opacity .6s}
+.goats-wrap:not(.open) .goats{filter:blur(16px) saturate(.6);opacity:.55;pointer-events:none;user-select:none}
+.goats-wrap.open.revealing .goat{animation:greveal .9s cubic-bezier(.2,.8,.2,1) both}
+.goats-wrap.open.revealing .goat:nth-child(2){animation-delay:.25s}
+.goats-wrap.open.revealing .goat:nth-child(3){animation-delay:.4s}
+.goat{--c1:#cfd6e0;--c2:#ffffff;position:relative;border-radius:24px;overflow:hidden;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.goat.rich{--c1:#3ddc97;--c2:#c9ffe6}
+.goat.magic{--c1:#ff5d73;--c2:#ffd0d7}
+.goat .ban{position:relative;height:120px;background:linear-gradient(120deg,color-mix(in srgb,var(--c1) 45%,#0b0d12),#0b0d12 75%);background-size:cover;background-position:center}
+.goat .ban::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(10,12,16,.92))}
+.goat .ban img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.goat .body{position:relative;padding:0 24px 24px;margin-top:-58px;display:grid;gap:12px;z-index:1}
+.gav{position:relative;width:112px;height:112px;flex:none}
+.gav .gring{position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(from var(--gang),var(--c1),var(--c2),var(--c1) 35%,rgba(255,255,255,.06) 55%,var(--c1));animation:gspin 4s linear infinite}
+.gav .gimg{position:absolute;inset:0;border-radius:50%;overflow:hidden;border:4px solid #0d1016;background:#1b1f27;display:grid;place-items:center;font-size:2.4rem;font-weight:700}
+.gav .gimg img{width:100%;height:100%;object-fit:cover}
+.gav .deco{position:absolute;inset:-12%;width:124%;height:124%;pointer-events:none}
+.goat h3{font-size:1.7rem;letter-spacing:-.03em;line-height:1.05}
+.goat .user{color:var(--muted);font-size:.95rem}
+.rank{display:inline-flex;align-items:center;gap:7px;width:max-content;padding:5px 12px;border-radius:999px;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#0a0b0e;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.goat p.desc{color:var(--soft)}
+.goat .meta{display:flex;flex-wrap:wrap;gap:8px}
+.goat .meta span{font-size:.86rem;color:var(--muted);padding:4px 10px;border-radius:999px;border:1px solid var(--line)}
+.goat .dc{margin-top:4px;width:max-content}
+/* Gandy resalta */
+.goat.main{--c1:#f5c451;--c2:#fff1b8;grid-column:1/-1;border-color:rgba(245,196,81,.45);box-shadow:0 30px 80px -30px rgba(245,196,81,.35)}
+.goat.main .ban{height:230px}
+.goat.main .body{grid-template-columns:auto 1fr;align-items:end;gap:26px;margin-top:-92px;padding:0 34px 34px}
+.goat.main .gav{width:172px;height:172px;animation:gfloat 5s ease-in-out infinite}
+.goat.main .gav .gring{inset:-7px}
+.goat.main .gav .gimg{font-size:3.6rem;border-width:6px}
+.goat.main h3{font-size:clamp(2.4rem,5vw,3.8rem)}
+.goat.main .crown{position:absolute;left:50%;top:-34px;color:#f5c451;filter:drop-shadow(0 4px 10px rgba(245,196,81,.6));animation:gcrown 3s ease-in-out infinite;z-index:2}
+.goat.main::before{content:"";position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,241,184,.12),transparent);animation:gsweep 6s ease-in-out infinite;z-index:2;pointer-events:none}
+.goat.main .merit{font-size:.9rem;font-weight:600;color:#f5c451;letter-spacing:.02em}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff1b8;box-shadow:0 0 12px 3px rgba(245,196,81,.7);animation:gtwinkle 2.6s ease-in-out infinite;z-index:2;pointer-events:none}
+/* candado */
+.goat-lock{position:absolute;inset:0;display:grid;place-items:center;z-index:5;padding:16px}
+.goats-wrap.open .goat-lock{display:none}
+.lock-card{width:min(460px,100%);padding:28px;border-radius:22px;background:rgba(13,16,22,.94);border:1px solid var(--line-2);text-align:center;display:grid;gap:14px;justify-items:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.9)}
+.lock-card .lk{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:rgba(245,196,81,.12);color:#f5c451;border:1px solid rgba(245,196,81,.35)}
+.lock-card h3{font-size:1.5rem}
+.lock-card p{color:var(--soft)}
+.lbar{width:100%;height:10px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden}
+.lbar i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#f5c451,#fff1b8);transition:width .5s}
+.lock-card small{color:var(--muted)}
+.lock-card .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.linkbtn{background:none;border:0;color:var(--soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;font-size:.92rem}
+@media (max-width:760px){
+  .goats{grid-template-columns:1fr}
+  .goat.main .body{grid-template-columns:1fr;margin-top:-80px;padding:0 22px 26px}
+  .goat.main .gav{width:136px;height:136px}
+  .goat.main .ban{height:170px}
+}
+@media (prefers-reduced-motion:reduce){ .goat *,.goat::before,.gav{animation:none!important} .goats-wrap.open.revealing .goat{animation:none} }
+html[data-motion="reduce"] .goat::before{display:none}
+html[data-contrast="high"] .goats-wrap:not(.open) .goats{filter:none;opacity:.15}
 </style>
 </head>
 <body data-page="home">
@@ -206,9 +273,32 @@
   <div class="wrap">
     <div class="sec-head">
       <div><p class="eyebrow">En vivo desde Auren</p><h2>Directos</h2></div>
-      <p>Streamers de la comunidad jugando en la ciudad. ¿Quieres salir aquí? Pídelo en el Discord.</p>
+      <p>Streamers de la comunidad jugando en la ciudad. <a href="streamers.html">Ver todos los streamers</a>.</p>
     </div>
     <div class="streams" id="streams"></div>
+  </div>
+</section>
+
+<section id="goats" aria-labelledby="h-goats">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><p class="eyebrow">Los que levantaron la ciudad</p><h2 id="h-goats">The GOATs</h2></div>
+      <p>Los owners de Auren RP. Su foto, su banner y su nombre salen en vivo de su Discord.</p>
+    </div>
+    <div class="goats-wrap" id="goatsWrap">
+      <div class="goats" id="goatList"></div>
+      <div class="goat-lock" id="goatLock">
+        <div class="lock-card">
+          <span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+          <h3>Sección bloqueada</h3>
+          <p>Haz el recorrido de la web con GandyDev para abrir The GOATs.</p>
+          <div class="lbar" role="progressbar" aria-label="Progreso del recorrido" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="lockBar"><i style="width:0%"></i></div>
+          <small id="lockTxt">0 de 8 pasos</small>
+          <div class="row"><button class="btn btn-primary" type="button" id="lockStart">Empezar el recorrido</button></div>
+          <button class="linkbtn" type="button" id="lockSkip">Abrir sin hacer el recorrido</button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -250,6 +340,7 @@
 
 <script src="assets/site.js"></script>
 <script src="assets/city.js"></script>
+<script src="assets/tour.js"></script>
 <script>
 (function(){
   const A = window.Auren, C = A.config, esc = A.esc, I = window.AUREN_ICON;
@@ -258,13 +349,91 @@
 
   // directos
   const arrow = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
-  document.getElementById("streams").innerHTML = C.streamers.map(s=>{
+  const streamsEl = document.getElementById("streams");
+  const placeholder = ()=> C.streamers.map(s=>{
     const kick = s.platform === "kick";
     const url = kick ? `https://kick.com/${encodeURIComponent(s.name)}` : `https://twitch.tv/${encodeURIComponent(s.name)}`;
     return `<a class="stream" href="${url}" target="_blank" rel="noopener">
       <span class="plat ${kick?"kick":""}">${kick?"Kick":"Twitch"}</span><span class="go">${arrow}</span>
       <span><span class="ch">${esc(s.name)}</span><br><span class="meta">${esc(s.role)}</span></span></a>`;
   }).join("");
+  streamsEl.innerHTML = placeholder();
+  // Si la web ya tiene streamers reales, mostramos primero los que están en directo
+  fetch("/api/streamers").then(r=> r.ok ? r.json() : null).then(d=>{
+    const list = (d && d.streamers || []).filter(s=> s.channels.twitch || s.channels.kick);
+    if(!list.length) return;
+    const fol = s=> (s.followers.twitch||0) + (s.followers.kick||0);
+    list.sort((a,b)=> (!!b.live - !!a.live) || (b.live?.viewers||0) - (a.live?.viewers||0) || fol(b) - fol(a));
+    streamsEl.innerHTML = list.slice(0,3).map(s=>{
+      const kick = s.live ? s.live.platform === "kick" : !s.channels.twitch;
+      const ch = kick ? s.channels.kick : s.channels.twitch;
+      const meta = s.live ? `En directo${s.live.viewers!=null ? ` · ${s.live.viewers} viendo` : ""}` : (fol(s) ? `${fol(s).toLocaleString("es")} seguidores` : "Streamer de Auren");
+      return `<a class="stream" href="streamers.html#s-${esc(s.id)}">
+        <span class="plat ${kick?"kick":""}">${s.live ? "● " : ""}${kick?"Kick":"Twitch"}</span><span class="go">${arrow}</span>
+        <span><span class="ch">${esc(s.name)}</span><br><span class="meta">${esc(meta)} · ${esc(ch)}</span></span></a>`;
+    }).join("");
+  }).catch(()=>{});
+
+
+  // ---------- The GOATs ----------
+  const goatList = document.getElementById("goatList"), goatsWrap = document.getElementById("goatsWrap");
+  const reduceM = ()=> document.documentElement.dataset.motion === "reduce" || matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const crownSVG = '<svg class="crown" width="44" height="32" viewBox="0 0 30 22" fill="currentColor" aria-hidden="true"><path d="M2 6l7 6 6-10 6 10 7-6-3 16H5z"/></svg>';
+  const year = iso => iso ? new Date(iso).getFullYear() : null;
+  function goatCard(g, p){
+    const name = (p && p.name) || g.name, cls = g.main ? "main" : (/rich/i.test(g.name) ? "rich" : /magic/i.test(g.name) ? "magic" : "");
+    const av = p && p.avatar ? (reduceM() || !p.avatar.anim ? p.avatar.still : p.avatar.anim) : "";
+    const ban = p && p.banner ? (reduceM() || !p.banner.anim ? p.banner.still : p.banner.anim) : "";
+    const accent = p && p.accent ? `background:linear-gradient(120deg,${esc(p.accent)},#0b0d12 80%)` : "";
+    const since = year(p && p.createdAt), joined = year(p && p.joinedAt);
+    const sparks = g.main ? Array.from({length:7}, (_, i)=> `<span class="spark" style="left:${8 + i*13}%;top:${12 + (i%3)*22}%;animation-delay:${(i*.37).toFixed(2)}s"></span>`).join("") : "";
+    return `<article class="goat ${cls}" aria-label="${esc(name)}, ${esc(g.rank)}">
+      ${sparks}
+      <div class="ban" style="${accent}">${ban ? `<img src="${esc(ban)}" alt="" loading="lazy">` : ""}</div>
+      <div class="body">
+        <div class="gav">${g.main ? crownSVG : ""}<span class="gring"></span>
+          <span class="gimg">${esc(name.charAt(0).toUpperCase())}${av ? `<img src="${esc(av)}" alt="Foto de perfil de ${esc(name)}" style="position:absolute;inset:0" data-gimg>` : ""}</span>
+          ${p && p.decoration ? `<img class="deco" src="${esc(p.decoration)}" alt="">` : ""}
+        </div>
+        <div style="display:grid;gap:10px;min-width:0">
+          ${g.main ? `<span class="merit">★ Mérito principal de Auren</span>` : ""}
+          <div><h3>${esc(name)}</h3>${p && p.username ? `<span class="user">@${esc(p.username)}</span>` : ""}</div>
+          <span class="rank">${esc(g.rank)}</span>
+          <p class="desc">${esc(g.desc || "")}</p>
+          <div class="meta">${since ? `<span>En Discord desde ${since}</span>` : ""}${joined ? `<span>En el Discord de Auren desde ${joined}</span>` : ""}</div>
+          <a class="btn btn-ghost btn-sm dc" href="https://discord.com/users/${esc(g.id)}" target="_blank" rel="noopener">${I.discord}Ver perfil de Discord</a>
+        </div>
+      </div>
+    </article>`;
+  }
+  function renderGoats(people){
+    const by = new Map((people || []).map(p=> [p.id, p]));
+    const list = (C.goats || []).slice().sort((a, b)=> (b.main ? 1 : 0) - (a.main ? 1 : 0));
+    goatList.innerHTML = list.map(g=> goatCard(g, by.get(g.id))).join("");
+    goatList.querySelectorAll("img[data-gimg], .deco, .ban img").forEach(i=> i.addEventListener("error", ()=> i.remove(), {once:true}));
+  }
+  renderGoats([]);
+  fetch("/api/goats").then(r=> r.ok ? r.json() : null).then(d=>{ if(d && d.people) renderGoats(d.people); }).catch(()=>{});
+
+  const TOUR_TOTAL = 8;
+  function lockState(){
+    const open = A.store.get("auren_goats") === "1";
+    goatsWrap.classList.toggle("open", open);
+    goatList.toggleAttribute("inert", !open); goatList.setAttribute("aria-hidden", open ? "false" : "true");
+    const stepN = Math.min(TOUR_TOTAL, +(A.store.get("auren_tour_step") || 0));
+    const pct = Math.round(stepN / TOUR_TOTAL * 100);
+    const bar = document.getElementById("lockBar"); bar.setAttribute("aria-valuenow", pct); bar.firstElementChild.style.width = pct + "%";
+    document.getElementById("lockTxt").textContent = `${stepN} de ${TOUR_TOTAL} pasos`;
+    document.getElementById("lockStart").textContent = stepN > 0 ? "Seguir el recorrido" : "Empezar el recorrido";
+  }
+  window.addEventListener("auren:tour-progress", lockState);
+  window.addEventListener("auren:goats-unlock", ()=>{
+    A.store.set("auren_goats", "1"); goatsWrap.classList.add("revealing"); lockState();
+    setTimeout(()=> goatsWrap.classList.remove("revealing"), 1800);
+  });
+  document.getElementById("lockStart").onclick = ()=> window.AurenTour && window.AurenTour.start(+(A.store.get("auren_tour_step") || 0));
+  document.getElementById("lockSkip").onclick = ()=> window.dispatchEvent(new Event("auren:goats-unlock"));
+  lockState();
 
   // ---------- guía por pasos ----------
   const STEPS = [

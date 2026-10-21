@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Streamers · Auren RP</title>
+<meta name="description" content="Los streamers de Auren RP: quién está en directo, el top por seguidores y el más activo de la semana.">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spin{to{--ang:360deg}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,59,.55)}70%{box-shadow:0 0 0 10px rgba(255,59,59,0)}100%{box-shadow:0 0 0 0 rgba(255,59,59,0)}}
+@keyframes sweep{0%{background-position:120% 0}100%{background-position:-20% 0}}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes eq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+
+:root{--live:#ff3b3b;--twitch:#a970ff;--kick:#53fc18;--yt:#ff4e45;--tt:#f3f4f6;
+  --gold:#f5c451;--gold-2:#fff1b8;--silver:#cfd6e0;--silver-2:#ffffff;--bronze:#d08a52;--bronze-2:#ffd2a8}
+
+/* ---------- cabecera de la página ---------- */
+.sx-hero{padding:9rem 0 3rem;position:relative}
+.sx-hero .eyebrow{display:flex;align-items:center;gap:10px}
+.eqz{display:inline-flex;gap:3px;align-items:end;height:14px}
+.eqz i{width:3px;height:100%;border-radius:2px;background:var(--live);transform-origin:bottom;animation:eq 1s ease-in-out infinite}
+.eqz i:nth-child(2){animation-delay:-.3s}.eqz i:nth-child(3){animation-delay:-.6s}.eqz i:nth-child(4){animation-delay:-.15s}
+.sx-title{font-size:clamp(3.6rem,12vw,9.5rem);line-height:.88;letter-spacing:-.06em;font-weight:800;
+  background:linear-gradient(100deg,#9aa1ad 0%,#f3f4f6 30%,#ffffff 40%,#f3f4f6 50%,#9aa1ad 80%) 0 0/250% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:sweep 7s linear infinite}
+.sx-sub{margin-top:1.4rem;color:var(--soft);max-width:58ch;font-size:1.1rem}
+.sx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:2rem;max-width:820px}
+.sx-stat{padding:14px 18px;border-radius:16px;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sx-stat b{display:block;font-size:1.9rem;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.sx-stat span{color:var(--muted);font-size:.92rem}
+.sx-stat.live b{color:#ff8c8c}
+.sx-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.4rem}
+.demo-note{margin-top:1.2rem;padding:12px 16px;border-radius:12px;border:1px dashed var(--line-2);color:var(--soft);font-size:.95rem;max-width:720px}
+
+.sx-sec{padding:3.5rem 0}
+.sx-sec h2{font-size:clamp(1.9rem,4vw,3rem);line-height:1.02}
+.sx-head{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;margin-bottom:1.6rem}
+.sx-head p{color:var(--soft);max-width:460px}
+
+.badge-live{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 9px;border-radius:999px;background:var(--live);color:#fff;font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;width:max-content}
+.badge-live::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1.6s infinite}
+
+/* ---------- avatar ---------- */
+.av{position:relative;display:grid;place-items:center;border-radius:50%;overflow:hidden;flex:none;font-weight:700;color:#fff;background:hsl(var(--h,220) 14% 22%)}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* anillo animado (podio, en vivo) */
+.ring{position:relative;border-radius:50%;padding:4px;background:conic-gradient(from var(--ang),var(--c1),var(--c2),var(--c1) 40%,rgba(255,255,255,.08) 60%,var(--c1));animation:spin 4s linear infinite;flex:none}
+.ring > .av{border:3px solid var(--bg)}
+
+/* ---------- escenario en vivo ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.screen{position:relative;border-radius:22px;padding:2px;background:conic-gradient(from var(--ang),rgba(255,59,59,.0) 0 55%,var(--live) 70%,#ffb3b3 76%,rgba(255,59,59,0) 90%);animation:spin 5s linear infinite}
+.screen-in{position:relative;border-radius:20px;overflow:hidden;background:#000;aspect-ratio:16/9}
+.screen-in iframe,.screen-in img{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.screen-ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:var(--soft);
+  background:radial-gradient(ellipse at 30% 20%,rgba(255,59,59,.18),transparent 60%),linear-gradient(160deg,#151922,#07080b)}
+.screen-ph b{display:block;font-size:1.4rem;color:var(--ink);margin-bottom:6px}
+.stage-info{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.stage-info .t{min-width:0;flex:1}
+.stage-info .t b{font-size:1.25rem;display:block;letter-spacing:-.02em}
+.stage-info .t span{color:var(--soft);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onair{display:grid;gap:10px}
+.onair h3{font-size:1rem;color:var(--muted);font-weight:500}
+.oa{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:8px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.oa:hover,.oa[aria-pressed="true"]{border-color:rgba(255,59,59,.6);background:rgba(40,14,16,.6)}
+.oa .th{position:relative;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#111}
+.oa .th img{width:100%;height:100%;object-fit:cover}
+.oa .th em{position:absolute;left:6px;bottom:6px;font-style:normal;font-size:.75rem;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.75)}
+.oa b{display:block;font-size:1rem}
+.oa small{color:var(--muted);font-size:.86rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nolive{padding:28px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.nolive p{color:var(--soft);flex:1;min-width:240px}
+
+/* ---------- podio ---------- */
+.podium{display:grid;grid-template-columns:1fr 1.18fr 1fr;gap:16px;align-items:end}
+.top{position:relative;border-radius:24px;padding:28px 22px 24px;text-align:center;display:grid;justify-items:center;gap:10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),var(--surface);border:1px solid var(--line);
+  overflow:hidden;cursor:pointer;animation:rise .7s both;transition:transform .2s,border-color .2s}
+.top:hover{transform:translateY(-4px);border-color:var(--line-2)}
+.top::after{content:attr(data-rank);position:absolute;right:14px;top:4px;font-size:5.5rem;font-weight:800;letter-spacing:-.06em;line-height:1;color:rgba(255,255,255,.05)}
+.top.r1{--c1:var(--gold);--c2:var(--gold-2);padding-top:40px;padding-bottom:34px;border-color:rgba(245,196,81,.4);
+  background:radial-gradient(ellipse at 50% 0%,rgba(245,196,81,.22),transparent 65%),var(--surface);animation:rise .7s both,float 5s ease-in-out .7s infinite}
+.top.r2{--c1:var(--silver);--c2:var(--silver-2);animation-delay:.12s}
+.top.r3{--c1:var(--bronze);--c2:var(--bronze-2);animation-delay:.22s}
+.top .ring .av{width:96px;height:96px;font-size:2.2rem}
+.top.r1 .ring .av{width:128px;height:128px;font-size:3rem}
+.crown{position:absolute;top:12px;left:50%;transform:translateX(-50%);color:var(--gold)}
+.medal{font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c1)}
+.top h3{font-size:1.35rem;letter-spacing:-.02em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top.r1 h3{font-size:1.7rem}
+.fol{font-size:2.2rem;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.top.r1 .fol{font-size:2.9rem}
+.fol + small{color:var(--muted);font-size:.9rem;margin-top:-4px}
+.split{display:flex;width:100%;max-width:220px;height:6px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.08)}
+.split i{display:block;height:100%}
+.split .tw{background:var(--twitch)}.split .kk{background:var(--kick)}
+.top .live-tag{position:absolute;left:14px;top:14px}
+
+/* ---------- el más activo ---------- */
+.act{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+.spot{position:relative;border-radius:24px;padding:clamp(22px,3vw,34px);overflow:hidden;cursor:pointer;
+  background:radial-gradient(ellipse at 0% 0%,rgba(255,120,60,.20),transparent 55%),var(--surface);border:1px solid rgba(255,140,80,.35);
+  display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+.spot{--c1:#ff8a3d;--c2:#ffd29e}
+.spot .ring .av{width:112px;height:112px;font-size:2.6rem}
+.spot small.k{color:#ffb98a;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.82rem}
+.spot h3{font-size:clamp(1.6rem,3vw,2.2rem);letter-spacing:-.03em;line-height:1.05;margin:4px 0 8px}
+.spot .hrs{display:block;font-size:clamp(2.4rem,5vw,3.4rem);font-weight:800;letter-spacing:-.05em;line-height:1}
+.spot .hrs + span{color:var(--soft)}
+.rank{padding:clamp(18px,2.6vw,26px);display:grid;gap:12px;align-content:start}
+.rank h3{font-size:1.1rem}
+.rk{display:grid;grid-template-columns:28px 36px 1fr auto;gap:12px;align-items:center;cursor:pointer;border-radius:10px;padding:4px}
+.rk:hover{background:rgba(255,255,255,.04)}
+.rk .n{color:var(--muted);font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
+.rk .av{width:36px;height:36px;font-size:.95rem}
+.rk .bar{height:8px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:5px}
+.rk .bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#ff8a3d,#ffd29e);transform-origin:left;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.rk b{font-weight:600;display:block;line-height:1.2}
+.rk em{font-style:normal;color:var(--soft);font-variant-numeric:tabular-nums;font-size:.95rem}
+
+/* ---------- plantilla de streamers ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:1.4rem}
+.filters .search{flex:1;min-width:220px;max-width:360px}
+.chipset{display:flex;gap:6px;flex-wrap:wrap}
+.chipset button{height:40px;padding:0 15px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface-2);cursor:pointer;font-size:.95rem}
+.chipset button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px 14px;align-items:start}
+.sc{position:relative;border-radius:20px;padding:20px;background:var(--surface);border:1px solid var(--line);display:grid;gap:14px;align-content:start;
+  cursor:pointer;transition:transform .18s,border-color .18s;animation:rise .5s both;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sc:hover{transform:translateY(-3px);border-color:var(--line-2)}
+.sc.is-live{border-color:transparent}
+.sc.is-live::before{content:"";position:absolute;inset:-1px;border-radius:21px;padding:2px;pointer-events:none;
+  background:conic-gradient(from var(--ang),transparent 0 50%,var(--live) 68%,#ffc2c2 74%,transparent 88%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 3.6s linear infinite}
+.sc.is-live{box-shadow:0 0 0 1px rgba(255,59,59,.25),0 18px 50px -20px rgba(255,59,59,.45)}
+.sc.feat:not(.is-live){border-color:rgba(245,196,81,.35);background:linear-gradient(160deg,rgba(245,196,81,.08),transparent 45%),var(--surface)}
+.sc-top{display:flex;gap:14px;align-items:center;min-width:0}
+.sc .av{width:58px;height:58px;font-size:1.4rem}
+.sc-top div{min-width:0}
+.sc-top b{display:block;font-size:1.15rem;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-top small{color:var(--muted);font-size:.9rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc .thumb{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#111}
+.sc .thumb img{width:100%;height:100%;object-fit:cover}
+.sc .thumb .badge-live{position:absolute;left:8px;top:8px}
+.sc .thumb em{position:absolute;right:8px;bottom:8px;font-style:normal;font-size:.8rem;font-weight:600;padding:2px 8px;border-radius:7px;background:rgba(0,0,0,.78)}
+.sc .title{color:var(--soft);font-size:.95rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sc-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sc-foot .f{font-weight:700;font-variant-numeric:tabular-nums}
+.sc-foot .f small{font-weight:400;color:var(--muted)}
+.tag-feat{position:absolute;right:16px;top:-12px;background:#1a1608;border:1px solid rgba(245,196,81,.5);padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.plats{display:flex;gap:6px}
+.pl{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line-2);background:rgba(0,0,0,.25);transition:background .15s}
+.pl:hover{background:rgba(255,255,255,.1)}
+.pl svg{width:17px;height:17px}
+.pl.tw{color:var(--twitch)}.pl.kk{color:var(--kick)}.pl.yt{color:var(--yt)}.pl.tt{color:var(--tt)}
+.empty{padding:34px;text-align:center;color:var(--soft)}
+.empty b{display:block;color:var(--ink);font-size:1.3rem;margin-bottom:6px}
+
+/* ---------- diálogos ---------- */
+dialog{color:var(--ink);background:#0d1016;border:1px solid var(--line-2);border-radius:22px;padding:0;width:100%;max-width:min(860px,calc(100% - 24px));margin:auto;max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.dh{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0d1016;z-index:2}
+.dh h2{font-size:1.35rem}
+.db{padding:22px;display:grid;gap:18px}
+.prof{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.prof .av{width:84px;height:84px;font-size:2rem}
+.prof b{font-size:1.6rem;letter-spacing:-.03em;display:block}
+.prof small{color:var(--muted)}
+.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.pstats div{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2)}
+.pstats b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.pstats span{color:var(--muted);font-size:.9rem}
+.chlinks{display:flex;gap:10px;flex-wrap:wrap}
+.chlinks a{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface-2);font-weight:500;text-decoration:none!important}
+.chlinks a svg{width:18px;height:18px}
+.chlinks a:hover{background:rgba(255,255,255,.08)}
+
+/* ---------- gestión (admins) ---------- */
+dialog.manage{max-width:min(1100px,calc(100% - 24px))}
+.warns{display:grid;gap:8px}
+.warn{padding:12px 14px;border-radius:12px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);color:#fde7a8;font-size:.95rem}
+.warn code{font-size:.9em;background:rgba(0,0,0,.35);padding:1px 6px;border-radius:6px;color:#fff}
+.mrow{display:grid;grid-template-columns:220px repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2)}
+.mrow .who{display:flex;gap:10px;align-items:center;min-width:0;align-self:center}
+.mrow .who .av{width:42px;height:42px;font-size:1rem}
+.mrow .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .who small{color:var(--muted);font-size:.85rem}
+.mrow .field label{font-size:.85rem;color:var(--soft)}
+.mrow .input{padding:.6rem .75rem;font-size:.92rem}
+.mrow .act-col{display:grid;gap:8px;justify-items:end}
+.chk{display:inline-flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer;white-space:nowrap}
+.chk input{width:18px;height:18px;accent-color:var(--gold)}
+.mrow .st{font-size:.85rem;color:var(--muted);min-height:1.2em}
+.mrow .st.ok{color:var(--ok)}.mrow .st.bad{color:var(--bad)}
+
+@media (max-width:1000px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .act{grid-template-columns:minmax(0,1fr)}
+  .mrow{grid-template-columns:1fr 1fr}
+  .mrow .who{grid-column:1/-1}
+  .mrow .act-col{grid-column:1/-1;grid-auto-flow:column;justify-content:space-between;align-items:center}
+}
+@media (max-width:760px){
+  .podium{grid-template-columns:minmax(0,1fr);align-items:stretch}
+  .podium .r1{order:-1}
+  .spot{grid-template-columns:1fr;justify-items:start}
+  .oa{grid-template-columns:100px 1fr}
+}
+@media (max-width:520px){ .mrow{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){
+  .sx-title,.ring,.screen,.sc.is-live::before,.top,.top.r1,.eqz i,.badge-live::before,.rk .bar i,.sc{animation:none!important}
+}
+html[data-contrast="high"] .sx-title{background:none;color:#fff}
+html[data-contrast="high"] .sc.is-live::before,html[data-contrast="high"] .screen{animation:none;background:var(--live)}
+</style>
+</head>
+<body data-page="streamers" data-city="dim">
+<header id="siteHeader"></header>
+
+<main id="contenido" tabindex="-1">
+  <div class="wrap sx-hero">
+    <p class="eyebrow"><span class="eqz" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Creadores de Auren</p>
+    <h1 class="sx-title">Streamers</h1>
+    <p class="sx-sub">La ciudad contada desde dentro. Mira quién está en directo ahora, el top por seguidores y el streamer más activo de la semana.</p>
+    <div class="sx-stats" id="stats" aria-live="polite"></div>
+    <div class="sx-tools" id="tools"></div>
+    <div id="note"></div>
+  </div>
+
+  <section class="sx-sec" id="envivo" aria-labelledby="h-live">
+    <div class="wrap">
+      <div class="sx-head"><h2 id="h-live">En directo ahora</h2><p>Se actualiza solo cada pocos minutos. Elige un directo para verlo aquí mismo.</p></div>
+      <div id="stage"></div>
+    </div>
+  </section>
+
+  <section class="sx-sec" id="top" aria-labelledby="h-top">
+    <div class="wrap">
+      <div class="sx-head"><h2 id="h-top">Top streamers</h2><p>Por seguidores sumando Twitch y Kick.</p></div>
+      <div id="podium"></div>
+    </div>
+  </section>
+
+  <section class="sx-sec" id="activo" aria-labelledby="h-act">
+    <div class="wrap">
+      <div class="sx-head"><h2 id="h-act">El más activo</h2><p>Horas en directo en los últimos 7 días.</p></div>
+      <div id="active"></div>
+    </div>
+  </section>
+
+  <section class="sx-sec" id="todos" aria-labelledby="h-all" style="padding-bottom:6rem">
+    <div class="wrap">
+      <div class="sx-head"><h2 id="h-all">Todos los streamers</h2><p>Todas las personas con el rol de Streamer en el Discord de Auren.</p></div>
+      <div class="filters">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="sr-only" for="q">Buscar streamer</label>
+          <input class="input" id="q" type="search" placeholder="Buscar streamer" autocomplete="off">
+        </div>
+        <div class="chipset" role="group" aria-label="Filtrar">
+          <button type="button" data-f="all" aria-pressed="true">Todos</button>
+          <button type="button" data-f="live" aria-pressed="false">En directo</button>
+          <button type="button" data-f="feat" aria-pressed="false">Destacados</button>
+        </div>
+      </div>
+      <div class="roster" id="roster"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="pdlg" aria-labelledby="pTitle"></dialog>
+<dialog id="mdlg" class="manage" aria-labelledby="mTitle"></dialog>
+
+<footer id="siteFooter"></footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script>
+(function(){
+  const A = window.Auren, esc = A.esc;
+  const $ = id => document.getElementById(id);
+  const nf = new Intl.NumberFormat("es");
+  const compact = n => n >= 10000 ? new Intl.NumberFormat("es",{notation:"compact",maximumFractionDigits:1}).format(n) : nf.format(n);
+  const reduce = () => document.documentElement.dataset.motion === "reduce" || matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const SVG = {
+    tw:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2 2.5 6v14h5v3h3l3-3h4l5-5V2H4zm16 12-3 3h-5l-3 3v-3H5V4h15v10zm-4-7h-2v6h2V7zm-5 0H9v6h2V7z"/></svg>',
+    kk:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h6v4h2V5h2V3h8v6h-2v2h-2v2h2v2h2v6h-8v-2h-2v-2H9v4H3V3z"/></svg>',
+    yt:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-4.8.5-4.8s0-3.2-.5-4.8zM9.8 15.1V8.9l5.7 3.1-5.7 3.1z"/></svg>',
+    tt:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 2h-3.4v13.4a2.9 2.9 0 1 1-2.9-2.9c.3 0 .6 0 .9.1V9.1a6.3 6.3 0 1 0 5.4 6.3V8.6a8.1 8.1 0 0 0 4.7 1.5V6.7a4.7 4.7 0 0 1-4.7-4.7z"/></svg>',
+    crown:'<svg width="30" height="22" viewBox="0 0 30 22" fill="currentColor" aria-hidden="true"><path d="M2 6l7 6 6-10 6 10 7-6-3 16H5z"/></svg>',
+    gear:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    close:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+  };
+  const PLAT = {
+    twitch:{k:"tw", n:"Twitch", url:c=>`https://twitch.tv/${encodeURIComponent(c)}`},
+    kick:{k:"kk", n:"Kick", url:c=>`https://kick.com/${encodeURIComponent(c)}`},
+    youtube:{k:"yt", n:"YouTube", url:c=>`https://youtube.com/${c.split("/").map(encodeURIComponent).join("/")}`},
+    tiktok:{k:"tt", n:"TikTok", url:c=>`https://tiktok.com/@${encodeURIComponent(c)}`}
+  };
+
+  let DATA = null, DEMO = false, ADMIN = false, FILTER = "all", STAGE = null;
+  const byId = id => DATA.streamers.find(s=> s.id === id);
+  const fol = s => (s.followers.twitch||0) + (s.followers.kick||0);
+  const hue = id => { let h = 0; for(const ch of String(id)) h = (h*31 + ch.charCodeAt(0)) % 360; return h; };
+  const av = (s, cls="") => `<span class="av ${cls}" style="--h:${hue(s.id)}" aria-hidden="true">${esc((s.name||"?").trim().charAt(0).toUpperCase())}${s.avatar ? `<img src="${esc(s.avatar)}" alt="" loading="lazy" data-av>` : ""}</span>`;
+  const fixAvatars = root => root.querySelectorAll("img[data-av]").forEach(i=> i.addEventListener("error", ()=> i.remove(), {once:true}));
+  const hours = m => m < 60 ? `${m} min` : `${Math.floor(m/60)} h${m%60 ? ` ${m%60} min` : ""}`;
+  const since = iso => { if(!iso) return ""; const m = Math.max(1, Math.round((Date.now() - new Date(iso))/60000)); return m < 60 ? `hace ${m} min` : `hace ${hours(m)}`; };
+  const ago = t => { if(!t) return ""; const m = Math.round((Date.now() - t)/60000); return m < 60 ? `hace ${Math.max(1,m)} min` : m < 1440 ? `hace ${Math.round(m/60)} h` : `hace ${Math.round(m/1440)} días`; };
+  const links = s => Object.entries(PLAT).filter(([p])=> s.channels[p]).map(([p,P])=> ({p, P, ch:s.channels[p], url:P.url(s.channels[p])}));
+
+  function embed(live){
+    if(DEMO || !live) return "";
+    const host = location.hostname;
+    const src = live.platform === "kick"
+      ? `https://player.kick.com/${encodeURIComponent(live.channel)}?muted=true&autoplay=true`
+      : `https://player.twitch.tv/?channel=${encodeURIComponent(live.channel)}&parent=${encodeURIComponent(host)}&muted=true&autoplay=true`;
+    return `<iframe src="${esc(src)}" title="Directo de ${esc(live.channel)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+  }
+
+  /* ---------- cabecera ---------- */
+  function renderStats(){
+    const all = DATA.streamers, live = all.filter(s=> s.live);
+    const total = all.reduce((n,s)=> n + fol(s), 0);
+    const viewers = live.reduce((n,s)=> n + (s.live.viewers||0), 0);
+    $("stats").innerHTML = `
+      <div class="sx-stat"><b>${nf.format(all.length)}</b><span>Streamers en Auren</span></div>
+      <div class="sx-stat live"><b>${nf.format(live.length)}</b><span>En directo ahora</span></div>
+      <div class="sx-stat"><b>${nf.format(viewers)}</b><span>Viendo en este momento</span></div>
+      <div class="sx-stat"><b>${compact(total)}</b><span>Seguidores en total</span></div>`;
+    $("tools").innerHTML = ADMIN ? `<button class="btn btn-ghost" id="manageBtn">${SVG.gear}Gestionar streamers</button>` : "";
+    if(ADMIN) $("manageBtn").onclick = openManage;
+    const up = DATA.updatedAt ? `Actualizado ${ago(DATA.updatedAt)}.` : "";
+    $("note").innerHTML = DEMO
+      ? `<p class="demo-note">Vista de ejemplo con streamers inventados. En la web publicada salen las personas reales con el rol de Streamer del Discord.</p>`
+      : (up ? `<p class="demo-note" style="border-style:solid">${esc(up)} Los datos se refrescan solos cada 10 minutos.</p>` : "");
+  }
+
+  /* ---------- en directo ---------- */
+  function renderStage(){
+    const live = DATA.streamers.filter(s=> s.live).sort((a,b)=> (b.featured - a.featured) || (b.live.viewers||0) - (a.live.viewers||0));
+    const el = $("stage");
+    if(!live.length){
+      el.dataset.sig = "";
+      const last = DATA.streamers.filter(s=> s.lastLive).sort((a,b)=> b.lastLive - a.lastLive)[0];
+      el.innerHTML = `<div class="card nolive"><span class="pill"><span class="dot"></span>Sin directos</span>
+        <p>Ahora mismo nadie está en directo.${last ? ` El último fue <b>${esc(last.name)}</b>, ${esc(ago(last.lastLive))}.` : ""} Vuelve más tarde o sigue a tus streamers favoritos para enterarte.</p></div>`;
+      return;
+    }
+    if(!STAGE || !live.some(s=> s.id === STAGE)) STAGE = live[0].id;
+    // no recargar el reproductor si no cambió nada (evita cortar el directo)
+    const sig = STAGE + "|" + live.map(x=> x.id).join(",");
+    if(el.dataset.sig === sig && el.querySelector(".stage")) return;
+    el.dataset.sig = sig;
+    const s = byId(STAGE), L = s.live;
+    const P = PLAT[L.platform] || PLAT.twitch;
+    el.innerHTML = `<div class="stage">
+      <div>
+        <div class="screen"><div class="screen-in">
+          ${DEMO ? `<div class="screen-ph"><div><b>${esc(s.name)} está en directo</b>Aquí se ve el directo de ${esc(P.n)} dentro de la web.</div></div>` : embed(L)}
+        </div></div>
+        <div class="stage-info">
+          ${av(s)}
+          <div class="t"><b>${esc(s.name)}</b><span>${esc(L.title || "En directo en Auren RP")}</span></div>
+          <span class="badge-live">En vivo</span>
+          <span class="pill">${L.viewers != null ? `${nf.format(L.viewers)} viendo` : esc(P.n)}${L.startedAt ? ` · ${esc(since(L.startedAt))}` : ""}</span>
+          <a class="btn btn-ghost btn-sm" href="${esc(P.url(L.channel))}" target="_blank" rel="noopener">Abrir en ${esc(P.n)}</a>
+        </div>
+      </div>
+      <div class="onair" role="group" aria-label="Directos disponibles">
+        <h3>${live.length === 1 ? "1 directo" : `${live.length} directos`} en este momento</h3>
+        ${live.map(x=> `<button type="button" class="oa" data-stage="${esc(x.id)}" aria-pressed="${x.id===STAGE}">
+          <span class="th">${x.live.thumbnail ? `<img src="${esc(x.live.thumbnail)}" alt="" loading="lazy">` : ""}<em>${x.live.viewers != null ? nf.format(x.live.viewers) : "EN VIVO"}</em></span>
+          <span style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.live.title || x.live.game || "En directo")}</small></span></button>`).join("")}
+      </div></div>`;
+    el.querySelector(".stage-info .av").style.cssText += ";width:46px;height:46px";
+    el.querySelectorAll("[data-stage]").forEach(b=> b.onclick = ()=>{ STAGE = b.dataset.stage; renderStage(); });
+    fixAvatars(el);
+  }
+
+  /* ---------- podio ---------- */
+  function renderPodium(){
+    const ids = (DATA.top && DATA.top.followers) || [];
+    const el = $("podium");
+    if(!ids.length){
+      el.innerHTML = `<div class="card empty"><b>El top aparece pronto</b>Cuando los streamers tengan su canal de Twitch o Kick asignado, aquí verás a los tres con más seguidores.</div>`;
+      return;
+    }
+    const order = [ids[1], ids[0], ids[2]];
+    const cls = {[ids[0]]:"r1", [ids[1]]:"r2", [ids[2]]:"r3"};
+    const medal = {r1:"Oro", r2:"Plata", r3:"Bronce"};
+    el.innerHTML = `<div class="podium">${order.map(id=>{
+      if(!id) return `<div aria-hidden="true"></div>`;
+      const s = byId(id); if(!s) return "<div></div>";
+      const r = cls[id], f = fol(s), tw = s.followers.twitch||0, kk = s.followers.kick||0;
+      return `<article class="top ${r}" data-rank="${r.slice(1)}" data-open="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}, puesto ${r.slice(1)}, ${nf.format(f)} seguidores">
+        ${r === "r1" ? `<span class="crown">${SVG.crown}</span>` : ""}
+        ${s.live ? `<span class="badge-live live-tag">En vivo</span>` : ""}
+        <span class="ring">${av(s)}</span>
+        <span class="medal">${medal[r]} · Puesto ${r.slice(1)}</span>
+        <h3>${esc(s.name)}</h3>
+        <span class="fol" data-count="${f}">${nf.format(f)}</span><small>seguidores</small>
+        <span class="split" title="Twitch ${nf.format(tw)} · Kick ${nf.format(kk)}"><i class="tw" style="width:${f ? tw/f*100 : 0}%"></i><i class="kk" style="width:${f ? kk/f*100 : 0}%"></i></span>
+      </article>`;
+    }).join("")}</div>`;
+    fixAvatars(el); countUp(el);
+  }
+
+  function countUp(root){
+    if(reduce()) return;
+    const els = root.querySelectorAll("[data-count]");
+    const io = new IntersectionObserver(es=> es.forEach(e=>{
+      if(!e.isIntersecting) return; io.unobserve(e.target);
+      const to = +e.target.dataset.count, t0 = performance.now(), d = 1300;
+      const step = t => { const k = Math.min(1,(t-t0)/d), v = Math.round(to * (1 - Math.pow(1-k,3))); e.target.textContent = nf.format(v); if(k<1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }), {threshold:.4});
+    els.forEach(x=> io.observe(x));
+  }
+
+  /* ---------- el más activo ---------- */
+  function renderActive(){
+    const el = $("active");
+    const ranked = DATA.streamers.filter(s=> s.weekMinutes > 0).sort((a,b)=> b.weekMinutes - a.weekMinutes);
+    if(!ranked.length){
+      el.innerHTML = `<div class="card empty"><b>Todavía sin actividad esta semana</b>En cuanto los streamers hagan directo, la web cuenta sus horas y aquí sale el más activo.</div>`;
+      return;
+    }
+    const s = ranked[0], max = s.weekMinutes;
+    el.innerHTML = `<div class="act">
+      <article class="spot" data-open="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}, el más activo de la semana">
+        <span class="ring">${av(s)}</span>
+        <div>
+          <small class="k">El más activo de la semana</small>
+          <h3>${esc(s.name)}</h3>
+          <span class="hrs">${esc(hours(s.weekMinutes))}</span><span>en directo en los últimos 7 días</span>
+          ${s.live ? `<p style="margin-top:10px"><span class="badge-live">En vivo ahora</span></p>` : ""}
+        </div>
+      </article>
+      <div class="card rank">
+        <h3>Ranking de actividad</h3>
+        ${ranked.slice(0,6).map((x,i)=> `<div class="rk" data-open="${esc(x.id)}" tabindex="0" role="button" aria-label="${i+1}. ${esc(x.name)}, ${esc(hours(x.weekMinutes))}">
+          <span class="n">${i+1}</span>${av(x)}
+          <div style="min-width:0"><b>${esc(x.name)}</b><div class="bar"><i style="width:${Math.max(4, x.weekMinutes/max*100)}%;animation-delay:${i*.08}s"></i></div></div>
+          <em>${esc(hours(x.weekMinutes))}</em></div>`).join("")}
+      </div></div>`;
+    fixAvatars(el);
+  }
+
+  /* ---------- todos ---------- */
+  function renderRoster(){
+    const q = $("q").value.trim().toLowerCase();
+    let list = DATA.streamers.slice();
+    if(FILTER === "live") list = list.filter(s=> s.live);
+    if(FILTER === "feat") list = list.filter(s=> s.featured);
+    if(q) list = list.filter(s=> (s.name + " " + s.username + " " + Object.values(s.channels).join(" ")).toLowerCase().includes(q));
+    list.sort((a,b)=> (!!b.live - !!a.live) || (b.featured - a.featured) || fol(b) - fol(a) || a.name.localeCompare(b.name));
+    const el = $("roster");
+    if(!DATA.streamers.length){
+      el.innerHTML = `<div class="card empty" style="grid-column:1/-1"><b>Todavía no hay streamers</b>Cuando alguien tenga el rol de Streamer en el Discord de Auren, aparecerá aquí solo.</div>`;
+      return;
+    }
+    if(!list.length){ el.innerHTML = `<div class="card empty" style="grid-column:1/-1"><b>Sin resultados</b>Prueba con otro nombre o quita el filtro.</div>`; return; }
+    el.innerHTML = list.map((s,i)=>{
+      const L = s.live, ls = links(s), f = fol(s);
+      return `<article class="sc ${L ? "is-live" : ""} ${s.featured ? "feat" : ""}" id="s-${esc(s.id)}" data-open="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}${L ? ", en directo" : ""}" style="animation-delay:${Math.min(i,12)*.04}s">
+        ${s.featured && !L ? `<span class="tag-feat">Destacado</span>` : ""}
+        <div class="sc-top">${av(s)}<div><b>${esc(s.name)}</b><small>@${esc(s.username)}</small></div></div>
+        ${L ? `<div class="thumb">${L.thumbnail ? `<img src="${esc(L.thumbnail)}" alt="" loading="lazy">` : ""}<span class="badge-live">En vivo</span>${L.viewers != null ? `<em>${nf.format(L.viewers)} viendo</em>` : ""}</div>
+               <p class="title">${esc(L.title || "En directo en Auren RP")}</p>` : ""}
+        <div class="sc-foot">
+          <span class="f">${f ? `${compact(f)} <small>seguidores</small>` : `<small>${ls.length ? "Sin datos de seguidores" : "Canales sin asignar"}</small>`}</span>
+          <span class="plats">${ls.map(l=> `<a class="pl ${l.P.k}" href="${esc(l.url)}" target="_blank" rel="noopener" aria-label="${esc(l.P.n)} de ${esc(s.name)}" data-stop>${SVG[l.P.k]}</a>`).join("")}</span>
+        </div>
+      </article>`;
+    }).join("");
+    fixAvatars(el);
+  }
+
+  /* ---------- ficha del streamer ---------- */
+  function openProfile(id){
+    const s = byId(id); if(!s) return;
+    const d = $("pdlg"), L = s.live, ls = links(s);
+    d.innerHTML = `<div class="dh"><h2 id="pTitle">Perfil del streamer</h2><button class="icon-btn" data-close aria-label="Cerrar">${SVG.close}</button></div>
+      <div class="db">
+        <div class="prof">${L ? `<span class="ring" style="--c1:var(--live);--c2:#ffc2c2">${av(s)}</span>` : av(s)}
+          <div><b>${esc(s.name)}</b><small>@${esc(s.username)}${s.featured ? " · Destacado" : ""}</small>
+          ${L ? `<p style="margin-top:8px"><span class="badge-live">En vivo</span></p>` : ""}</div></div>
+        ${L ? `<div class="screen"><div class="screen-in">${DEMO ? `<div class="screen-ph"><div><b>En directo</b>${esc(L.title||"")}</div></div>` : embed(L)}</div></div>
+               <p style="color:var(--soft)">${esc(L.title || "")}${L.game ? ` · ${esc(L.game)}` : ""}</p>` : ""}
+        <div class="pstats">
+          <div><b>${nf.format(fol(s))}</b><span>Seguidores totales</span></div>
+          ${s.followers.twitch != null ? `<div><b>${nf.format(s.followers.twitch)}</b><span>En Twitch</span></div>` : ""}
+          ${s.followers.kick != null ? `<div><b>${nf.format(s.followers.kick)}</b><span>En Kick</span></div>` : ""}
+          <div><b>${esc(hours(s.weekMinutes||0))}</b><span>En directo esta semana</span></div>
+          ${!L && s.lastLive ? `<div><b>${esc(ago(s.lastLive).replace("hace ",""))}</b><span>Desde su último directo</span></div>` : ""}
+        </div>
+        ${ls.length ? `<div class="chlinks">${ls.map(l=> `<a href="${esc(l.url)}" target="_blank" rel="noopener" style="color:inherit"><span class="pl ${l.P.k}" style="width:auto;height:auto;border:0;background:none">${SVG[l.P.k]}</span>${esc(l.P.n)} · ${esc(l.ch)}</a>`).join("")}</div>`
+                    : `<p style="color:var(--soft)">Este streamer todavía no tiene canales asignados.${ADMIN ? " Puedes ponerlos desde Gestionar streamers." : ""}</p>`}
+      </div>`;
+    d.querySelector("[data-close]").onclick = ()=> d.close();
+    fixAvatars(d);
+    d.showModal();
+    history.replaceState(null, "", "#s-" + s.id);
+  }
+  $("pdlg").addEventListener("close", ()=>{ $("pdlg").innerHTML = ""; if(location.hash.startsWith("#s-")) history.replaceState(null, "", location.pathname); });
+  $("pdlg").addEventListener("click", e=>{ if(e.target === $("pdlg")) $("pdlg").close(); });
+
+  /* ---------- gestión de canales (admins de la web) ---------- */
+  function openManage(){
+    const d = $("mdlg"), cfg = DATA.configured || {};
+    const warns = [];
+    if(!DEMO && !cfg.discord) warns.push(`Falta el Secret <code>DISCORD_BOT_TOKEN</code> en Cloudflare: sin él la web no puede leer quién tiene el rol de Streamer.`);
+    if(!DEMO && !cfg.twitch) warns.push(`Faltan <code>TWITCH_CLIENT_ID</code> y <code>TWITCH_CLIENT_SECRET</code>: sin ellos no se ven los directos ni los seguidores de Twitch.`);
+    if(!DEMO && !cfg.kick) warns.push(`Opcional: con <code>KICK_CLIENT_ID</code> y <code>KICK_CLIENT_SECRET</code> también se detectan los directos de Kick.`);
+    const field = (s,p,label,ph) => `<div class="field"><label for="m-${p}-${esc(s.id)}">${label}</label><input class="input" id="m-${p}-${esc(s.id)}" data-p="${p}" value="${esc(s.channels[p]||"")}" placeholder="${ph}" autocomplete="off" spellcheck="false"></div>`;
+    d.innerHTML = `<div class="dh"><h2 id="mTitle">Gestionar streamers</h2>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="mRefresh">Actualizar ahora</button><button class="icon-btn" data-close aria-label="Cerrar">${SVG.close}</button></div></div>
+      <div class="db">
+        <p style="color:var(--soft)">Pega el enlace del canal o solo el nombre. La lista sale sola del rol de Streamer del Discord. Marca <b>Destacado</b> para ponerlo primero y con brillo dorado.</p>
+        ${warns.length ? `<div class="warns">${warns.map(w=> `<div class="warn">${w}</div>`).join("")}</div>` : ""}
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="sr-only" for="mq">Buscar en la lista</label><input class="input" id="mq" type="search" placeholder="Buscar en la lista" autocomplete="off"></div>
+        <div id="mlist" style="display:grid;gap:10px">
+        ${DATA.streamers.length ? DATA.streamers.slice().sort((a,b)=> a.name.localeCompare(b.name)).map(s=> `<form class="mrow" data-id="${esc(s.id)}" data-name="${esc((s.name+" "+s.username).toLowerCase())}">
+          <div class="who">${av(s)}<div style="min-width:0"><b>${esc(s.name)}</b><small>@${esc(s.username)}</small></div></div>
+          ${field(s,"twitch","Twitch","twitch.tv/canal")}${field(s,"kick","Kick","kick.com/canal")}${field(s,"youtube","YouTube","youtube.com/@canal")}${field(s,"tiktok","TikTok","tiktok.com/@usuario")}
+          <div class="act-col"><label class="chk"><input type="checkbox" data-p="featured" ${s.featured ? "checked" : ""}>Destacado</label>
+            <button class="btn btn-primary btn-sm" type="submit">Guardar</button><span class="st" aria-live="polite"></span></div>
+        </form>`).join("") : `<div class="card empty"><b>No hay nadie con el rol de Streamer</b>Dale el rol en Discord y pulsa “Actualizar ahora”.</div>`}
+        </div>
+      </div>`;
+    d.querySelector("[data-close]").onclick = ()=> d.close();
+    fixAvatars(d);
+    $("mq").oninput = ()=>{ const q = $("mq").value.trim().toLowerCase(); d.querySelectorAll(".mrow").forEach(r=> r.hidden = q && !r.dataset.name.includes(q)); };
+    $("mRefresh").onclick = async ()=>{
+      const b = $("mRefresh"); b.disabled = true; b.textContent = "Actualizando…";
+      if(DEMO){ setTimeout(()=>{ b.disabled = false; b.textContent = "Actualizar ahora"; A.toast("Vista de ejemplo: en la web real se vuelve a leer Discord, Twitch y Kick."); }, 600); return; }
+      try{
+        const r = await fetch("/api/streamers/refresh", {method:"POST"});
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j.error || "No se pudo actualizar.");
+        await load(true); A.toast("Datos actualizados."); d.close(); openManage();
+      }catch(e){ A.toast(e.message); b.disabled = false; b.textContent = "Actualizar ahora"; }
+    };
+    d.querySelectorAll(".mrow").forEach(f=> f.addEventListener("submit", async e=>{
+      e.preventDefault();
+      const id = f.dataset.id, st = f.querySelector(".st"), btn = f.querySelector("button[type=submit]");
+      const body = {id};
+      f.querySelectorAll("[data-p]").forEach(i=> body[i.dataset.p] = i.type === "checkbox" ? i.checked : i.value.trim());
+      st.className = "st"; st.textContent = "Guardando…"; btn.disabled = true;
+      try{
+        let entry;
+        if(DEMO){ entry = {twitch:clean(body.twitch), kick:clean(body.kick), youtube:clean(body.youtube), tiktok:clean(body.tiktok), featured:body.featured}; }
+        else{
+          const r = await fetch("/api/streamers/channels", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+          const j = await r.json().catch(()=>({}));
+          if(!r.ok) throw new Error(j.error || "No se pudo guardar.");
+          entry = j.entry;
+        }
+        const s = byId(id);
+        s.channels = {twitch:entry.twitch||"", kick:entry.kick||"", youtube:entry.youtube||"", tiktok:entry.tiktok||""};
+        s.featured = !!entry.featured;
+        f.querySelectorAll("input[data-p]").forEach(i=>{ if(i.type !== "checkbox") i.value = s.channels[i.dataset.p] || ""; });
+        st.className = "st ok"; st.textContent = DEMO ? "Guardado (ejemplo)" : "Guardado";
+        renderAll();
+        if(!DEMO) setTimeout(()=> load(true), 5000);
+      }catch(err){ st.className = "st bad"; st.textContent = err.message; }
+      finally{ btn.disabled = false; }
+    }));
+    d.showModal();
+  }
+  const clean = v => String(v||"").replace(/^https?:\/\/(www\.|m\.)?[^/]+\/?/i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
+  $("mdlg").addEventListener("click", e=>{ if(e.target === $("mdlg")) $("mdlg").close(); });
+
+  /* ---------- eventos ---------- */
+  document.addEventListener("click", e=>{
+    if(e.target.closest("[data-stop]")) return;
+    const o = e.target.closest("[data-open]"); if(o && !o.closest("dialog")) openProfile(o.dataset.open);
+  });
+  document.addEventListener("keydown", e=>{
+    if(e.key !== "Enter" && e.key !== " ") return;
+    const o = e.target.closest && e.target.closest("[data-open]");
+    if(o && e.target === o){ e.preventDefault(); openProfile(o.dataset.open); }
+  });
+  document.querySelectorAll(".chipset button").forEach(b=> b.onclick = ()=>{
+    FILTER = b.dataset.f; document.querySelectorAll(".chipset button").forEach(x=> x.setAttribute("aria-pressed", x === b)); renderRoster();
+  });
+  $("q").addEventListener("input", renderRoster);
+
+  function renderAll(){ renderStats(); renderStage(); renderPodium(); renderActive(); renderRoster(); }
+
+  /* ---------- datos ---------- */
+  function demoData(){
+    const now = Date.now();
+    const p = (id,name,user,o) => Object.assign({id, name, username:user, avatar:"", channels:{twitch:"",kick:"",youtube:"",tiktok:""}, featured:false, live:null, followers:{}, lastLive:null, weekMinutes:0}, o);
+    const list = [
+      p("100000000000000001","ElTigueraRD","tiguerard",{channels:{twitch:"eltiguerard",kick:"",youtube:"@eltiguerard",tiktok:"eltiguerard"}, featured:true, followers:{twitch:48210}, weekMinutes:1710,
+        live:{platform:"twitch",channel:"eltiguerard",title:"Persecución por todo Manhattan con la LCPD 🚓 | Auren RP",game:"Grand Theft Auto V",viewers:1284,startedAt:new Date(now-2.3*3600e3).toISOString(),thumbnail:""}}),
+      p("100000000000000002","LaMamiDelBronx","mamibronx",{channels:{twitch:"",kick:"lamamidelbronx",youtube:"",tiktok:"lamamidelbronx"}, followers:{kick:31950}, weekMinutes:1260,
+        live:{platform:"kick",channel:"lamamidelbronx",title:"Abriendo el colmado más famoso del Bronx",game:"GTA V",viewers:640,startedAt:new Date(now-48*60e3).toISOString(),thumbnail:""}}),
+      p("100000000000000003","DonPeriquito",  "donperiquito",{channels:{twitch:"donperiquito",kick:"",youtube:"",tiktok:""}, followers:{twitch:22740}, weekMinutes:980, lastLive:now-5*3600e3}),
+      p("100000000000000004","Yeyo Mecánico", "yeyomecanico",{channels:{twitch:"yeyomecanico",kick:"yeyomecanico",youtube:"",tiktok:""}, followers:{twitch:6100,kick:3400}, weekMinutes:540, featured:true, lastLive:now-26*3600e3}),
+      p("100000000000000005","Doctora Lisy",  "doclisy",{channels:{twitch:"doclisy",kick:"",youtube:"@doclisy",tiktok:""}, followers:{twitch:4820}, weekMinutes:420,
+        live:{platform:"twitch",channel:"doclisy",title:"Turno de noche en Auren Medical",game:"GTA V",viewers:212,startedAt:new Date(now-95*60e3).toISOString(),thumbnail:""}}),
+      p("100000000000000006","Kilo Washington","kilowash",{channels:{twitch:"",kick:"kilowash",youtube:"",tiktok:"kilowash"}, followers:{kick:2950}, weekMinutes:300, lastLive:now-3*86400e3}),
+      p("100000000000000007","Santana Taxi",  "santanataxi",{channels:{twitch:"santanataxi",kick:"",youtube:"",tiktok:""}, followers:{twitch:1180}, weekMinutes:120}),
+      p("100000000000000008","Nueva en Auren","nuevaenauren",{})
+    ];
+    const withF = list.filter(s=> fol(s) > 0).sort((a,b)=> fol(b) - fol(a));
+    return { updatedAt: now - 3*60e3, configured:{discord:true, twitch:true, kick:false}, streamers:list,
+      top:{followers: withF.slice(0,3).map(s=> s.id), active: list.slice().sort((a,b)=> b.weekMinutes - a.weekMinutes)[0].id} };
+  }
+
+  const onSite = /(\.workers\.dev|aurenroleplay\.com|localhost|127\.0\.0\.1)$/.test(location.hostname);
+  async function load(silent){
+    try{
+      const r = await fetch("/api/streamers", {cache:"no-store"});
+      if(!r.ok) throw new Error(String(r.status));
+      DATA = await r.json(); DEMO = false;
+    }catch(e){
+      if(onSite){
+        if(!silent && !DATA){ DATA = {streamers:[], top:{followers:[],active:null}, configured:{}}; }
+        if(!silent) A.toast("No se pudo cargar la lista de streamers. Inténtalo en un momento.");
+      } else { DATA = demoData(); DEMO = true; ADMIN = true; }
+    }
+    renderAll();
+  }
+
+  (async ()=>{
+    await load();
+    if(!DEMO){
+      try{ const r = await fetch("/api/streamers/me"); if(r.ok){ ADMIN = !!(await r.json()).admin; renderStats(); } }catch{}
+      setInterval(()=>{ if(!document.hidden) load(true); }, 120000);
+    }
+    const m = location.hash.match(/^#s-(\d+)$/);
+    if(m && byId(m[1])) openProfile(m[1]);
+  })();
+})();
+</script>
+</body>
+</html>

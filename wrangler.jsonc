@@ -10,9 +10,19 @@
   },
   // Canal en vivo del Panel del staff (gratis en el plan Free, tipo SQLite)
   "durable_objects": {
-    "bindings": [{ "name": "ADMIN_HUB", "class_name": "AdminHub" }]
+    "bindings": [
+      { "name": "ADMIN_HUB", "class_name": "AdminHub" },
+      { "name": "SITE_STORE", "class_name": "SiteStore" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AdminHub"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["AdminHub"] },
+    { "tag": "v2", "new_sqlite_classes": ["SiteStore"] }
+  ],
+  // IA gratis de Cloudflare para GandyDev (10.000 neuronas al día en el plan Free)
+  "ai": { "binding": "AI" },
+  // Cada 10 minutos se actualizan los streamers (en vivo, seguidores y actividad)
+  "triggers": { "crons": ["*/10 * * * *"] },
   // Mantiene las variables que pongas en el panel de Cloudflare al volver a desplegar
   "keep_vars": true,
   "workers_dev": true,

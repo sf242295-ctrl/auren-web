@@ -13,6 +13,9 @@
 <link rel="stylesheet" href="assets/site.css">
 <style>
 /* Panel de trabajo: menú lateral + contenido. Pensado para usarse muchas horas: letra grande y contraste alto */
+body[data-page="staff"] .wrap{width:min(1500px,100% - 32px)}
+.adm, dialog{font-size:1.06rem}
+.adm .btn-sm, dialog .btn-sm{height:42px;padding:0 16px;font-size:.98rem;border-radius:11px}
 .adm-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:8.5rem 0 1.6rem}
 .adm-head h1{font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1}
 .adm-head .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -22,17 +25,22 @@
 .conn.off .dot{background:var(--bad)}
 .demo-note{padding:12px 16px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fde4a3;font-size:.95rem;margin-bottom:16px}
 
-.adm{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:start}
+.adm{display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start}
 .adm > *{min-width:0}
 .side{position:sticky;top:96px;padding:8px;display:grid;gap:2px}
-.side button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border-radius:10px;border:0;background:transparent;color:var(--soft);font-size:.98rem;text-align:left;cursor:pointer}
-.side button svg{width:18px;height:18px;flex:none;opacity:.85}
+.side button{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 12px;border-radius:12px;border:0;background:transparent;color:var(--soft);font-size:1.02rem;text-align:left;cursor:pointer}
+.side button .lbl{display:grid;line-height:1.3}
+.side button .lbl small{color:var(--muted);font-size:.84rem}
+.side button[aria-current="page"] .lbl small{color:var(--soft)}
+.side button svg{width:22px;height:22px;flex:none;opacity:.9}
 .side button:hover{background:var(--surface-2);color:var(--ink)}
 .side button[aria-current="page"]{background:rgba(255,255,255,.09);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
 .side .badge{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--on-accent);font-size:.8rem;font-weight:600;display:grid;place-items:center}
-.view{padding:clamp(18px,2.6vw,30px);min-height:60vh}
-.view > h2{font-size:clamp(1.5rem,2.4vw,1.9rem);line-height:1.1}
-.view > .sub{color:var(--soft);margin-top:6px}
+.view{padding:clamp(20px,2.8vw,36px);min-height:60vh}
+.view > h2{font-size:clamp(1.8rem,2.8vw,2.3rem);line-height:1.1}
+.view > .sub{color:var(--soft);margin-top:8px;font-size:1.06rem;max-width:70ch}
+.howto{margin-top:12px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--soft);font-size:.98rem}
+.howto b{color:var(--ink)}
 .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0 16px}
 .bar .search{flex:1;min-width:220px;max-width:420px}
 .bar .grow{flex:1}
@@ -40,8 +48,13 @@
 /* números */
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
 .tile{padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2)}
-.tile b{display:block;font-size:2.3rem;font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
-.tile span{display:block;margin-top:8px;color:var(--soft);font-size:.95rem}
+.tile b{display:block;font-size:2.8rem;font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.tile span{display:block;margin-top:8px;color:var(--soft);font-size:1rem}
+.quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:16px}
+.qk{display:grid;gap:4px;text-align:left;padding:16px 18px;border-radius:16px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:1.02rem}
+.qk:hover{background:rgba(255,255,255,.08)}
+.qk b{font-weight:600}
+.qk span{color:var(--soft);font-size:.92rem}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .box{padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2);min-width:0}
 .box h3{font-size:1.08rem;margin-bottom:12px}
@@ -55,9 +68,9 @@
 
 /* tablas */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
-table{width:100%;border-collapse:collapse;font-size:.98rem}
+table{width:100%;border-collapse:collapse;font-size:1.04rem}
 caption{text-align:left;padding:12px 14px;color:var(--soft);font-size:.92rem}
-th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
 th{font-weight:600;font-size:.88rem;color:var(--soft);background:rgba(255,255,255,.03);white-space:nowrap}
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:rgba(255,255,255,.03)}
@@ -79,7 +92,7 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 .dlg-in{padding:22px;display:grid;gap:16px}
 .dlg-in h3{font-size:1.35rem}
 .dlg-in .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-dialog.drawer{max-width:min(820px,calc(100% - 24px));height:calc(100vh - 24px);max-height:none;margin:12px 12px 12px auto}
+dialog.drawer{max-width:min(1060px,calc(100% - 24px));height:calc(100vh - 24px);max-height:none;margin:12px 12px 12px auto}
 @media (max-width:700px){dialog.drawer{margin:auto;height:calc(100vh - 16px);max-width:calc(100% - 16px)}}
 .p-head{display:flex;gap:14px;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}
 .p-head .pid{width:56px;height:56px;border-radius:14px;background:#1b1f27;display:grid;place-items:center;font-weight:600;font-size:1.1rem;flex:none}
@@ -95,8 +108,14 @@ dialog.drawer{max-width:min(820px,calc(100% - 24px));height:calc(100vh - 24px);m
 .kv dt{color:var(--muted);font-size:.86rem}
 .kv dd{font-weight:500;margin-top:2px;overflow-wrap:anywhere}
 .agroup + .agroup{margin-top:18px}
-.agroup h4{font-size:.92rem;color:var(--soft);font-weight:500;margin-bottom:8px}
-.agroup .btns{display:flex;flex-wrap:wrap;gap:8px}
+.agroup h4{font-size:1.02rem;color:var(--ink);font-weight:600;margin-bottom:10px}
+.agroup .btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.acard{display:grid;gap:4px;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:1rem}
+.acard:hover{background:rgba(255,255,255,.08)}
+.acard b{font-weight:600}
+.acard span{color:var(--soft);font-size:.9rem;line-height:1.45}
+.acard.danger{border-color:rgba(248,113,113,.45);background:rgba(248,113,113,.07)}
+.acard.danger b{color:#fecaca}
 .btn-danger{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fecaca}
 .btn-danger:hover{background:rgba(248,113,113,.2)}
 .form-grid{display:grid;gap:14px}
@@ -118,17 +137,32 @@ dialog.drawer{max-width:min(820px,calc(100% - 24px));height:calc(100vh - 24px);m
 .msg time{color:var(--muted);font-size:.82rem;margin-left:6px}
 .msg p{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere}
 .chat-send{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+/* monitoreo de pantalla */
+.screens{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+.screen{border:1px solid var(--line-2);border-radius:16px;overflow:hidden;background:#000}
+.screen .bar2{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0f1218;border-bottom:1px solid var(--line)}
+.screen .bar2 b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.screen .shot{position:relative;aspect-ratio:16/9;display:grid;place-items:center;color:var(--muted);cursor:zoom-in;max-width:100%}
+.screen .shot img{width:100%;height:100%;object-fit:contain;display:block}
+.screen .when{position:absolute;left:10px;bottom:10px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.7);font-size:.84rem;color:#e5e7eb}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pick button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:.95rem}
+.pick button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+dialog.big{max-width:min(1400px,calc(100% - 24px))}
+dialog.big img{width:100%;display:block;background:#000}
 .console{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:.92rem;background:#000;border:1px solid var(--line-2);border-radius:12px;padding:12px;white-space:pre-wrap;max-height:260px;overflow:auto;color:#e5e7eb}
 
 .state-box{text-align:center;display:grid;justify-items:center;gap:14px;padding:clamp(36px,6vw,64px) 22px}
 .state-box h2{font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.1}
 .state-box p{max-width:52ch;color:var(--soft)}
 
-@media (max-width:1060px){ .tiles{grid-template-columns:repeat(2,1fr)} .cols{grid-template-columns:1fr} }
+@media (max-width:1060px){ .tiles{grid-template-columns:repeat(2,1fr)} .cols{grid-template-columns:1fr} .screens{grid-template-columns:1fr} }
 @media (max-width:900px){
   .adm{grid-template-columns:1fr}
   .side{position:static;display:flex;overflow-x:auto;gap:4px}
-  .side button{width:auto;white-space:nowrap}
+  .side button{width:auto;white-space:nowrap;min-height:48px}
+  .side button .lbl small{display:none}
   .chat{grid-template-columns:1fr}
   .kv{grid-template-columns:1fr}
   .hide-sm{display:none}
@@ -154,6 +188,7 @@ dialog.drawer{max-width:min(820px,calc(100% - 24px));height:calc(100vh - 24px);m
 
 <dialog id="dlg" aria-labelledby="dlgTitle"></dialog>
 <dialog id="pdlg" class="drawer" aria-labelledby="pTitle"></dialog>
+<dialog id="bigdlg" class="big" aria-label="Pantalla en grande"></dialog>
 
 <footer id="siteFooter"></footer>
 

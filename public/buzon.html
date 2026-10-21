@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem("auren_theme");if(t==="light"){document.documentElement.dataset.theme="light"}if(localStorage.getItem("auren_sound")==="off"){document.documentElement.dataset.sound="off"}}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buzón · Auren RP</title>
+<meta name="description" content="Cuenta tu experiencia en Auren RP o deja una queja anónima para el staff.">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.bz-head{padding:9rem 0 2rem}
+.bz-head h1{font-size:clamp(3rem,9vw,6rem);line-height:.92;letter-spacing:-.05em;font-weight:800}
+.bz-head .sub{margin-top:1.1rem;color:var(--soft);max-width:62ch;font-size:1.08rem}
+.bz-switch{display:inline-flex;gap:4px;padding:5px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface-2);margin-top:1.8rem}
+.bz-switch button{height:46px;padding:0 20px;border-radius:10px;border:0;background:transparent;cursor:pointer;font-weight:600;font-size:1rem;color:var(--soft)}
+.bz-switch button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.bz-grid{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:28px;align-items:start;padding-bottom:6rem}
+.compose{padding:clamp(22px,3vw,30px);display:grid;gap:16px;position:sticky;top:90px}
+.compose h2{font-size:1.5rem;letter-spacing:-.02em}
+.compose p.lead{color:var(--soft);margin-top:-6px}
+.stars{display:flex;gap:6px}
+.stars button{background:none;border:0;cursor:pointer;padding:2px;color:var(--line-2);transition:color .12s,transform .12s}
+.stars button svg{width:34px;height:34px;display:block}
+.stars button.on{color:#ffb020}
+.stars button:hover{transform:scale(1.12)}
+textarea.input{min-height:130px;resize:vertical;line-height:1.5}
+.count{font-size:.85rem;color:var(--muted);text-align:right}
+.anon-note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgb(139 92 246 / .35);background:rgb(139 92 246 / .1);color:var(--soft);font-size:.92rem}
+.anon-note svg{flex:none;width:18px;height:18px;margin-top:1px;color:#b9a7ff}
+.msg-ok{padding:12px 14px;border-radius:12px;border:1px solid rgb(74 222 128 / .4);background:rgb(74 222 128 / .1);color:#bbf7d0;font-size:.95rem}
+.msg-bad{color:var(--bad);font-size:.92rem}
+.login-wall{display:grid;gap:12px;justify-items:start}
+.wall-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.exp-list{display:grid;gap:14px}
+.exp-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:2px}
+.exp-head h2{font-size:1.5rem;letter-spacing:-.02em}
+.exp-head span{color:var(--muted);font-size:.95rem}
+.exp{padding:20px;border-radius:18px;display:grid;gap:12px;animation:rise .4s both}
+.exp .who{display:flex;gap:12px;align-items:center}
+.exp .av{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;color:#fff;background:hsl(var(--h,220) 16% 28%);overflow:hidden}
+.exp .av img{width:100%;height:100%;object-fit:cover}
+.exp .who b{display:block;letter-spacing:-.01em}
+.exp .who small{color:var(--muted);font-size:.85rem}
+.exp .rate{margin-left:auto;color:#ffb020;letter-spacing:2px;font-size:1rem;white-space:nowrap}
+.exp .body{color:var(--soft);line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.exp .foot{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.exp .when{color:var(--muted);font-size:.82rem}
+.exp .hide{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.82rem;text-decoration:underline;text-underline-offset:3px}
+.exp.hidden-row{opacity:.5}
+.empty{padding:32px;text-align:center;color:var(--soft)}
+.empty b{display:block;color:var(--ink);font-size:1.25rem;margin-bottom:6px}
+@media (max-width:860px){ .bz-grid{grid-template-columns:1fr} .compose{position:static} }
+html[data-theme="light"] .msg-ok{color:#166534}
+html[data-theme="light"] .anon-note{color:#4b2a86}
+</style>
+</head>
+<body data-page="buzon" data-city="dim">
+<header id="siteHeader"></header>
+
+<main id="contenido" tabindex="-1">
+  <div class="wrap bz-head">
+    <p class="eyebrow">Tu voz en la ciudad</p>
+    <h1>Buzón</h1>
+    <p class="sub">Cuenta tu experiencia en Auren para que la vea toda la comunidad, o deja una queja anónima para el staff. Todo llega también al Discord del equipo.</p>
+    <div class="bz-switch" role="tablist" aria-label="Tipo de mensaje">
+      <button role="tab" aria-selected="true" data-tab="exp" type="button">Mi experiencia</button>
+      <button role="tab" aria-selected="false" data-tab="queja" type="button">Queja anónima</button>
+    </div>
+  </div>
+
+  <div class="wrap bz-grid">
+    <aside class="card compose" id="compose"></aside>
+    <section aria-label="Experiencias de la comunidad">
+      <div class="exp-head"><h2>Lo que dice la comunidad</h2><span id="expCount"></span></div>
+      <div class="exp-list" id="expList"></div>
+    </section>
+  </div>
+</main>
+
+<footer id="siteFooter"></footer>
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script>
+(function(){
+  const A = window.Auren, C = A.config, esc = A.esc, I = window.AUREN_ICON, $ = id => document.getElementById(id);
+  const onSite = /(\.workers\.dev|aurenroleplay\.com|localhost|127\.0\.0\.1)$/.test(location.hostname);
+  let TAB = "exp", DEMO = false, ADMIN = false, user = null, stars = 5, DATA = { experiences: [], total: 0 };
+  const hue = s => { let h = 0; for(const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "ahora mismo" : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m/60)} h` : `hace ${Math.round(m/1440)} días`; };
+  const star = f => `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .6-5.3 4.6 1.6 6.8L12 17l-6.9 3.5 1.6-6.8L1.4 9.1l7-.6z"/></svg>`;
+
+  function starPicker(){
+    return `<div class="stars" role="radiogroup" aria-label="Valoración">${[1,2,3,4,5].map(n=>`<button type="button" class="${n<=stars?"on":""}" data-star="${n}" role="radio" aria-checked="${n===stars}" aria-label="${n} de 5">${star()}</button>`).join("")}</div>`;
+  }
+  function renderCompose(){
+    const el = $("compose");
+    if(!user){
+      el.innerHTML = `<div class="login-wall">
+        <h2>${TAB==="exp"?"Cuenta tu experiencia":"Deja tu queja"}</h2>
+        <p class="lead">Inicia sesión con Discord para escribir en el buzón.${TAB==="queja"?" Tu queja es <b>anónima</b>: el staff no sabrá quién la mandó.":""}</p>
+        <a class="btn btn-primary" href="/api/auth/login" data-auth="login">${I.discord}Iniciar sesión con Discord</a>
+      </div>`;
+      return;
+    }
+    if(TAB === "exp"){
+      el.innerHTML = `<h2>Cuenta tu experiencia</h2><p class="lead">Sale en esta página con tu nombre y llega al Discord del staff.</p>
+        <div><label style="font-weight:500;font-size:.92rem;display:block;margin-bottom:8px">¿Cómo la valoras?</label>${starPicker()}</div>
+        <div class="field"><label for="txt">Tu experiencia</label>
+          <textarea class="input" id="txt" maxlength="1000" placeholder="¿Qué te gusta de Auren? ¿Un rol que recuerdes, cómo te trató la comunidad…?"></textarea>
+          <div class="count"><span id="n">0</span>/1000</div></div>
+        <button class="btn btn-primary" id="send" type="button">Publicar mi experiencia</button>
+        <div id="feed" aria-live="polite"></div>`;
+    } else {
+      el.innerHTML = `<h2>Queja anónima</h2><p class="lead">Para contarle al equipo algo que no estuvo bien.</p>
+        <div class="anon-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <span>Es <b>anónima de verdad</b>: la web no guarda ni envía quién la escribió. Solo verifica que estés en el Discord para evitar spam.</span></div>
+        <div class="field"><label for="about">¿Sobre quién o qué? <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+          <input class="input" id="about" maxlength="60" placeholder="Un nombre del staff, una situación…"></div>
+        <div class="field"><label for="txt">Tu queja</label>
+          <textarea class="input" id="txt" maxlength="1000" placeholder="Cuéntanos qué pasó, con el mayor detalle que puedas."></textarea>
+          <div class="count"><span id="n">0</span>/1000</div></div>
+        <button class="btn btn-primary" id="send" type="button">Enviar queja anónima</button>
+        <div id="feed" aria-live="polite"></div>`;
+    }
+    const txt = $("txt"), n = $("n");
+    if(txt) txt.addEventListener("input", ()=> n.textContent = txt.value.length);
+    el.querySelectorAll("[data-star]").forEach(b=> b.onclick = ()=>{ stars = +b.dataset.star; renderCompose(); });
+    const send = $("send");
+    if(send) send.onclick = submit;
+  }
+
+  async function submit(){
+    const txt = $("txt"), feed = $("feed"), btn = $("send");
+    const text = txt.value.trim();
+    if(text.length < 10){ feed.innerHTML = `<p class="msg-bad">Escribe un poco más (mínimo 10 letras).</p>`; txt.focus(); return; }
+    btn.disabled = true; feed.innerHTML = "";
+    try{
+      if(DEMO){
+        if(TAB === "exp"){ DATA.experiences.unshift({ id:"demo"+Date.now(), name:user.name, username:user.username, avatar:user.avatar, text, stars, at:Date.now() }); DATA.total++; renderList(); }
+        feed.innerHTML = `<p class="msg-ok">${TAB==="exp"?"¡Gracias! (vista de ejemplo)":"Queja enviada (vista de ejemplo)."}</p>`;
+      } else if(TAB === "exp"){
+        const r = await fetch("/api/buzon/experiencia", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text, stars })});
+        const j = await r.json(); if(!r.ok) throw new Error(j.error);
+        feed.innerHTML = `<p class="msg-ok">¡Gracias por contar tu experiencia! Ya está publicada.</p>`;
+        load(true);
+      } else {
+        const r = await fetch("/api/buzon/queja", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text, about: ($("about")?.value || "").trim() })});
+        const j = await r.json(); if(!r.ok) throw new Error(j.error);
+        feed.innerHTML = `<p class="msg-ok">Queja enviada de forma anónima. Gracias por avisar, el staff lo revisa.</p>`;
+      }
+      txt.value = ""; const nn = $("n"); if(nn) nn.textContent = "0";
+    }catch(e){ feed.innerHTML = `<p class="msg-bad">${esc(e.message || "No se pudo enviar. Inténtalo otra vez.")}</p>`; }
+    finally{ btn.disabled = false; }
+  }
+
+  function renderList(){
+    const el = $("expList"), list = DATA.experiences || [];
+    $("expCount").textContent = DATA.total ? `${DATA.total} ${DATA.total === 1 ? "experiencia" : "experiencias"}` : "";
+    if(!list.length){ el.innerHTML = `<div class="card empty"><b>Todavía no hay experiencias</b>Sé el primero en contar cómo te va en Auren.</div>`; return; }
+    el.innerHTML = list.map(x=>`<article class="card exp ${x.hidden?"hidden-row":""}" style="--h:${hue(x.id)}">
+      <div class="who"><span class="av">${esc((x.name||"?").charAt(0).toUpperCase())}${x.avatar?`<img src="${esc(x.avatar)}" alt="" loading="lazy" data-av>`:""}</span>
+        <div style="min-width:0"><b>${esc(x.name)}</b>${x.username?`<small>@${esc(x.username)}</small>`:""}</div>
+        <span class="rate" aria-label="${x.stars} de 5">${"★".repeat(x.stars)}${"☆".repeat(5-x.stars)}</span></div>
+      <div class="body">${esc(x.text)}</div>
+      <div class="foot"><span class="when">${esc(ago(x.at))}</span>${ADMIN?`<button class="hide" data-hide="${esc(x.id)}" data-h="${x.hidden?0:1}">${x.hidden?"Mostrar":"Ocultar"}</button>`:""}</div>
+    </article>`).join("");
+    el.querySelectorAll("img[data-av]").forEach(i=> i.addEventListener("error", ()=> i.remove(), {once:true}));
+    if(ADMIN) el.querySelectorAll("[data-hide]").forEach(b=> b.onclick = async ()=>{
+      try{ await fetch("/api/buzon/hide", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ id:b.dataset.hide, hidden: b.dataset.h === "1" })}); load(true); }catch{}
+    });
+  }
+
+  function demo(){
+    const P = (name, user, text, s) => ({ id:name+s, name, username:user, avatar:"", text, stars:s, at:Date.now()-Math.random()*6e8 });
+    return { total:3, experiences:[
+      P("El Tíguere RD","tiguerard","El mejor server dominicano que he jugado. El staff responde rapidísimo y la comunidad es una familia. 🔥",5),
+      P("La Mami","mamibronx","Entré sin saber nada y en una hora ya estaba roleando con media ciudad. Me encanta.",5),
+      P("Don Periquito","donperiquito","Buen rol y buenos eventos. A veces se llena pero vale la pena.",4),
+    ] };
+  }
+  async function load(silent){
+    try{ const r = await fetch("/api/buzon", {cache:"no-store"}); if(!r.ok) throw 0; DATA = await r.json(); DEMO = false; }
+    catch(e){ if(onSite){ if(!DATA.experiences.length) DATA = { experiences:[], total:0 }; } else { DATA = demo(); DEMO = true; ADMIN = true; } }
+    renderList();
+  }
+
+  document.querySelectorAll("[data-tab]").forEach(b=> b.onclick = ()=>{
+    TAB = b.dataset.tab; document.querySelectorAll("[data-tab]").forEach(x=> x.setAttribute("aria-selected", x === b));
+    renderCompose();
+  });
+
+  (async ()=>{
+    user = await A.user;
+    renderCompose();
+    await load();
+    if(!DEMO && user){ try{ const r = await fetch("/api/streamers/me"); if(r.ok) ADMIN = !!(await r.json()).admin; renderList(); }catch{} }
+    if(A.onLive) A.onLive(what=>{ if(what === "buzon" || what === "all") load(true); });
+  })();
+})();
+</script>
+</body>
+</html>

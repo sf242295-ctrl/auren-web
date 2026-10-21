@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem("auren_theme");if(t==="light"){document.documentElement.dataset.theme="light"}if(localStorage.getItem("auren_sound")==="off"){document.documentElement.dataset.sound="off"}}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta de Halloween · Auren RP</title>
+<meta name="description" content="Gira la ruleta de Halloween de Auren RP: un giro por cuenta.">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.rl-head{padding:9rem 0 1.5rem;text-align:center}
+.rl-head .eyebrow{justify-content:center;display:flex;gap:8px}
+.rl-head h1{font-size:clamp(2.8rem,8vw,5.5rem);line-height:.95;letter-spacing:-.04em;font-weight:800;
+  background:linear-gradient(180deg,#ffe2b0 10%,#ff9a3c 55%,#b4410a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rl-head p{color:var(--soft);max-width:54ch;margin:1.1rem auto 0;font-size:1.08rem}
+.closed{max-width:560px;margin:2rem auto;padding:26px;text-align:center}
+.closed b{display:block;font-size:1.4rem;margin-bottom:8px}
+.rl-wrap{display:grid;place-items:center;gap:26px;padding-bottom:5rem}
+.wheel-box{position:relative;width:min(440px,86vw);aspect-ratio:1;display:grid;place-items:center}
+.pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;width:38px;height:46px;filter:drop-shadow(0 4px 6px rgb(var(--sink) / .5))}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;transition:transform 5.2s cubic-bezier(.16,.84,.3,1);
+  box-shadow:0 0 0 10px var(--panel),0 0 0 13px #ff8a1f,0 20px 60px -15px rgb(255 120 30 / .5),inset 0 0 40px rgb(var(--sink) / .4)}
+.wheel::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,transparent 60%,rgb(var(--sink) / .25))}
+.hub{position:absolute;width:62px;height:62px;border-radius:50%;background:var(--panel);border:3px solid #ff8a1f;display:grid;place-items:center;z-index:2;animation:floaty 4s ease-in-out infinite}
+.hub svg{width:34px;height:34px;color:#ff8a1f}
+.seg-label{position:absolute;left:50%;top:50%;transform-origin:0 0;font-size:.82rem;font-weight:700;color:#fff;white-space:nowrap;text-shadow:0 1px 3px rgb(0 0 0 / .6);pointer-events:none}
+.spin-btn{font-size:1.1rem;height:56px;padding:0 34px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;max-width:620px}
+.legend span{display:inline-flex;align-items:center;gap:7px;color:var(--soft);font-size:.92rem}
+.legend i{width:12px;height:12px;border-radius:3px;flex:none}
+.result{max-width:560px;width:100%;padding:28px;text-align:center;display:grid;gap:14px;animation:pop .5s both}
+.result .big{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.result .prize-ico{width:74px;height:74px;margin:0 auto;border-radius:20px;display:grid;place-items:center;background:rgb(255 138 31 / .14);border:1px solid rgb(255 138 31 / .4)}
+.result .prize-ico svg{width:40px;height:40px;color:#ff8a1f}
+.code{font-family:ui-monospace,monospace;font-size:1.3rem;font-weight:700;letter-spacing:3px;padding:10px 16px;border-radius:12px;border:1px dashed var(--line-2);background:var(--surface-2);display:inline-block}
+.choose{display:grid;gap:12px}
+.choose .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.choose .opts button{padding:16px 10px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface-2);cursor:pointer;display:grid;gap:8px;justify-items:center;font-weight:600;transition:border-color .15s,transform .15s}
+.choose .opts button:hover{border-color:#ff8a1f;transform:translateY(-3px)}
+.choose .opts svg{width:30px;height:30px;color:#ff8a1f}
+.recent{max-width:620px;width:100%}
+.recent h2{font-size:1.2rem;text-align:center;margin-bottom:12px;color:var(--soft)}
+.recent ul{list-style:none;display:grid;gap:8px}
+.recent li{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-size:.95rem}
+.recent li b{font-weight:600}
+.recent .pz{color:#ffb46b}
+.demo-note{margin:1rem auto 0;max-width:620px;padding:12px 16px;border-radius:12px;border:1px dashed var(--line-2);color:var(--soft);font-size:.95rem;text-align:center}
+@media (max-width:480px){ .choose .opts{grid-template-columns:1fr} }
+dialog{color:var(--ink);background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:0;width:100%;max-width:min(760px,calc(100% - 24px));margin:auto;max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgb(var(--sink) / .7)}
+.wdh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.wtable{display:grid;gap:8px;padding:16px 20px}
+.wrow{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-size:.92rem}
+.wrow .nm b{display:block}.wrow .nm small{color:var(--muted)}
+.wrow .pz{color:#ffb46b;font-weight:600}
+.wrow code{font-family:ui-monospace,monospace;font-size:.82rem;background:rgb(var(--sink) / .3);padding:2px 7px;border-radius:6px}
+.wrow .dl{display:inline-flex;gap:6px;align-items:center;cursor:pointer;white-space:nowrap}
+@media (max-width:620px){ .wrow{grid-template-columns:1fr auto} }
+</style>
+</head>
+<body data-page="ruleta" data-city="dim">
+<header id="siteHeader"></header>
+
+<main id="contenido" tabindex="-1">
+  <div class="wrap rl-head">
+    <p class="eyebrow">🎃 Especial de temporada</p>
+    <h1>Ruleta de Halloween</h1>
+    <p>Un giro por cuenta. Gira y que la suerte de la ciudad decida qué te llevas. Los premios los entrega el staff en el servidor.</p>
+  </div>
+  <div class="wrap rl-wrap" id="app"><div class="card closed"><b>Cargando…</b></div></div>
+</main>
+
+<dialog id="wdlg" aria-labelledby="wTitle"></dialog>
+<footer id="siteFooter"></footer>
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script>
+(function(){
+  const A = window.Auren, esc = A.esc, I = window.AUREN_ICON, $ = id => document.getElementById(id);
+  const onSite = /(\.workers\.dev|aurenroleplay\.com|localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const COLORS = ["#ff8a1f","#8b5cf6","#3ddc97","#56b6ff","#ff5d73","#f5c451","#b4410a","#a970ff"];
+  const ICON = {
+    armas:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 7h16l2-2h2v4h-2l-2 2h-4l-1 2h-3l-2 6H4l2-6H3a1 1 0 0 1-1-1z"/></svg>',
+    carro:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l2-5h14l2 5v6h-3a2 2 0 1 1-4 0H8a2 2 0 1 1-4 0H3zm3.5-4-1 3h13l-1-3z"/></svg>',
+    pase:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.6 6.3L21 9l-5 4 1.6 7L12 16l-5.6 4L8 13 3 9l6.4-.7z"/></svg>',
+    cadena:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="7" height="5" rx="2.5"/><rect x="14" y="11" width="7" height="5" rx="2.5"/><path d="M10 11h4"/></svg>',
+    nada:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>',
+    items:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 7h16v3H4zm1 5h14l-1 9H6zm4-9h6l1 3H8z"/></svg>',
+    Venda:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(45 12 12)"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+    Radio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="15" cy="14" r="3"/><path d="M7 8l9-4"/></svg>',
+    Agua:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/></svg>'
+  };
+  const pIco = (id, choice) => ICON[choice] || ICON[id] || ICON.items;
+  let DATA = null, DEMO = false, spinning = false, angle = 0, ADMIN = false;
+
+  function segColor(i){ return COLORS[i % COLORS.length]; }
+  function drawWheel(prizes){
+    const n = prizes.length, step = 360 / n;
+    const grad = prizes.map((p, i)=> `${segColor(i)} ${i*step}deg ${(i+1)*step}deg`).join(",");
+    const labels = prizes.map((p, i)=>{
+      const mid = (i + .5) * step;
+      return `<span class="seg-label" style="transform:rotate(${mid}deg) translateX(14px)">${esc(p.label)}</span>`;
+    }).join("");
+    return `<div class="wheel-box">
+      <svg class="pointer" viewBox="0 0 38 46" aria-hidden="true"><path d="M19 46 2 10a17 17 0 0 1 34 0z" fill="#ff8a1f" stroke="#1b0b00" stroke-width="1.5"/><circle cx="19" cy="15" r="5" fill="#1b0b00"/></svg>
+      <div class="wheel" id="wheel" style="background:conic-gradient(${grad})">${labels}</div>
+      <div class="hub">${I.mark}</div>
+    </div>`;
+  }
+
+  function spinView(){
+    const prizes = DATA.prizes;
+    $("app").innerHTML = `
+      ${drawWheel(prizes)}
+      <button class="btn btn-primary spin-btn" id="spin">${DATA.logged ? "Girar la ruleta 🎃" : "Inicia sesión para girar"}</button>
+      <div class="legend">${prizes.map((p,i)=>`<span><i style="background:${segColor(i)}"></i>${esc(p.label)}</span>`).join("")}</div>
+      ${DEMO ? `<p class="demo-note">Vista de ejemplo: puedes girar las veces que quieras. En la web real es un giro por cuenta y el premio lo guarda el servidor.</p>` : ""}
+      <div class="recent" id="recent"></div>
+      ${ADMIN ? `<button class="btn btn-ghost btn-sm" id="winners" type="button">Ver ganadores (staff)</button>` : ""}`;
+    renderRecent();
+    if(ADMIN && $("winners")) $("winners").onclick = openWinners;
+    const btn = $("spin");
+    btn.onclick = ()=>{
+      if(!DATA.logged && !DEMO){ location.href = "/api/auth/login?next=" + encodeURIComponent("/ruleta.html"); return; }
+      if(DATA.member === false && !DEMO){ A.toast("Tienes que estar en el Discord de Auren para girar."); return; }
+      doSpin();
+    };
+  }
+
+  async function doSpin(){
+    if(spinning) return; spinning = true;
+    const btn = $("spin"); btn.disabled = true; btn.textContent = "Girando…";
+    const wheel = $("wheel"), n = DATA.prizes.length, step = 360 / n;
+    let index;
+    try{
+      if(DEMO){ index = Math.floor(Math.random() * n); DATA.me = { prize: DATA.prizes[index].id, label: DATA.prizes[index].label, choose: DATA.prizes[index].choose || null, code: DATA.prizes[index].id==="nada"?null:"HW-DEMO12", at: Date.now() }; }
+      else {
+        const r = await fetch("/api/ruleta/spin", {method:"POST"});
+        const j = await r.json();
+        if(r.status === 409 && j.me){ DATA.me = j.me; finishSpin(DATA.prizes.findIndex(p=>p.id===j.me.prize)); A.toast("Ya giraste esta temporada."); return; }
+        if(!r.ok) throw new Error(j.error);
+        index = j.index; DATA.me = j.me;
+      }
+      try{ window.AurenSFX && window.AurenSFX.play("whoosh"); }catch{}
+      const turns = 6, target = turns * 360 + (360 - (index + .5) * step);
+      angle += target - (angle % 360);
+      wheel.style.transform = `rotate(${angle}deg)`;
+      let ticks = Math.round(turns * n), tk = 0;
+      const ti = setInterval(()=>{ try{ window.AurenSFX && window.AurenSFX.play("blip"); }catch{} if(++tk >= ticks) clearInterval(ti); }, 90);
+      setTimeout(()=>{ clearInterval(ti); finishSpin(index); }, 5300);
+    }catch(e){ A.toast(e.message || "No se pudo girar."); btn.disabled = false; btn.textContent = "Girar la ruleta 🎃"; spinning = false; }
+  }
+  function finishSpin(index){
+    spinning = false;
+    try{ window.AurenSFX && window.AurenSFX.play(DATA.me.prize==="nada"?"boo":"unlock"); }catch{}
+    resultView();
+    if(!DEMO) load(true);
+  }
+
+  function resultView(){
+    const me = DATA.me, won = me.prize !== "nada";
+    const needChoice = me.choose && !me.choice;
+    $("app").innerHTML = `<div class="card result">
+      <span class="prize-ico">${pIco(me.prize, me.choice)}</span>
+      ${won ? `<div class="big">¡Te tocó ${esc(me.choice ? me.choice : me.label)}! 🎉</div>` : `<div class="big">Esta vez… ¡nada! 👻</div>`}
+      ${won && !needChoice ? `<p style="color:var(--soft)">Enséñale este código al staff en el servidor para reclamar tu premio:</p><span class="code">${esc(me.code)}</span>` : ""}
+      ${needChoice ? `<div class="choose"><p style="color:var(--soft)">¡Te tocaron <b>3 items random</b>! Elige uno:</p>
+          <div class="opts">${me.choose.map(o=>`<button type="button" data-choice="${esc(o)}">${pIco("", o)}${esc(o)}</button>`).join("")}</div></div>` : ""}
+      ${!won ? `<p style="color:var(--soft)">La suerte de la ciudad no estuvo de tu lado. ¡Vuelve el año que viene!</p>` : ""}
+      <div class="recent" id="recent" style="margin-top:10px"></div>
+    </div>`;
+    renderRecent();
+    if(needChoice) $("app").querySelectorAll("[data-choice]").forEach(b=> b.onclick = async ()=>{
+      $("app").querySelectorAll("[data-choice]").forEach(x=> x.disabled = true);
+      try{
+        if(DEMO){ DATA.me.choice = b.dataset.choice; }
+        else{ const r = await fetch("/api/ruleta/choose", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ choice: b.dataset.choice })}); const j = await r.json(); if(!r.ok) throw new Error(j.error); DATA.me = j.me; }
+        try{ window.AurenSFX && window.AurenSFX.play("toggleOn"); }catch{}
+        resultView();
+      }catch(e){ A.toast(e.message); $("app").querySelectorAll("[data-choice]").forEach(x=> x.disabled = false); }
+    });
+  }
+  function renderRecent(){
+    const el = $("recent"); if(!el) return;
+    const list = DATA.recent || [];
+    if(!list.length){ el.innerHTML = ""; return; }
+    el.innerHTML = `<h2>Últimos ganadores</h2><ul>${list.map(x=>`<li><b>${esc(x.name)}</b><span class="pz">${esc(x.choice || x.label)}</span></li>`).join("")}</ul>`;
+  }
+
+  async function openWinners(){
+    const d = $("wdlg");
+    let data;
+    if(DEMO) data = { spins:[{key:"a",name:"El Tíguere RD",username:"tiguerard",label:"Una cadena gratis",prize:"cadena",code:"HW-7KQ2MN",choice:null,at:Date.now()-3e6,delivered:false},{key:"b",name:"La Mami",username:"mamibronx",label:"3 items random",prize:"items",choice:"Agua",code:"HW-9XP4RT",at:Date.now()-9e6,delivered:true}] };
+    else{ try{ const r = await fetch("/api/ruleta/admin"); data = await r.json(); if(!r.ok) throw new Error(data.error); }catch(e){ A.toast(e.message||"No se pudo abrir."); return; } }
+    const row = x => `<div class="wrow" data-key="${esc(x.key)}">
+      <span class="nm"><b>${esc(x.name)}</b>${x.username?`<small>@${esc(x.username)}</small>`:""}</span>
+      <span class="pz">${esc(x.choice || x.label)}</span>
+      ${x.code?`<code>${esc(x.code)}</code>`:`<span style="color:var(--muted)">—</span>`}
+      <label class="dl"><input type="checkbox" ${x.delivered?"checked":""} ${x.prize==="nada"?"disabled":""} data-dl> Entregado</label></div>`;
+    d.innerHTML = `<div class="wdh"><h2 id="wTitle">Ganadores de la ruleta</h2><button class="icon-btn" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="wtable">${data.spins.length?data.spins.map(row).join(""):`<p style="color:var(--soft);text-align:center;padding:20px">Todavía nadie ha girado.</p>`}</div>`;
+    d.querySelector("[data-close]").onclick = ()=> d.close();
+    d.querySelectorAll(".wrow").forEach(r=>{ const cb = r.querySelector("[data-dl]"); if(cb) cb.onchange = async ()=>{
+      try{ if(!DEMO){ const rr = await fetch("/api/ruleta/deliver", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ key:r.dataset.key, delivered:cb.checked })}); if(!rr.ok) throw 0; } }catch{ cb.checked = !cb.checked; A.toast("No se pudo guardar."); }
+    }; });
+    d.showModal();
+  }
+  $("wdlg").addEventListener("click", e=>{ if(e.target === $("wdlg")) $("wdlg").close(); });
+
+  function demo(){
+    return { open:true, logged:true, member:true,
+      prizes:[{id:"armas",label:"3 armas en el server"},{id:"carro",label:"1 carro VIP"},{id:"pase",label:"Pase Élite de Navidad"},{id:"cadena",label:"Una cadena gratis"},{id:"nada",label:"Nada"},{id:"items",label:"3 items random",choose:["Venda","Radio","Agua"]}],
+      me:null, recent:[{name:"El Tíguere RD",label:"Una cadena gratis"},{name:"La Mami",choice:"Agua"},{name:"Kilo",label:"1 carro VIP"}] };
+  }
+  async function load(silent){
+    try{ const r = await fetch("/api/ruleta", {cache:"no-store"}); if(!r.ok) throw 0; DATA = await r.json(); DEMO = false; }
+    catch(e){ if(onSite){ DATA = DATA || { open:false }; } else { DATA = demo(); DEMO = true; } }
+    if(silent) return;
+    if(!DATA.open){ $("app").innerHTML = `<div class="card closed"><b>La ruleta está cerrada 🎃</b><p style="color:var(--soft)">Vuelve en temporada de Halloween para girar y ganar.</p></div>`; return; }
+    if(DATA.me) resultView(); else spinView();
+  }
+
+  (async ()=>{
+    await load();
+    if(!DEMO){ try{ const r = await fetch("/api/streamers/me"); if(r.ok){ ADMIN = !!(await r.json()).admin; if(DATA && DATA.open && !DATA.me) spinView(); } }catch{} }
+    if(A.onLive) A.onLive(what=>{ if(what === "ruleta" || what === "all") load(true); });
+  })();
+})();
+</script>
+</body>
+</html>

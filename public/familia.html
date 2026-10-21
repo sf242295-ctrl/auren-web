@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem("auren_theme");if(t==="light"){document.documentElement.dataset.theme="light"}if(localStorage.getItem("auren_sound")==="off"){document.documentElement.dataset.sound="off"}}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Familia Staff · Auren RP</title>
+<meta name="description" content="El equipo completo de Auren RP y de qué se encarga cada uno.">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgb(74 222 128 / .5)}70%{box-shadow:0 0 0 8px rgb(74 222 128 / 0)}100%{box-shadow:0 0 0 0 rgb(74 222 128 / 0)}}
+.fam-head{padding:9rem 0 2rem}
+.fam-head h1{font-size:clamp(3rem,9vw,6.6rem);line-height:.92;letter-spacing:-.05em;font-weight:800}
+.fam-head .sub{margin-top:1.1rem;color:var(--soft);max-width:60ch;font-size:1.08rem}
+.fam-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.4rem;align-items:center}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:livePulse 2s infinite}
+.fam-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.4rem;align-items:center}
+.fam-tools .search{flex:1;min-width:220px;max-width:380px}
+.demo-note{margin-top:1.1rem;padding:12px 16px;border-radius:12px;border:1px dashed var(--line-2);color:var(--soft);font-size:.95rem;max-width:760px}
+
+.grp{padding:2.4rem 0 .6rem}
+.grp-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1.1rem}
+.grp-h h2{font-size:clamp(1.6rem,3.4vw,2.3rem);letter-spacing:-.03em;line-height:1.05}
+.grp-h .dot{width:12px;height:12px;border-radius:50%;background:var(--rc,var(--muted));box-shadow:0 0 14px var(--rc,transparent)}
+.grp-h .n{color:var(--muted);font-weight:500}
+.grp-h p{flex-basis:100%;color:var(--soft);margin-top:-4px}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.person{position:relative;padding:20px;border-radius:20px;display:grid;gap:12px;align-content:start;animation:rise .5s both;border-top:3px solid var(--rc,var(--line-2))}
+.person .top{display:flex;gap:14px;align-items:center;min-width:0}
+.pav{position:relative;width:58px;height:58px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:1.3rem;color:#fff;background:hsl(var(--h,220) 16% 26%);overflow:hidden;box-shadow:0 0 0 3px var(--panel),0 0 0 5px var(--rc,var(--line-2))}
+.pav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.person b{display:block;font-size:1.12rem;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person small{display:block;color:var(--muted);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rolechip{display:inline-flex;align-items:center;gap:6px;width:max-content;max-width:100%;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600;border:1px solid color-mix(in srgb,var(--rc,#888) 60%,transparent);background:color-mix(in srgb,var(--rc,#888) 16%,transparent);color:var(--ink)}
+.duty{font-size:.96rem;color:var(--soft);line-height:1.5}
+.duty strong{color:var(--ink);font-weight:600}
+.duty.none{color:var(--muted);font-style:italic}
+.owners .person{border-top-width:4px}
+.owners .pav{width:72px;height:72px;font-size:1.6rem}
+.empty{padding:30px;text-align:center;color:var(--soft)}
+.empty b{display:block;color:var(--ink);font-size:1.25rem;margin-bottom:6px}
+
+dialog{color:var(--ink);background:var(--panel);border:1px solid var(--line-2);border-radius:22px;padding:0;width:100%;max-width:min(980px,calc(100% - 24px));margin:auto;max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgb(var(--sink) / .72)}
+.dh{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2;flex-wrap:wrap}
+.dh h2{font-size:1.35rem}
+.tabs{display:flex;gap:6px}
+.tabs button{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface-2);cursor:pointer;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.db{padding:22px;display:grid;gap:14px}
+.warn{padding:12px 14px;border-radius:12px;border:1px solid rgb(251 191 36 / .4);background:rgb(251 191 36 / .08);color:#fde7a8;font-size:.95rem}
+.warn code{font-size:.9em;background:rgb(var(--sink) / .35);padding:1px 6px;border-radius:6px}
+.rrow{display:grid;grid-template-columns:auto 220px 1fr 1.4fr;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2)}
+.rrow.off .input{opacity:.45}
+.rrow .nm{display:flex;align-items:center;gap:8px;min-width:0;font-weight:600}
+.rrow .nm i{width:10px;height:10px;border-radius:50%;flex:none}
+.rrow .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.drow{display:grid;grid-template-columns:240px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2)}
+.drow .who{display:flex;gap:10px;align-items:center;min-width:0}
+.drow .who .pav{width:40px;height:40px;font-size:1rem;box-shadow:none}
+.drow .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drow .who small{color:var(--muted);font-size:.84rem}
+.st{font-size:.85rem;color:var(--muted);min-width:70px}
+.st.ok{color:var(--ok)}.st.bad{color:var(--bad)}
+.manual{display:flex;gap:8px;flex-wrap:wrap}
+.manual .input{max-width:260px}
+@media (max-width:860px){
+  .rrow{grid-template-columns:auto 1fr}
+  .rrow .input{grid-column:1/-1}
+  .drow{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){ .person,.live-dot{animation:none} }
+html[data-theme="light"] .warn{color:#7a4300}
+</style>
+</head>
+<body data-page="familia" data-city="dim">
+<header id="siteHeader"></header>
+
+<main id="contenido" tabindex="-1">
+  <div class="wrap fam-head">
+    <p class="eyebrow">Los que cuidan la ciudad</p>
+    <h1>Familia Staff</h1>
+    <p class="sub">El equipo completo de Auren y de qué se encarga cada uno. Si a alguien le cambian el rango en Discord, esta página se actualiza sola.</p>
+    <div class="fam-meta" id="meta"></div>
+    <div class="fam-tools">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <label class="sr-only" for="q">Buscar en el staff</label>
+        <input class="input" id="q" type="search" placeholder="Buscar a alguien del staff" autocomplete="off">
+      </div>
+      <button class="btn btn-ghost" id="manageBtn" type="button">Gestionar Familia Staff</button>
+    </div>
+    <div id="note"></div>
+  </div>
+  <div class="wrap" id="roster" style="padding-bottom:6rem" aria-live="polite"></div>
+</main>
+
+<dialog id="mdlg" aria-labelledby="mTitle"></dialog>
+<footer id="siteFooter"></footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script>
+(function(){
+  const A = window.Auren, C = A.config, esc = A.esc, $ = id => document.getElementById(id);
+  const onSite = /(\.workers\.dev|aurenroleplay\.com|localhost|127\.0\.0\.1)$/.test(location.hostname);
+  let DATA = null, GOATS = {}, DEMO = false, ADMIN = false, LOGGED = false;
+  const hue = id => { let h = 0; for(const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  const av = (p, cls = "") => `<span class="pav ${cls}" style="--h:${hue(p.id)}" aria-hidden="true">${esc((p.name || "?").trim().charAt(0).toUpperCase())}${p.avatar ? `<img src="${esc(p.avatar)}" alt="" loading="lazy" data-av>` : ""}</span>`;
+  const fixAv = root => root.querySelectorAll("img[data-av]").forEach(i=> i.addEventListener("error", ()=> i.remove(), {once:true}));
+  const ago = t => { if(!t) return ""; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "ahora mismo" : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; };
+
+  /* ---------- pintar ---------- */
+  function card(p, color, chip, i){
+    const duty = p.duty ? `<p class="duty"><strong>Se encarga de:</strong> ${esc(p.duty)}</p>` : `<p class="duty none">Sin función asignada todavía.</p>`;
+    return `<article class="card person" style="--rc:${esc(color || "")};animation-delay:${Math.min(i, 14) * .035}s" data-name="${esc((p.name + " " + (p.username || "") + " " + (p.duty || "") + " " + chip).toLowerCase())}">
+      <div class="top">${av(p)}<div style="min-width:0"><b>${esc(p.name)}</b>${p.username ? `<small>@${esc(p.username)}</small>` : ""}</div></div>
+      <span class="rolechip">${esc(chip)}</span>
+      ${duty}
+    </article>`;
+  }
+  function render(){
+    const d = DATA, el = $("roster");
+    const ownerColors = ["#f5c451", "#3ddc97", "#ff5d73"];
+    const owners = (C.goats || []).map((g, i)=>{
+      const o = (d.owners || []).find(x=> x.id === g.id) || {}, gp = GOATS[g.id] || {};
+      const avatar = gp.avatar ? (gp.avatar.still || gp.avatar) : (o.avatar || (g.avatar ? String(g.avatar).replace(/\.gif(\?|$)/, ".png$1") : ""));
+      return { id:g.id, name:g.name, username: gp.username || "", avatar, duty: o.duty || g.desc || "", chip: g.rank, color: ownerColors[i % 3] };
+    });
+    const total = owners.length + d.groups.reduce((n, g)=> n + g.members.length, 0);
+    $("meta").innerHTML = `<span class="pill"><span class="live-dot"></span>En vivo</span>
+      <span class="pill">${total} en el equipo</span><span class="pill">${d.groups.length + 1} grupos</span>
+      ${d.updatedAt ? `<span class="pill">Rangos revisados ${esc(ago(d.updatedAt))}</span>` : ""}`;
+    let html = `<section class="grp owners" aria-labelledby="g-owners"><div class="grp-h"><span class="dot" style="--rc:#f5c451"></span><h2 id="g-owners">Owners</h2><span class="n">${owners.length}</span></div>
+      <div class="people">${owners.map((p, i)=> card(p, p.color, p.chip, i)).join("")}</div></section>`;
+    if(!d.groups.length){
+      html += `<div class="card empty" style="margin-top:2rem"><b>${d.configured ? "Todavía no hay nadie en estos rangos" : "Falta elegir los rangos del staff"}</b>${d.configured ? "En cuanto alguien tenga uno de los rangos elegidos en Discord, aparece aquí solo." : "Un owner o admin de la web tiene que pulsar “Gestionar Familia Staff” y marcar qué roles de Discord son del staff."}</div>`;
+    }
+    d.groups.forEach((g, gi)=>{
+      html += `<section class="grp" aria-labelledby="g-${gi}"><div class="grp-h"><span class="dot" style="--rc:${esc(g.color || "")}"></span><h2 id="g-${gi}">${esc(g.label)}</h2><span class="n">${g.members.length}</span>${g.desc ? `<p>${esc(g.desc)}</p>` : ""}</div>
+        <div class="people">${g.members.map((p, i)=> card(p, g.color, g.label, i)).join("")}</div></section>`;
+    });
+    el.innerHTML = html;
+    fixAv(el); filter();
+    $("manageBtn").className = "btn " + (ADMIN ? "btn-primary" : "btn-ghost");
+    $("note").innerHTML = DEMO ? `<p class="demo-note">Vista de ejemplo con un staff inventado. En la web publicada salen los rangos reales de tu Discord.</p>` : "";
+  }
+  function filter(){
+    const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll(".person").forEach(c=> c.hidden = !!q && !c.dataset.name.includes(q));
+    document.querySelectorAll(".grp").forEach(g=> g.hidden = !!q && ![...g.querySelectorAll(".person")].some(c=> !c.hidden));
+  }
+  $("q").addEventListener("input", filter);
+
+  /* ---------- datos ---------- */
+  function demo(){
+    const P = (id, name, user, duty) => ({ id, name, username:user, avatar:"", duty });
+    return { updatedAt: Date.now() - 60000, configured:true, source:"demo",
+      owners:(C.goats || []).map(g=> ({ id:g.id, duty:"" })),
+      groups:[
+        { id:"1", label:"Administradores", color:"#ff8a1f", desc:"Llevan el día a día del servidor.", members:[P("100000000000000011","Yeisy","yeisy","Sanciones graves y apelaciones"), P("100000000000000012","El Menor","elmenor","Economía y negocios de la ciudad")] },
+        { id:"2", label:"Moderadores", color:"#a970ff", desc:"Vigilan que se cumplan las normativas.", members:[P("100000000000000021","Kiko","kiko","Reportes y tickets"), P("100000000000000022","Lia","lia",""), P("100000000000000023","Toñito","tonito","Eventos y ruleta de Halloween")] },
+        { id:"3", label:"Soporte", color:"#3ddc97", desc:"Ayudan a quien entra por primera vez.", members:[P("100000000000000031","Mari","mari","Bienvenidas y dudas de nuevos"), P("100000000000000032","Joel","joels","")] },
+        { id:"4", label:"Desarrolladores", color:"#56b6ff", desc:"", members:[P("100000000000000041","Dev Pana","devpana","Scripts y mapa")] }
+      ] };
+  }
+  async function load(silent){
+    try{
+      const [r, g] = await Promise.all([fetch("/api/staff", {cache:"no-store"}), fetch("/api/goats").catch(()=> null)]);
+      if(!r.ok) throw 0;
+      DATA = await r.json(); DEMO = false;
+      if(g && g.ok){ const j = await g.json(); (j.people || []).forEach(p=> GOATS[p.id] = p); }
+    }catch(e){
+      if(onSite){ if(!DATA) DATA = { groups:[], owners:[], configured:false }; if(!silent) A.toast("No se pudo cargar el staff. Inténtalo en un momento."); }
+      else { DATA = demo(); DEMO = true; ADMIN = true; }
+    }
+    render();
+  }
+
+  /* ---------- gestionar (owners y admins de la web) ---------- */
+  let ADM = null, tab = "roles";
+  async function openManage(){
+    if(!ADMIN){
+      if(!LOGGED){ location.href = "/api/auth/login?next=" + encodeURIComponent("/familia.html#gestionar"); return; }
+      A.toast("Solo los owners y los admins de la web pueden gestionar la Familia Staff."); return;
+    }
+    if(DEMO) ADM = ADM || { cfg:{ roles: DATA.groups.map(g=> ({ id:g.id, label:g.label, desc:g.desc })), duties:{} },
+      guildRoles:[{id:"1",name:"Admin",color:0xff8a1f,position:9},{id:"2",name:"Moderador",color:0xa970ff,position:8},{id:"3",name:"Soporte",color:0x3ddc97,position:7},{id:"4",name:"Dev",color:0x56b6ff,position:6},{id:"5",name:"VIP",color:0xf5c451,position:5},{id:"6",name:"Streamer",color:0xff3b3b,position:4}],
+      members: DATA.groups.flatMap(g=> g.members.map(m=> ({...m, roles:[g.id]}))), goats:(C.goats || []).map(g=> g.id) };
+    else{
+      try{ const r = await fetch("/api/staff/admin", {cache:"no-store"}); const j = await r.json(); if(!r.ok) throw new Error(j.error); ADM = j; }
+      catch(e){ A.toast(e.message || "No se pudo abrir."); return; }
+    }
+    drawManage(); $("mdlg").showModal();
+  }
+  const hex = c => c ? "#" + Number(c).toString(16).padStart(6, "0") : "var(--muted)";
+  function drawManage(){
+    const d = $("mdlg"), cfg = ADM.cfg, chosen = new Map(cfg.roles.map(r=> [r.id, r]));
+    const rolesHTML = ADM.guildRoles && ADM.guildRoles.length
+      ? ADM.guildRoles.map(r=>{ const c = chosen.get(r.id); return `<label class="rrow ${c ? "" : "off"}" data-id="${esc(r.id)}">
+          <input type="checkbox" ${c ? "checked" : ""} aria-label="Mostrar ${esc(r.name)}">
+          <span class="nm"><i style="background:${hex(r.color)}"></i><span>${esc(r.name)}</span></span>
+          <input class="input" data-k="label" placeholder="Nombre en la web (${esc(r.name)})" value="${esc(c?.label || "")}">
+          <input class="input" data-k="desc" placeholder="Descripción del grupo (opcional)" value="${esc(c?.desc || "")}"></label>`; }).join("")
+      : `<div class="warn">Todavía no se ven los roles de tu Discord. Pon el Secret <code>DISCORD_BOT_TOKEN</code> en Cloudflare, o deja encendido el servidor de FiveM con el panel web conectado. También puedes añadir un rol pegando su ID:</div>
+         <div class="manual"><input class="input" id="manId" placeholder="ID del rol" inputmode="numeric"><input class="input" id="manLabel" placeholder="Nombre en la web"><button class="btn btn-ghost btn-sm" type="button" id="manAdd">Añadir</button></div>
+         ${cfg.roles.map(r=> `<label class="rrow" data-id="${esc(r.id)}"><input type="checkbox" checked><span class="nm"><i></i><span>${esc(r.id)}</span></span><input class="input" data-k="label" value="${esc(r.label)}"><input class="input" data-k="desc" value="${esc(r.desc || "")}"></label>`).join("")}`;
+    const people = [...(C.goats || []).map(g=> ({ id:g.id, name:g.name, username:"", avatar:"" })), ...ADM.members.filter(m=> !(ADM.goats || []).includes(m.id))];
+    const duties = cfg.duties || {};
+    const dutyHTML = people.length ? people.map(p=> `<form class="drow" data-id="${esc(p.id)}">
+        <div class="who">${av(p)}<div style="min-width:0"><b>${esc(p.name)}</b>${p.username ? `<small>@${esc(p.username)}</small>` : ""}</div></div>
+        <input class="input" maxlength="160" placeholder="¿De qué se encarga? Ej.: Reportes y tickets" value="${esc(duties[p.id] || (DATA.groups.flatMap(g=> g.members).find(m=> m.id === p.id)?.duty) || (DATA.owners || []).find(o=> o.id === p.id)?.duty || "")}" aria-label="Función de ${esc(p.name)}">
+        <span style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary btn-sm" type="submit">Guardar</button><span class="st" aria-live="polite"></span></span></form>`).join("")
+      : `<div class="warn">Primero elige los rangos del staff en la pestaña Rangos.</div>`;
+    d.innerHTML = `<div class="dh"><h2 id="mTitle">Gestionar Familia Staff</h2>
+        <div class="tabs" role="tablist"><button role="tab" aria-selected="${tab === "roles"}" data-tab="roles" type="button">Rangos</button><button role="tab" aria-selected="${tab === "duty"}" data-tab="duty" type="button">Funciones</button></div>
+        <button class="icon-btn" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="db" ${tab === "roles" ? "" : "hidden"} id="tRoles">
+        <p style="color:var(--soft)">Marca los roles de Discord que son del staff. Salen en la web en el mismo orden que en tu Discord (el más alto primero). Si le quitas ese rol a alguien en Discord, desaparece de aquí al momento.</p>
+        ${rolesHTML}
+        <div><button class="btn btn-primary" type="button" id="saveRoles">Guardar rangos</button> <span class="st" id="rolesSt" aria-live="polite"></span></div>
+      </div>
+      <div class="db" ${tab === "duty" ? "" : "hidden"} id="tDuty">
+        <p style="color:var(--soft)">Escribe de qué se encarga cada persona. Sale en su tarjeta.</p>
+        ${dutyHTML}
+      </div>`;
+    fixAv(d);
+    d.querySelector("[data-close]").onclick = ()=> d.close();
+    d.querySelectorAll("[data-tab]").forEach(b=> b.onclick = ()=>{ tab = b.dataset.tab; drawManage(); });
+    d.querySelectorAll(".rrow input[type=checkbox]").forEach(c=> c.onchange = ()=> c.closest(".rrow").classList.toggle("off", !c.checked));
+    const man = d.querySelector("#manAdd");
+    if(man) man.onclick = ()=>{ const id = d.querySelector("#manId").value.trim(); if(!/^\d{5,25}$/.test(id)){ A.toast("Pega el ID del rol (solo números)."); return; } ADM.cfg.roles.push({ id, label: d.querySelector("#manLabel").value.trim(), desc:"" }); drawManage(); };
+    d.querySelector("#saveRoles").onclick = async ()=>{
+      const roles = [...d.querySelectorAll(".rrow")].filter(r=> r.querySelector("input[type=checkbox]").checked)
+        .map(r=> ({ id:r.dataset.id, label:r.querySelector('[data-k="label"]').value.trim(), desc:r.querySelector('[data-k="desc"]').value.trim() }));
+      const st = d.querySelector("#rolesSt"); st.className = "st"; st.textContent = "Guardando…";
+      try{
+        if(DEMO){ ADM.cfg.roles = roles; }
+        else{ const r = await fetch("/api/staff/config", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ roles })}); const j = await r.json(); if(!r.ok) throw new Error(j.error); ADM.cfg = j.cfg; }
+        st.className = "st ok"; st.textContent = DEMO ? "Guardado (ejemplo)" : "Guardado. La lista se actualiza en unos segundos.";
+        if(!DEMO) setTimeout(()=> load(true), 2500);
+      }catch(e){ st.className = "st bad"; st.textContent = e.message || "No se pudo guardar."; }
+    };
+    d.querySelectorAll(".drow").forEach(f=> f.addEventListener("submit", async e=>{
+      e.preventDefault();
+      const id = f.dataset.id, duty = f.querySelector(".input").value.trim(), st = f.querySelector(".st");
+      st.className = "st"; st.textContent = "Guardando…";
+      try{
+        if(DEMO){ DATA.groups.forEach(g=> g.members.forEach(m=>{ if(m.id === id) m.duty = duty; })); const o = DATA.owners.find(o=> o.id === id); if(o) o.duty = duty; render(); }
+        else{ const r = await fetch("/api/staff/duty", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ id, duty })}); const j = await r.json(); if(!r.ok) throw new Error(j.error); ADM.cfg.duties[id] = j.duty; }
+        st.className = "st ok"; st.textContent = "Guardado";
+      }catch(err){ st.className = "st bad"; st.textContent = err.message || "Error"; }
+    }));
+  }
+  $("mdlg").addEventListener("click", e=>{ if(e.target === $("mdlg")) $("mdlg").close(); });
+  $("manageBtn").onclick = openManage;
+
+  (async ()=>{
+    await load();
+    if(!DEMO){
+      try{ const r = await fetch("/api/streamers/me"); if(r.ok){ const j = await r.json(); ADMIN = !!j.admin; LOGGED = !!j.logged; render(); } }catch{}
+      if(A.onLive) A.onLive(what=>{ if(what === "staff" || what === "all") load(true); });
+      setInterval(()=>{ if(!document.hidden) load(true); }, 180000);
+    }
+    if(location.hash === "#gestionar"){ history.replaceState(null, "", location.pathname); openManage(); }
+  })();
+})();
+</script>
+</body>
+</html>

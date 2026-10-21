@@ -18,6 +18,10 @@ auren-worker/
     ├── assets/staff.js       ← lógica del panel del staff
     ├── assets/gandy.js       ← GandyDev, el asistente que camina y salta por la web
     ├── assets/tour.js        ← recorrido de bienvenida (abre The GOATs)
+    ├── assets/halloween.js   ← ambiente de Halloween (luna, murciélagos, araña…)
+    ├── familia.html          ← FAMILIA STAFF (el equipo y de qué se encarga cada uno)
+    ├── buzon.html            ← BUZÓN (experiencias públicas y quejas anónimas)
+    ├── ruleta.html           ← RULETA de Halloween
     ├── data/normativas.js    ← AQUÍ editas las reglas
     └── data/ayuda.js         ← AQUÍ editas las preguntas frecuentes
 ```
@@ -45,6 +49,10 @@ En GitHub abre el archivo → lápiz (Edit) → cambia → **Commit changes**. E
 | `TWITCH_CLIENT_SECRET` | Client Secret de esa app | **Secret** |
 | `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | (opcional) app de kick.com para detectar directos de Kick | **Secret** |
 | `GOAT_IDS` | (opcional) IDs de Discord de The GOATs; ya vienen puestos Gandy, RichDinero y MagicBullet | Text |
+| `BUZON_WEBHOOK` | Webhook de Discord donde llegan las experiencias y las quejas (ya lo tienes) | **Secret** |
+| `QUEJAS_WEBHOOK` | (opcional) otro webhook solo para las quejas anónimas | **Secret** |
+| `ROULETTE_FROM` / `ROULETTE_TO` | (opcional) fechas de la ruleta, por defecto 10-01 a 11-02 | Text |
+| `ROULETTE_OPEN` | (opcional) ponlo en `false` para cerrar la ruleta antes de tiempo | Text |
 
 Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID` tiene que estar puesto.
 
@@ -63,6 +71,12 @@ Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID`
   Los seguidores de Kick se leen de su página pública y a veces Kick lo bloquea; los directos sí van por la API oficial.
 - Cada 10 minutos la web actualiza sola quién está en vivo, los seguidores y las horas en directo
   (el "más activo" es quien más horas hizo en los últimos 7 días, contando desde que pones los canales).
+
+## Ambiente de Halloween
+- Se enciende solo entre el 1 de octubre y el 2 de noviembre (cámbialo en `assets/site.js` → `halloween`).
+- Luna llena, murciélagos, niebla, brasas, telarañas en las tarjetas, una araña que baja del techo, botones
+  color calabaza, GandyDev con sombrero de bruja y una calabaza, y la radio con noticias de temporada.
+- Cada persona lo puede quitar en el botón AA → “Ambiente de Halloween”.
 
 ## Recorrido de bienvenida y The GOATs
 - La primera vez que alguien abre la portada, GandyDev le enseña la web en 8 pasos con una barra de progreso.
@@ -97,6 +111,32 @@ Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID`
 - El canal en vivo usa Durable Objects de Cloudflare, incluidos gratis en el plan Free.
 - **Monitor de pantallas:** en el menú del panel. Elige hasta 4 jugadores y ves sus pantallas cada 6 segundos;
   pulsa una para verla en grande. Hace falta el permiso de monitoreo o de spectate en tu rango. Queda en los logs.
+
+## Familia Staff (`/familia`)
+- Sale el equipo completo agrupado por rango (Owners, Administradores, Moderadores…) y de qué se encarga cada uno.
+- La lista sale sola de Discord. Un owner o admin de la web pulsa **Gestionar Familia Staff** y:
+  - en **Rangos** marca qué roles de Discord son del staff y les pone nombre y descripción;
+  - en **Funciones** escribe de qué se encarga cada persona.
+- **En tiempo real:** si le quitas o le pones un rango a alguien en Discord, aparece o desaparece de la web
+  al momento (hace falta el bot en Cloudflare, o el servidor de FiveM encendido con el panel web conectado).
+
+## Buzón (`/buzon`)
+- **Mi experiencia:** cualquiera que esté en el Discord cuenta su experiencia (con estrellas). Sale en la página
+  y llega al canal de Discord del webhook `BUZON_WEBHOOK`.
+- **Queja anónima:** llega al mismo canal (o a `QUEJAS_WEBHOOK`) **sin decir quién la mandó**. La web no guarda
+  quién fue; solo comprueba que estés en el Discord para evitar spam.
+- Los owners y admins de la web pueden ocultar una experiencia desde la misma página.
+
+## Ruleta de Halloween (`/ruleta`)
+- Un giro por cuenta. El premio lo decide el servidor (no se puede trucar desde el navegador).
+- Premios: 3 armas, 1 carro VIP, Pase Élite de Navidad, una cadena gratis, nada, y 3 items random
+  (al que le toquen los 3 items elige entre venda, radio o agua).
+- Cada ganador recibe un código; el staff lo ve en **Ver ganadores** y marca lo que ya entregó.
+- Para cambiar los premios o los pesos, usa el Secret `ROULETTE_PRIZES` (JSON). Se abre sola en temporada.
+
+## En tiempo real
+- Streamers, Familia Staff, el buzón y la ruleta se actualizan solos en todas las pestañas abiertas,
+  sin recargar, por un canal en vivo (`/api/live`).
 
 ## Modo blanco y sonidos
 - Arriba hay un botón de sol/luna para pasar a **modo blanco** y otro de altavoz para **activar o quitar los sonidos**

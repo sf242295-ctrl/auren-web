@@ -21,6 +21,8 @@ window.AUREN_CONFIG = {
     { name: "Streamer2", platform: "kick",   role: "Mecánico del bloque" },
     { name: "Streamer3", platform: "twitch", role: "EMS Auren Medical" }
   ],
+  // Temporada de Halloween: se activa sola entre estas fechas (pon enabled:false para quitarla)
+  halloween: { enabled: true, from: "10-01", to: "11-02" },
   // The GOATs: los owners de Auren. La foto, el banner y el nombre salen solos de su Discord
   // (avatar/banner de aquí solo se usan si la web todavía no pudo leer Discord).
   goats: [
@@ -52,7 +54,8 @@ window.AUREN_CONFIG = {
     contrast: { key:"auren_contrast", values:["normal","high"], def:"normal" },
     motion:   { key:"auren_motion",   values:["normal","reduce"], def:"normal" },
     theme:    { key:"auren_theme",    values:["dark","light"], def:"dark" },
-    sound:    { key:"auren_sound",    values:["on","off"], def:"on" }
+    sound:    { key:"auren_sound",    values:["on","off"], def:"on" },
+    spooky:   { key:"auren_spooky",   values:["on","off"], def:"on" }
   };
   function loadLegibleFont(){
     if(document.getElementById("legibleFont")) return;
@@ -78,6 +81,24 @@ window.AUREN_CONFIG = {
   });
   // Si el sistema pide alto contraste y la persona no eligió nada, lo respetamos
   if(!store.get(PREFS.contrast.key) && matchMedia("(prefers-contrast: more)").matches) root.dataset.contrast = "high";
+
+  /* ---------- temporada de Halloween ---------- */
+  const SEASON = (()=>{
+    const h = C.halloween || {}; if(h.enabled === false) return false;
+    const md = new Date().toISOString().slice(5, 10);
+    return md >= (h.from || "10-01") && md <= (h.to || "11-02");
+  })();
+  const spookyOn = () => SEASON && getPref("spooky") !== "off";
+  if(spookyOn()) root.dataset.season = "halloween";
+  document.addEventListener("auren:prefs", e=>{
+    if(e.detail.name !== "spooky") return;
+    if(spookyOn()){ root.dataset.season = "halloween"; loadSpooky(); } else delete root.dataset.season;
+    document.dispatchEvent(new Event("auren:season"));
+  });
+  function loadSpooky(){
+    if(document.querySelector('script[src$="halloween.js"]')) return;
+    const hs = document.createElement("script"); hs.src = "assets/halloween.js"; document.body.appendChild(hs);
+  }
 
   /* ---------- efectos de sonido (se generan aquí mismo, sin archivos) ---------- */
   const SFX = (()=>{
@@ -125,7 +146,14 @@ window.AUREN_CONFIG = {
       blip:      ()=> tone({ f:520 + Math.random() * 420, t:.03, type:"square", v:.035 }),
       step:      ()=>{ tone({ f:740, t:.09, v:.22 }); tone({ f:1110, t:.13, v:.2, at:.07 }); },
       unlock:    ()=>{ [523, 659, 784, 1047].forEach((f, i)=> tone({ f, t:.22, type:"triangle", v:.25, at:i * .09 })); noise({ t:.5, v:.08, f:6000, at:.3 }); },
-      pop:       ()=> tone({ f:1000, f2:300, t:.08, v:.28 })
+      pop:       ()=> tone({ f:1000, f2:300, t:.08, v:.28 }),
+      boo:       ()=>{ tone({ f:330, f2:220, t:.55, type:"sine", v:.22 }); tone({ f:335, f2:226, t:.55, type:"sine", v:.12, at:.02 }); },
+      ghost:     ()=>{ const c = ac(); if(!c) return; const now = c.currentTime, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+                   o.type = "sine"; o.frequency.setValueAtTime(520, now); o.frequency.linearRampToValueAtTime(760, now + .5); o.frequency.linearRampToValueAtTime(480, now + 1);
+                   lfo.frequency.value = 6; lg.gain.value = 14; lfo.connect(lg); lg.connect(o.frequency);
+                   g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.16, now + .15); g.gain.exponentialRampToValueAtTime(.0001, now + 1.05);
+                   o.connect(g); g.connect(master); o.start(now); lfo.start(now); o.stop(now + 1.1); lfo.stop(now + 1.1); },
+      squeak:    ()=>{ tone({ f:2600, f2:3400, t:.05, type:"triangle", v:.08 }); tone({ f:2900, f2:3600, t:.05, type:"triangle", v:.07, at:.07 }); }
     };
     // sonidos de interfaz: botones, enlaces y tarjetas
     document.addEventListener("click", e=>{
@@ -160,10 +188,12 @@ window.AUREN_CONFIG = {
   const links = [
     ["home#jugar", "index.html#jugar", "Cómo jugar"],
     ["streamers", "streamers.html", "Streamers"],
-    ["home#comunidad", "index.html#comunidad", "Comunidad"],
+    ["familia", "familia.html", "Familia Staff"],
+    ["buzon", "buzon.html", "Buzón"],
     ["normativas", "normativas.html", "Normativas"],
     ["ayuda", "ayuda.html", "Ayuda"]
   ];
+  if(SEASON) links.splice(2, 0, ["ruleta", "ruleta.html", "Ruleta 🎃"]);
   const header = document.getElementById("siteHeader");
   header.className = "nav";
   header.innerHTML = `
@@ -186,6 +216,7 @@ window.AUREN_CONFIG = {
         <div class="seg" role="group" aria-labelledby="themeLbl">
           <button type="button" data-pref="theme" data-val="dark">Oscuro</button><button type="button" data-pref="theme" data-val="light">Blanco</button>
         </div>
+        ${SEASON ? `<button type="button" class="opt" data-toggle="spooky" data-on="on"><span>Ambiente de Halloween<small>Luna, murciélagos y niebla de temporada</small></span><span class="sw" aria-hidden="true"></span></button>` : ""}
         <button type="button" class="opt" data-toggle="sound" data-on="on"><span>Sonidos<small>Efectos al tocar botones y a GandyDev</small></span><span class="sw" aria-hidden="true"></span></button>
         <button type="button" class="opt" data-toggle="font" data-on="legible"><span>Letra fácil de leer<small>Pensada para baja visión</small></span><span class="sw" aria-hidden="true"></span></button>
         <button type="button" class="opt" data-toggle="contrast" data-on="high"><span>Alto contraste<small>Fondo negro y texto blanco</small></span><span class="sw" aria-hidden="true"></span></button>
@@ -243,6 +274,10 @@ window.AUREN_CONFIG = {
         <div class="foot-col"><h4>Servidor</h4><ul>
           <li><a href="index.html#jugar">Cómo jugar</a></li>
           <li><a href="streamers.html">Streamers</a></li>
+          <li><a href="familia.html">Familia Staff</a></li>
+          <li><a href="buzon.html">Buzón</a></li>
+          ${SEASON ? `<li><a href="ruleta.html">Ruleta de Halloween</a></li>` : ""}
+          <li><a href="index.html#comunidad">Comunidad</a></li>
           <li><a href="normativas.html">Normativas</a></li>
           <li><a href="#" data-connect>Conectar</a></li></ul></div>
         <div class="foot-col"><h4>Cuenta</h4><ul>
@@ -367,6 +402,24 @@ window.AUREN_CONFIG = {
 
   window.Auren = { config:C, esc, toast, copy, avatarHTML, statusPill, user:userPromise, stats:statsPromise, getPref,
     isAuthReady: ()=> authReady, loginHref, store };
+
+  // Canal en vivo: la web avisa al momento cuando cambian rangos, streamers o la ruleta
+  const liveFns = [];
+  let liveWS = null, liveRetry = 0;
+  function liveConnect(){
+    if(location.protocol !== "https:" && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+    try{
+      liveWS = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/api/live");
+      liveWS.onopen = ()=>{ liveRetry = 0; };
+      liveWS.onmessage = e=>{ let m; try{ m = JSON.parse(e.data); }catch{ return; } if(m && m.t === "update") liveFns.forEach(f=>{ try{ f(m.what || "all"); }catch{} }); };
+      liveWS.onclose = ()=>{ liveWS = null; setTimeout(liveConnect, Math.min(60000, 2000 * 2 ** liveRetry++)); };
+    }catch{}
+  }
+  setInterval(()=>{ try{ if(liveWS && liveWS.readyState === 1) liveWS.send("ping"); }catch{} }, 50000);
+  window.Auren.onLive = fn => { liveFns.push(fn); if(!liveWS) liveConnect(); };
+
+  if(spookyOn()) loadSpooky();
+  window.Auren.season = () => spookyOn();
 
   // GandyDev, el asistente que camina por la web
   if(!document.querySelector('script[src$="gandy.js"]')){

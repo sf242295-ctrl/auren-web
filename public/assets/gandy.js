@@ -124,7 +124,8 @@
 
   /* ---------- el muñequito (diseño propio) ---------- */
   let BOTN = 0;
-  const BOT = () => { const n = ++BOTN; return `<svg viewBox="0 0 64 84" aria-hidden="true">
+  const spooky = () => document.documentElement.dataset.season === "halloween";
+  const BOT = () => { const n = ++BOTN, H = spooky(), EYE = H ? "#ffa347" : "#7af0b4"; return `<svg viewBox="0 0 64 84" aria-hidden="true">
     <defs>
       <linearGradient id="gdH${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4354"/><stop offset="1" stop-color="#151920"/></linearGradient>
       <linearGradient id="gdB${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3543"/><stop offset="1" stop-color="#11141a"/></linearGradient>
@@ -136,29 +137,35 @@
     <ellipse class="shadow" cx="32" cy="82" rx="15" ry="2.6" fill="#000" opacity="0"/>
     <g class="spin"><g class="flip">
       <g class="jet" opacity="0" filter="url(#gdG${n})"><path d="M23 80.5c1.4 3.6 2.6 6.6 3 9 .4-2.4 1.6-5.4 3-9z" fill="#ffb347"/><path d="M24.6 80.5c.8 2 1.4 3.8 1.4 5.2.2-1.4.8-3.2 1.4-5.2z" fill="#fff3c4"/><path d="M36 80.5c1.4 3.6 2.6 6.6 3 9 .4-2.4 1.6-5.4 3-9z" fill="#ffb347"/><path d="M37.6 80.5c.8 2 1.4 3.8 1.4 5.2.2-1.4.8-3.2 1.4-5.2z" fill="#fff3c4"/></g>
-      <g class="legL"><rect x="22.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M19.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="19.5" y="78.6" width="13" height="1.8" rx=".9" fill="#7af0b4"/></g>
-      <g class="legR"><rect x="34.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M31.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="31.5" y="78.6" width="13" height="1.8" rx=".9" fill="#7af0b4"/></g>
+      <g class="legL"><rect x="22.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M19.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="19.5" y="78.6" width="13" height="1.8" rx=".9" fill="${EYE}"/></g>
+      <g class="legR"><rect x="34.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M31.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="31.5" y="78.6" width="13" height="1.8" rx=".9" fill="${EYE}"/></g>
       <g class="bodyg">
-        <g class="armL"><rect x="10.5" y="45" width="6.5" height="13.5" rx="3.25" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><circle cx="13.75" cy="59.6" r="3.3" fill="url(#gdC${n})"/></g>
+        <g class="armL"><rect x="10.5" y="45" width="6.5" height="13.5" rx="3.25" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><circle cx="13.75" cy="59.6" r="3.3" fill="url(#gdC${n})"/>${H ? `<g class="pumpkin"><path d="M13.6 59.4c.2-1.6 1-2.6 2.2-3" stroke="#3f6212" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="13.75" cy="64" rx="5.6" ry="4.6" fill="#ff8a1f" stroke="#c2410c" stroke-width=".8"/><path d="M13.75 59.6v8.8M10.4 60.6c-1 2-1 5.4 0 7M17.1 60.6c1 2 1 5.4 0 7" stroke="#c2410c" stroke-width=".6" fill="none"/><path d="M11 63l1.2-1 1.2 1zM14.3 63l1.2-1 1.2 1zM11.2 65.2c1.4 1 3.7 1 5.1 0l-.8 1.2h-3.5z" fill="#2a1200"/></g>` : ""}</g>
         <g class="armR"><rect x="47" y="45" width="6.5" height="13.5" rx="3.25" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><circle cx="50.25" cy="59.6" r="3.3" fill="url(#gdC${n})"/></g>
         <rect x="16.5" y="42" width="31" height="23" rx="10" fill="url(#gdB${n})" stroke="#475061" stroke-width="1"/>
         <path d="M21 44.5c3-1.4 7-2 11-2" stroke="rgba(255,255,255,.18)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
         <rect x="23" y="48" width="18" height="11" rx="4" fill="#090c11" stroke="#2a313d" stroke-width=".8"/>
-        <text x="32" y="56.4" text-anchor="middle" font-family="system-ui,sans-serif" font-size="7.4" font-weight="800" letter-spacing=".3" fill="#7af0b4" filter="url(#gdG${n})">GD</text>
-        <path d="M38.5 12.5c.6-3 1.6-5 3.2-6.6" stroke="#4a5262" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-        <circle class="light" cx="42.3" cy="5.3" r="2.7" fill="#4ade80" filter="url(#gdG${n})"/>
-        <rect x="5.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="6.8" y="26" width="2.4" height="6" rx="1.2" fill="#7af0b4" opacity=".85"/>
-        <rect x="53.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="54.8" y="26" width="2.4" height="6" rx="1.2" fill="#7af0b4" opacity=".85"/>
+        <text x="32" y="56.4" text-anchor="middle" font-family="system-ui,sans-serif" font-size="7.4" font-weight="800" letter-spacing=".3" fill="${EYE}" filter="url(#gdG${n})">GD</text>
+        ${H ? "" : `<path d="M38.5 12.5c.6-3 1.6-5 3.2-6.6" stroke="#4a5262" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <circle class="light" cx="42.3" cy="5.3" r="2.7" fill="#4ade80" filter="url(#gdG${n})"/>`}
+        <rect x="5.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="6.8" y="26" width="2.4" height="6" rx="1.2" fill="${EYE}" opacity=".85"/>
+        <rect x="53.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="54.8" y="26" width="2.4" height="6" rx="1.2" fill="${EYE}" opacity=".85"/>
         <rect x="9" y="12.5" width="46" height="32.5" rx="13" fill="url(#gdH${n})" stroke="#4d5667" stroke-width="1"/>
-        <path d="M11.2 22.5c1.6-7.4 9.4-11.4 20.8-11.4s19.2 4 20.8 11.4z" fill="url(#gdC${n})"/>
+        ${H ? `<g class="hat">
+          <path d="M18 19.5C21 11 25 3 33.5-5.5c3.2-3.2 7.4-3.6 9.8-1.4-3.4.2-5.6 2-6.6 4.8L46 19.5z" fill="#3b1d5c" stroke="#5b2a86" stroke-width="1"/>
+          <path d="M19.6 15.6h25.2l1.4 4H18.2z" fill="#ff8a1f"/>
+          <rect x="29.6" y="14.4" width="5" height="5.6" rx="1" fill="none" stroke="#ffd59e" stroke-width="1.2"/>
+          <ellipse cx="32" cy="20.6" rx="26" ry="4.4" fill="#2a1442" stroke="#5b2a86" stroke-width="1"/>
+          <path d="M24 3.5c3-1 6-1 9 .2" stroke="rgba(255,255,255,.15)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        </g>` : `<path d="M11.2 22.5c1.6-7.4 9.4-11.4 20.8-11.4s19.2 4 20.8 11.4z" fill="url(#gdC${n})"/>
         <path d="M12.4 21.8H4.6a2.3 2.3 0 0 0 0 4.6h7.8z" fill="#c9ced7"/>
         <path d="M32 11.2v10.6" stroke="#c5cad3" stroke-width=".8"/>
-        <circle cx="32" cy="11.4" r="1.3" fill="#7af0b4"/>
+        <circle cx="32" cy="11.4" r="1.3" fill="${EYE}"/>`}
         <rect x="14" y="24" width="36" height="17" rx="7.5" fill="url(#gdV${n})" stroke="#0f1a17" stroke-width=".8"/>
         <path d="M17.5 27h8" stroke="rgba(255,255,255,.2)" stroke-width="1.4" stroke-linecap="round"/>
-        <g class="eyes" filter="url(#gdG${n})"><rect class="eye" x="22" y="27.5" width="6" height="9" rx="3" fill="#7af0b4"/><rect class="eye" x="36" y="27.5" width="6" height="9" rx="3" fill="#7af0b4"/></g>
-        <g class="heyes" opacity="0" fill="none" stroke="#7af0b4" stroke-width="2.4" stroke-linecap="round" filter="url(#gdG${n})"><path d="M21.5 34l3.5-4 3.5 4"/><path d="M35.5 34l3.5-4 3.5 4"/></g>
-        <rect class="mouth" x="29" y="37.6" width="6" height="1.6" rx=".8" fill="#7af0b4"/>
+        <g class="eyes" filter="url(#gdG${n})"><rect class="eye" x="22" y="27.5" width="6" height="9" rx="3" fill="${EYE}"/><rect class="eye" x="36" y="27.5" width="6" height="9" rx="3" fill="${EYE}"/></g>
+        <g class="heyes" opacity="0" fill="none" stroke="${EYE}" stroke-width="2.4" stroke-linecap="round" filter="url(#gdG${n})"><path d="M21.5 34l3.5-4 3.5 4"/><path d="M35.5 34l3.5-4 3.5 4"/></g>
+        <rect class="mouth" x="29" y="37.6" width="6" height="1.6" rx=".8" fill="${EYE}"/>
         <circle cx="18.6" cy="37.4" r="1.7" fill="#ff7aa2" opacity=".3"/><circle cx="45.4" cy="37.4" r="1.7" fill="#ff7aa2" opacity=".3"/>
       </g></g></g>
     <g class="zz" opacity="0" font-family="system-ui,sans-serif" font-weight="700" fill="#d6dae1"><text x="50" y="10" font-size="10">z</text><text x="57" y="2" font-size="7">z</text></g>
@@ -186,6 +193,13 @@
       `¿Ya te conectaste? F8 y connect cfx.re/join/${C.cfxCode || "lee9965"}`, "Dando una vueltita por la web…",
       "Ojo con los robos de día, ¿eh?", "¿Viste quién está en directo? Mira Streamers.", "Puedes arrastrarme, no muerdo."]
   };
+
+  if(spooky()){
+    LINES.hi = ["¡Buuu! ¿Te asusté? Feliz Halloween.", "¿Truco o trato? Pregúntame lo que quieras.", "¡Klk! Esta noche ando de brujo. ¿Qué buscas?"];
+    LINES.idle = LINES.idle.concat(["Dicen que en el cementerio de Brooklyn se oyen cosas…", "Esta noche la luna está llenita.", "¡Cuidado con los murciélagos!", "¿Truco o trato?", "Esta calabaza no se come, es decorativa."]);
+    LINES.drop = LINES.drop.concat(["¡Me voy volando como un murciélago!"]);
+  }
+  document.addEventListener("auren:season", ()=>{ gd.innerHTML = BOT(); if(panel) panel.querySelector(".gd-head .av").innerHTML = BOT(); });
 
   /* ---------- bocadillo que habla letra a letra ---------- */
   let bubble = null, bubbleTimer = 0, speaking = 0;
@@ -426,7 +440,7 @@
   gd.addEventListener("pointercancel", endDrag);
 
   function greet(){
-    SFX("chirp");
+    SFX(spooky() ? "ghost" : "chirp");
     lastTouch = performance.now();
     if(act === "sleep"){ act = null; say(pick(LINES.wake)); setFace("happy", 1200); return; }
     setFace("happy", 1600);
@@ -440,7 +454,7 @@
   if(!bubbleShown) setTimeout(()=>{
     if(open || hold) return;
     setAct("wave", 1700); setFace("happy", 1700);
-    say("¡Hola! Soy GandyDev. Tócame si tienes dudas de las reglas, o arrástrame por la pantalla.", 4500);
+    say(spooky() ? "¡Buuu! Feliz Halloween. Soy GandyDev: tócame si tienes dudas o arrástrame por la pantalla." : "¡Hola! Soy GandyDev. Tócame si tienes dudas de las reglas, o arrástrame por la pantalla.", 4500);
     try{ sessionStorage.setItem("gd_hi", "1"); }catch{}
   }, 7000);
 

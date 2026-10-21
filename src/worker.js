@@ -8,6 +8,10 @@
                          /api/admin/status
   - GandyDev (IA):       POST /api/gandy
   - The GOATs:           /api/goats
+  - Buzón:               /api/buzon, POST /api/buzon/experiencia, POST /api/buzon/queja, /api/buzon/admin, POST /api/buzon/hide
+  - Ruleta Halloween:    /api/ruleta, POST /api/ruleta/spin, /choose, /api/ruleta/admin, POST /api/ruleta/deliver
+  - Familia Staff:       /api/staff, /api/staff/admin, POST /api/staff/config, POST /api/staff/duty
+  - En vivo (páginas):   /api/live (WebSocket)
   - Streamers:           /api/streamers, /api/streamers/me, POST /api/streamers/channels
 
   Variables (Cloudflare > tu Worker > Settings > Variables and Secrets):
@@ -24,6 +28,9 @@
     KICK_CLIENT_ID / KICK_CLIENT_SECRET      (Secret, opcional: directos de Kick)
     GANDY_MODEL            (Text, opcional: modelo de IA de GandyDev)
     GOAT_IDS               (Text, opcional: IDs de Discord de The GOATs, separados por comas)
+    BUZON_WEBHOOK          (Secret: webhook del canal de Discord donde llegan experiencias y quejas)
+    QUEJAS_WEBHOOK         (Secret, opcional: otro canal solo para las quejas anónimas)
+    ROULETTE_PRIZES / ROULETTE_OPEN / ROULETTE_FROM / ROULETTE_TO (opcionales: ruleta de Halloween)
     CFX_CODE               (Text, opcional: por defecto lee9965)
     DISCORD_INVITE         (Text, opcional: por defecto aurenrp)
 */
@@ -179,7 +186,7 @@ async function handleAuth(request, env, action) {
           nick: mData?.nick || null, avatar: user.avatar || null, guildAvatar: mData?.avatar || null,
           banner: user.banner || null, accent: user.accent_color ?? null,
           deco: user.avatar_decoration_data?.asset || mData?.avatar_decoration_data?.asset || null,
-          joinedAt: mData?.joined_at || null, streamer: !!(mData?.roles || []).includes(role), at: Date.now(),
+          joinedAt: mData?.joined_at || null, streamer: !!(mData?.roles || []).includes(role), roles: mData ? (mData.roles || []) : null, at: Date.now(),
         }) });
       }
     } catch {}
@@ -302,6 +309,15 @@ export class AdminHub extends DurableObject {
     const b = this.bridge();
     if (b) this.safeSend(b, { type: "viewers", n: this.staffViewers(exclude).length });
   }
+  async sendWatch(ws) {
+    const b = ws || this.bridge();
+    if (!b || !this.env.SITE_STORE) return;
+    try {
+      const r = await this.env.SITE_STORE.get(this.env.SITE_STORE.idFromName("auren")).fetch("https://store/watch");
+      const { roles } = await r.json();
+      this.safeSend(b, { type: "watch", roles });
+    } catch {}
+  }
   askWhoami(viewer) {
     const a = viewer.deserializeAttachment();
     const b = this.bridge();
@@ -311,6 +327,7 @@ export class AdminHub extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/watch") { await this.sendWatch(); return json({ ok: true }); }
 
     if (url.pathname === "/status") {
       return json({ bridge: !!this.bridge(), viewers: this.staffViewers().length });
@@ -352,6 +369,7 @@ export class AdminHub extends DurableObject {
           for (const old of this.ctx.getWebSockets("bridge")) if (old !== ws) { try { old.close(4409, "otra conexión"); } catch {} }
           ws.serializeAttachment({ ...a, authed: true, server: String(m.server || "FiveM").slice(0, 60) });
           this.safeSend(ws, { type: "hello_ok" });
+          await this.sendWatch(ws);
           for (const v of this.ctx.getWebSockets("viewer")) { this.safeSend(v, { type: "bridge", online: true }); this.askWhoami(v); }
           this.tellViewerCount();
         } else {
@@ -383,6 +401,12 @@ export class AdminHub extends DurableObject {
           return;
         }
         this.safeSend(v, { type: "res", id, ok: !!m.ok, result: m.result, error: m.error });
+        return;
+      }
+
+      if (m.type === "discord") {
+        // cambios de rangos en Discord vistos por el bot del servidor de FiveM → Streamers y Familia Staff
+        if (this.env.SITE_STORE) await this.env.SITE_STORE.get(this.env.SITE_STORE.idFromName("auren")).fetch("https://store/discord", { method: "POST", body: JSON.stringify(m) }).catch(() => {});
         return;
       }
 
@@ -520,6 +544,138 @@ function cleanChannel(platform, v) {
   return platform === "youtube" && !m[1].startsWith("@") && !m[1].startsWith("channel/") ? "@" + m[1] : m[1];
 }
 
+/* ---------- Ruleta de Halloween ---------- */
+// w = peso (probabilidad relativa). Para cambiarlos sin tocar código: variable ROULETTE_PRIZES (JSON con esta forma).
+const ROULETTE_DEFAULT = [
+  { id: "armas",  label: "3 armas en el server",   w: 8 },
+  { id: "carro",  label: "1 carro VIP",            w: 5 },
+  { id: "pase",   label: "Pase Élite de Navidad",  w: 4 },
+  { id: "cadena", label: "Una cadena gratis",      w: 13 },
+  { id: "nada",   label: "Nada",                   w: 35 },
+  { id: "items",  label: "3 items random",         w: 35, choose: ["Venda", "Radio", "Agua"] },
+];
+function roulettePrizes(env) {
+  try { const p = JSON.parse(env.ROULETTE_PRIZES || "null"); if (Array.isArray(p) && p.length >= 2) return p.map((x, i) => ({ id: String(x.id || i), label: String(x.label || "Premio").slice(0, 40), w: Math.max(0, Number(x.w) || 0), choose: Array.isArray(x.choose) ? x.choose.map(String).slice(0, 6) : undefined })); } catch {}
+  return ROULETTE_DEFAULT;
+}
+function rouletteSeason(env) {
+  if (String(env.ROULETTE_OPEN || "").toLowerCase() === "false") return null;
+  const d = new Date(), md = d.toISOString().slice(5, 10);
+  const from = env.ROULETTE_FROM || "10-01", to = env.ROULETTE_TO || "11-02";
+  return md >= from && md <= to ? `halloween-${d.getUTCFullYear()}` : null;
+}
+
+async function handleRuleta(request, env, sub) {
+  const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+  const user = authConfigured(env) ? await getUser(request, env) : null;
+  const season = rouletteSeason(env), prizes = roulettePrizes(env);
+  const pub = prizes.map(({ id, label, choose }) => ({ id, label, choose }));
+  const call = (path, data) => store.fetch(`https://store/${path}`, { method: "POST", body: JSON.stringify({ ...data, season, prizes }) });
+  if (!sub) {
+    const r = await call("ruleta", { uid: user ? user.id : null });
+    const j = await r.json();
+    return json({ open: !!season, prizes: pub, logged: !!user, member: user ? user.member !== false : null, me: j.me, recent: j.recent });
+  }
+  if (request.method !== "POST" && sub !== "admin") return json({ error: "Método no permitido" }, 405);
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== new URL(request.url).origin) return json({ error: "Origen no permitido." }, 403);
+  if (!user) return json({ error: "Inicia sesión con Discord para girar la ruleta." }, 401);
+  if (sub === "spin") {
+    if (!season) return json({ error: "La ruleta de Halloween está cerrada." }, 403);
+    if (user.member === false) return json({ error: "Tienes que estar en el Discord de Auren para girar." }, 403);
+    if (await rateLimited(request, "spin", 6)) return json({ error: "Espera un momento." }, 429);
+    return call("spin", { user: { id: user.id, name: user.name || user.username, username: user.username } });
+  }
+  if (sub === "choose") {
+    let b = {}; try { b = await request.json(); } catch {}
+    return call("choose", { uid: user.id, choice: String(b.choice || "") });
+  }
+  if (!(await isWebAdmin(env, user))) return json({ error: "Solo los owners y los admins de la web." }, 403);
+  if (sub === "admin") return call("ruleta-admin", {});
+  if (sub === "deliver") {
+    let b = {}; try { b = await request.json(); } catch {}
+    return call("deliver", { key: String(b.key || ""), delivered: !!b.delivered, by: user.name || user.username });
+  }
+  return json({ error: "Ruta no encontrada" }, 404);
+}
+
+/* ---------- Buzón: experiencias (públicas) y quejas del staff (anónimas) ---------- */
+async function sendWebhook(url, payload) {
+  if (!url) return false;
+  try {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, allowed_mentions: { parse: [] } }) });
+    return r.ok;
+  } catch { return false; }
+}
+async function handleBuzon(request, env, sub) {
+  const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+  if (!sub) {
+    if (await rateLimited(request, "buzon", 60)) return json({ error: "Demasiadas peticiones." }, 429);
+    return store.fetch("https://store/buzon");
+  }
+  const user = authConfigured(env) ? await getUser(request, env) : null;
+  if (!user) return json({ error: "Inicia sesión con Discord para escribir en el buzón." }, 401);
+  if (sub === "admin") {
+    if (!(await isWebAdmin(env, user))) return json({ error: "Solo los owners y los admins de la web." }, 403);
+    return store.fetch("https://store/buzon-admin");
+  }
+  if (request.method !== "POST") return json({ error: "Método no permitido" }, 405);
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== new URL(request.url).origin) return json({ error: "Origen no permitido." }, 403);
+  let b = {}; try { b = await request.json(); } catch {}
+  const text = String(b.text || "").replace(/\s+\n/g, "\n").trim().slice(0, 1000);
+  const hook = env.BUZON_WEBHOOK, qhook = env.QUEJAS_WEBHOOK || env.BUZON_WEBHOOK;
+  if (sub === "experiencia") {
+    if (user.member === false) return json({ error: "Tienes que estar en el Discord de Auren." }, 403);
+    if (text.length < 10) return json({ error: "Escribe un poco más (mínimo 10 letras)." }, 400);
+    const stars = Math.max(1, Math.min(5, Math.round(Number(b.stars) || 5)));
+    const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` : null;
+    const r = await store.fetch("https://store/buzon-add", { method: "POST", body: JSON.stringify({ kind: "exp", uid: user.id, name: user.name || user.username, username: user.username, avatar, text, stars }) });
+    const j = await r.json();
+    if (!r.ok) return json(j, r.status);
+    await sendWebhook(hook, { username: "Buzón de Auren", embeds: [{ title: "Nueva experiencia en Auren", description: text, color: 0xff8a1f,
+      author: { name: `${user.name || user.username} (@${user.username})`, icon_url: avatar || undefined }, fields: [{ name: "Valoración", value: "★".repeat(stars) + "☆".repeat(5 - stars), inline: true }], footer: { text: "Desde la web de Auren · sale también en la página" }, timestamp: new Date().toISOString() }] });
+    return json(j);
+  }
+  if (sub === "queja") {
+    if (text.length < 10) return json({ error: "Cuéntanos un poco más (mínimo 10 letras)." }, 400);
+    const about = String(b.about || "").trim().slice(0, 60);
+    // anónima: guardamos solo una huella para limitar el spam, nunca quién la envió
+    const hk = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.SESSION_SECRET || "auren"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const tag = toB64url(await crypto.subtle.sign("HMAC", hk, new TextEncoder().encode("queja:" + user.id))).slice(0, 16);
+    const r = await store.fetch("https://store/buzon-add", { method: "POST", body: JSON.stringify({ kind: "queja", tag, text, about }) });
+    const j = await r.json();
+    if (!r.ok) return json(j, r.status);
+    await sendWebhook(qhook, { username: "Buzón de quejas (anónimo)", embeds: [{ title: "Queja anónima sobre el staff", description: text, color: 0x8b5cf6,
+      fields: about ? [{ name: "Sobre", value: about, inline: true }] : [], footer: { text: "Anónima: la web no guarda ni envía quién la escribió" }, timestamp: new Date().toISOString() }] });
+    return json({ ok: true });
+  }
+  if (sub === "hide") {
+    if (!(await isWebAdmin(env, user))) return json({ error: "Solo los owners y los admins de la web." }, 403);
+    return store.fetch("https://store/buzon-hide", { method: "POST", body: JSON.stringify({ id: String(b.id || ""), hidden: !!b.hidden, by: user.name || user.username }) });
+  }
+  return json({ error: "Ruta no encontrada" }, 404);
+}
+
+async function handleStaffFamily(request, env, sub) {
+  const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+  if (!sub) {
+    if (await rateLimited(request, "staff", 60)) return json({ error: "Demasiadas peticiones." }, 429);
+    return store.fetch("https://store/staff");
+  }
+  const user = authConfigured(env) ? await getUser(request, env) : null;
+  if (!user) return json({ error: "Inicia sesión con Discord." }, 401);
+  if (!(await isWebAdmin(env, user))) return json({ error: "Solo los owners y los admins de la web pueden cambiar esto." }, 403);
+  if (sub === "admin") return store.fetch("https://store/staffadmin");
+  if (request.method !== "POST") return json({ error: "Método no permitido" }, 405);
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== new URL(request.url).origin) return json({ error: "Origen no permitido." }, 403);
+  const text = (await request.text()).slice(0, 20000);
+  if (sub === "config") return store.fetch("https://store/staffcfg", { method: "POST", body: text });
+  if (sub === "duty") return store.fetch("https://store/duty", { method: "POST", body: text });
+  return json({ error: "Ruta no encontrada" }, 404);
+}
+
 async function handleStreamers(request, env, sub) {
   const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
   if (!sub) {
@@ -550,56 +706,274 @@ async function handleStreamers(request, env, sub) {
 }
 
 export class SiteStore extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    try { this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong")); } catch {}
+  }
+
+  /* ---------- ayudantes ---------- */
+  hasBot() { return !!(this.env.DISCORD_BOT_TOKEN && this.env.DISCORD_GUILD_ID); }
+  streamerRole() { return this.env.STREAMER_ROLE_ID || DEFAULT_STREAMER_ROLE; }
+  goatIds() { return list(this.env.GOAT_IDS).length ? list(this.env.GOAT_IDS) : GOAT_IDS_DEFAULT; }
+  async staffCfg() { return (await this.ctx.storage.get("staffCfg")) || { roles: [], duties: {} }; }
+  async watchRoles() { const c = await this.staffCfg(); return [...new Set([this.streamerRole(), ...c.roles.map((r) => r.id)])]; }
+  async dir() { return (await this.ctx.storage.get("dir")) || { at: 0, source: null, members: {} }; }
+  async streamerMembers() { const d = await this.dir(), r = this.streamerRole(); return Object.values(d.members).filter((m) => m.roles.includes(r)); }
+  avatarUrl(id, userAvatar, guildAvatar) {
+    const cdn = "https://cdn.discordapp.com";
+    if (guildAvatar && this.env.DISCORD_GUILD_ID) return `${cdn}/guilds/${this.env.DISCORD_GUILD_ID}/users/${id}/avatars/${guildAvatar}.png?size=256`;
+    if (userAvatar) return `${cdn}/avatars/${id}/${userAvatar}.png?size=256`;
+    try { return `${cdn}/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`; } catch { return `${cdn}/embed/avatars/0.png`; }
+  }
+  cleanMember(m, watch) {
+    if (!m || !/^\d{5,25}$/.test(String(m.id || ""))) return null;
+    const roles = (m.roles || []).map(String).filter((r) => watch.includes(r));
+    return { id: String(m.id), name: String(m.name || m.username || "Sin nombre").slice(0, 60), username: String(m.username || "").slice(0, 40), avatar: String(m.avatar || this.avatarUrl(m.id)).slice(0, 300), roles };
+  }
+  // Avisa al momento a todas las páginas abiertas (Streamers, Familia Staff)
+  broadcast(what) {
+    const msg = JSON.stringify({ t: "update", what, at: Date.now() });
+    for (const ws of this.ctx.getWebSockets("pub")) { try { ws.send(msg); } catch {} }
+  }
+  async saveDir(d, what = "all") {
+    const prev = await this.dir();
+    const sig = (x) => JSON.stringify(Object.values(x.members).map((m) => [m.id, m.name, m.avatar, m.roles.join(".")]).sort());
+    const changed = sig(prev) !== sig(d);
+    await this.ctx.storage.put("dir", d);
+    if (changed) this.broadcast(what);
+    return changed;
+  }
+  async tellHub() {
+    try { if (this.env.ADMIN_HUB) await this.env.ADMIN_HUB.get(this.env.ADMIN_HUB.idFromName("auren")).fetch("https://hub/watch", { method: "POST" }); } catch {}
+  }
+
   async fetch(request) {
-    const url = new URL(request.url);
-    if (url.pathname === "/data") {
+    const url = new URL(request.url), path = url.pathname;
+    const body = async () => { try { return await request.json(); } catch { return {}; } };
+
+    if (path === "/live") {
+      if (request.headers.get("Upgrade") !== "websocket") return json({ error: "Se esperaba WebSocket." }, 426);
+      if (this.ctx.getWebSockets("pub").length > 3000) return json({ error: "Demasiadas conexiones." }, 503);
+      const pair = new WebSocketPair();
+      this.ctx.acceptWebSocket(pair[1], ["pub"]);
+      return new Response(null, { status: 101, webSocket: pair[0] });
+    }
+    if (path === "/data") {
       const data = await this.publicData();
       const stale = !data.updatedAt || Date.now() - data.updatedAt > 12 * 60000;
       if (stale) this.ctx.waitUntil(this.refresh().catch(() => {}));
-      return json(data, 200, { "Cache-Control": "public, max-age=30" });
+      return json(data, 200, { "Cache-Control": "public, max-age=15" });
     }
-    if (url.pathname === "/save") {
-      const { id, entry } = await request.json();
+    if (path === "/save") {
+      const { id, entry } = await body();
       const channels = (await this.ctx.storage.get("channels")) || {};
       channels[id] = entry;
       await this.ctx.storage.put("channels", channels);
-      this.ctx.waitUntil(this.refresh(true).catch(() => {}));
+      this.broadcast("streamers");
+      this.ctx.waitUntil(this.refresh(true).then(() => this.broadcast("streamers")).catch(() => {}));
       return json({ ok: true, entry });
     }
-    if (url.pathname === "/refresh") {
+    if (path === "/refresh") {
       await this.refresh(true);
+      this.broadcast("all");
       return json({ ok: true });
     }
-    if (url.pathname === "/profile" && request.method === "POST") {
-      const p = await request.json();
+    if (path === "/tick") {
+      // cada 2 minutos (cron): miembros por el bot y, cada ~5 minutos, directos y seguidores
+      try { await this.refreshMembers(); } catch {}
+      const st = await this.ctx.storage.get("status");
+      if (!st || Date.now() - st.at > 4.5 * 60000) { try { await this.refreshStatus(); this.broadcast("streamers"); } catch {} }
+      return json({ ok: true });
+    }
+    if (path === "/profile" && request.method === "POST") {
+      const p = await body();
       if (!/^\d{5,25}$/.test(String(p.id || ""))) return json({ error: "id" }, 400);
       const all = (await this.ctx.storage.get("profiles")) || {};
       all[p.id] = p;
       const ids = Object.keys(all);
       if (ids.length > 3000) ids.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ids.length - 3000).forEach((k) => delete all[k]);
       await this.ctx.storage.put("profiles", all);
+      // si no hay bot ni servidor conectado, el inicio de sesión también sirve para saber sus rangos
+      if (Array.isArray(p.roles)) {
+        const d = await this.dir();
+        if (d.source !== "bot" || !this.hasBot()) {
+          const m = this.cleanMember({ id: p.id, name: p.nick || p.globalName || p.username, username: p.username, avatar: this.avatarUrl(p.id, p.avatar, p.guildAvatar), roles: p.roles }, await this.watchRoles());
+          if (m && m.roles.length) d.members[m.id] = m; else delete d.members[p.id];
+          d.at = Date.now(); d.source = d.source || "logins";
+          await this.saveDir(d);
+        }
+      }
       return json({ ok: true });
     }
-    if (url.pathname === "/profiles") {
+    if (path === "/profiles") {
       const all = (await this.ctx.storage.get("profiles")) || {};
       const ids = (url.searchParams.get("ids") || "").split(",").filter(Boolean);
       const out = {}; ids.forEach((id) => { if (all[id]) out[id] = all[id]; });
       return json(out);
     }
+    if (path === "/watch") return json({ roles: await this.watchRoles() });
+    if (path === "/discord" && request.method === "POST") {
+      // Cambios en vivo desde el bot del servidor de FiveM (quitar/poner rangos, salir del Discord…)
+      const m = await body(), watch = await this.watchRoles();
+      if (Array.isArray(m.guildRoles)) await this.ctx.storage.put("guildRoles", m.guildRoles.slice(0, 400).map((r) => ({ id: String(r.id), name: String(r.name || "").slice(0, 60), color: Number(r.color) || 0, position: Number(r.position) || 0 })));
+      const d = await this.dir();
+      if (m.kind === "snapshot" && Array.isArray(m.members)) {
+        d.members = {};
+        for (const x of m.members.slice(0, 5000)) { const c = this.cleanMember(x, watch); if (c && c.roles.length) d.members[c.id] = c; }
+      } else if (m.kind === "member" && m.member) {
+        const c = this.cleanMember(m.member, watch);
+        if (c && c.roles.length) d.members[c.id] = c; else if (m.member.id) delete d.members[String(m.member.id)];
+      } else if (m.kind === "left" && m.id) {
+        delete d.members[String(m.id)];
+      }
+      d.at = Date.now(); d.source = "fivem";
+      await this.saveDir(d);
+      if (m.kind === "roles") this.broadcast("staff");
+      return json({ ok: true });
+    }
+    if (path === "/staff") return json(await this.publicStaff(), 200, { "Cache-Control": "public, max-age=10" });
+
+    /* ---- buzón ---- */
+    if (path.startsWith("/buzon")) {
+      const box = (await this.ctx.storage.get("buzon")) || { exp: [], quejas: [] };
+      const pubExp = () => box.exp.filter((x) => !x.hidden).slice(0, 60).map(({ id, name, username, avatar, text, stars, at }) => ({ id, name, username, avatar, text, stars, at }));
+      if (path === "/buzon") return json({ experiences: pubExp(), total: box.exp.filter((x) => !x.hidden).length });
+      if (path === "/buzon-admin") return json({ experiences: box.exp.slice(0, 200), quejas: box.quejas.slice(0, 200).map(({ id, text, about, at }) => ({ id, text, about, at })) });
+      const b = await body();
+      if (path === "/buzon-add") {
+        const now = Date.now(), id = crypto.randomUUID().slice(0, 8);
+        if (b.kind === "exp") {
+          const last = box.exp.find((x) => x.uid === b.uid);
+          if (last && now - last.at < 12 * 3600e3) return json({ error: "Ya contaste tu experiencia hace poco. Vuelve mañana." }, 429);
+          box.exp.unshift({ id, uid: b.uid, name: String(b.name).slice(0, 60), username: String(b.username || "").slice(0, 40), avatar: b.avatar, text: b.text, stars: b.stars, at: now, hidden: false });
+          box.exp = box.exp.slice(0, 500);
+          await this.ctx.storage.put("buzon", box);
+          this.broadcast("buzon");
+          return json({ ok: true, id });
+        }
+        if (b.kind === "queja") {
+          const recent = box.quejas.filter((x) => x.tag === b.tag && now - x.at < 24 * 3600e3).length;
+          if (recent >= 3) return json({ error: "Ya enviaste varias quejas hoy. Si es urgente, abre un ticket en el Discord." }, 429);
+          box.quejas.unshift({ id, tag: b.tag, text: b.text, about: b.about, at: now });
+          box.quejas = box.quejas.slice(0, 500);
+          await this.ctx.storage.put("buzon", box);
+          this.broadcast("quejas");
+          return json({ ok: true });
+        }
+      }
+      if (path === "/buzon-hide") {
+        const x = box.exp.find((e) => e.id === b.id); if (!x) return json({ error: "No existe." }, 404);
+        x.hidden = !!b.hidden; x.hiddenBy = b.hidden ? b.by : null;
+        await this.ctx.storage.put("buzon", box);
+        this.broadcast("buzon");
+        return json({ ok: true });
+      }
+      return json({ error: "no encontrado" }, 404);
+    }
+
+    /* ---- ruleta (el premio lo decide aquí el servidor, nunca el navegador) ---- */
+    if (["/ruleta", "/spin", "/choose", "/ruleta-admin", "/deliver"].includes(path)) {
+      const b = await body();
+      const spins = (await this.ctx.storage.get("spins")) || {};
+      const season = b.season, prizes = b.prizes || [];
+      const view = (x) => x ? { prize: x.prize, label: x.label, choice: x.choice || null, choose: x.choose || null, code: x.code, at: x.at, delivered: !!x.delivered } : null;
+      const recent = () => Object.values(spins).filter((x) => x.season === season).sort((a, z) => z.at - a.at).slice(0, 12)
+        .map((x) => ({ name: x.name, label: x.label, choice: x.choice || null, at: x.at }));
+      if (path === "/ruleta") return json({ me: season && b.uid ? view(spins[`${season}:${b.uid}`]) : null, recent: recent() });
+      if (path === "/spin") {
+        if (!season) return json({ error: "La ruleta está cerrada." }, 403);
+        const key = `${season}:${b.user.id}`;
+        if (spins[key]) return json({ error: "Ya giraste la ruleta esta temporada.", me: view(spins[key]) }, 409);
+        const total = prizes.reduce((n, p) => n + p.w, 0);
+        const rnd = crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32 * total;
+        let acc = 0, idx = prizes.length - 1;
+        for (let i = 0; i < prizes.length; i++) { acc += prizes[i].w; if (rnd < acc) { idx = i; break; } }
+        const p = prizes[idx];
+        const code = "HW-" + [...crypto.getRandomValues(new Uint8Array(6))].map((v) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[v % 32]).join("");
+        spins[key] = { season, uid: b.user.id, name: String(b.user.name || "").slice(0, 60), username: String(b.user.username || "").slice(0, 40), prize: p.id, label: p.label, choose: p.choose || null, choice: null, code: p.id === "nada" ? null : code, at: Date.now(), delivered: false };
+        await this.ctx.storage.put("spins", spins);
+        this.broadcast("ruleta");
+        return json({ ok: true, index: idx, me: view(spins[key]) });
+      }
+      if (path === "/choose") {
+        const x = spins[`${season}:${b.uid}`];
+        if (!x || !x.choose) return json({ error: "No tienes nada que elegir." }, 400);
+        if (x.choice) return json({ error: "Ya elegiste.", me: view(x) }, 409);
+        if (!x.choose.includes(b.choice)) return json({ error: "Opción no válida." }, 400);
+        x.choice = b.choice;
+        await this.ctx.storage.put("spins", spins);
+        this.broadcast("ruleta");
+        return json({ ok: true, me: view(x) });
+      }
+      if (path === "/ruleta-admin") return json({ season, spins: Object.entries(spins).map(([key, x]) => ({ key, ...x })).sort((a, z) => z.at - a.at) });
+      if (path === "/deliver") {
+        const x = spins[b.key]; if (!x) return json({ error: "No existe." }, 404);
+        x.delivered = !!b.delivered; x.deliveredBy = b.delivered ? b.by : null;
+        await this.ctx.storage.put("spins", spins);
+        this.broadcast("ruleta");
+        return json({ ok: true });
+      }
+    }
+    if (path === "/staffadmin") {
+      const [cfg, d, guildRoles] = await Promise.all([this.staffCfg(), this.dir(), this.ctx.storage.get("guildRoles")]);
+      return json({ cfg, guildRoles: (guildRoles || []).sort((a, b) => b.position - a.position), source: d.source, members: Object.values(d.members), goats: this.goatIds() });
+    }
+    if (path === "/staffcfg" && request.method === "POST") {
+      const b = await body(), cfg = await this.staffCfg();
+      cfg.roles = (Array.isArray(b.roles) ? b.roles : []).filter((r) => /^\d{5,25}$/.test(String(r.id || ""))).slice(0, 30)
+        .map((r) => ({ id: String(r.id), label: String(r.label || "").trim().slice(0, 40), desc: String(r.desc || "").trim().slice(0, 140) }));
+      await this.ctx.storage.put("staffCfg", cfg);
+      this.ctx.waitUntil((async () => { await this.tellHub(); try { await this.refreshMembers(); } catch {} this.broadcast("staff"); })());
+      this.broadcast("staff");
+      return json({ ok: true, cfg });
+    }
+    if (path === "/duty" && request.method === "POST") {
+      const b = await body();
+      if (!/^\d{5,25}$/.test(String(b.id || ""))) return json({ error: "Persona no válida." }, 400);
+      const cfg = await this.staffCfg();
+      const duty = String(b.duty || "").trim().slice(0, 160);
+      if (duty) cfg.duties[String(b.id)] = duty; else delete cfg.duties[String(b.id)];
+      await this.ctx.storage.put("staffCfg", cfg);
+      this.broadcast("staff");
+      return json({ ok: true, duty });
+    }
     return json({ error: "no encontrado" }, 404);
   }
 
+  async webSocketMessage(ws, msg) { /* las páginas solo escuchan */ }
+  async webSocketClose(ws, code, reason) { try { ws.close(code === 1005 || code === 1006 ? 1000 : code, reason); } catch {} }
+
+  /* ---------- Familia Staff ---------- */
+  async publicStaff() {
+    const [cfg, d, guildRoles] = await Promise.all([this.staffCfg(), this.dir(), this.ctx.storage.get("guildRoles")]);
+    const roleInfo = (id) => (guildRoles || []).find((r) => r.id === id) || {};
+    const owners = this.goatIds();
+    const groups = cfg.roles.map((r) => {
+      const gi = roleInfo(r.id);
+      return { id: r.id, label: r.label || gi.name || "Staff", desc: r.desc || "", color: gi.color ? "#" + Number(gi.color).toString(16).padStart(6, "0") : null, members: [] };
+    });
+    for (const m of Object.values(d.members)) {
+      if (owners.includes(m.id)) continue;
+      const g = groups.find((x) => m.roles.includes(x.id));
+      if (g) g.members.push({ id: m.id, name: m.name, username: m.username, avatar: m.avatar, duty: cfg.duties[m.id] || "" });
+    }
+    groups.forEach((g) => g.members.sort((a, b) => a.name.localeCompare(b.name, "es")));
+    return {
+      updatedAt: d.at || null, source: d.source, configured: cfg.roles.length > 0,
+      owners: owners.map((id) => ({ id, duty: cfg.duties[id] || "", name: d.members[id]?.name || null, avatar: d.members[id]?.avatar || null })),
+      groups: groups.filter((g) => g.members.length),
+      total: groups.reduce((n, g) => n + g.members.length, 0) + owners.length,
+    };
+  }
+
+  /* ---------- Streamers ---------- */
   async publicData() {
-    const [members, channels, status, activity] = await Promise.all([
-      this.ctx.storage.get("members"), this.ctx.storage.get("channels"), this.ctx.storage.get("status"), this.ctx.storage.get("activity"),
+    const [d, channels, status, activity] = await Promise.all([
+      this.dir(), this.ctx.storage.get("channels"), this.ctx.storage.get("status"), this.ctx.storage.get("activity"),
     ]);
     const ch = channels || {}, st = status?.per || {}, act = activity || {};
-    let memberList = members?.list || [];
-    if (!(this.env.DISCORD_BOT_TOKEN && this.env.DISCORD_GUILD_ID)) {
-      // sin bot: usamos a quienes iniciaron sesión en la web y tienen el rol de Streamer
-      const prof = (await this.ctx.storage.get("profiles")) || {};
-      memberList = Object.values(prof).filter((p) => p.streamer).map((p) => ({ id: p.id, name: p.nick || p.globalName || p.username, username: p.username, avatar: profileAvatar(p, this.env, 256).still }));
-    }
+    const sr = this.streamerRole();
+    const memberList = Object.values(d.members).filter((m) => m.roles.includes(sr));
     const week = {};
     for (const day of Object.keys(act)) for (const [id, m] of Object.entries(act[day])) week[id] = (week[id] || 0) + m;
     const streamers = memberList.map((m) => {
@@ -614,8 +988,9 @@ export class SiteStore extends DurableObject {
     const withF = streamers.map((x) => ({ id: x.id, f: (x.followers.twitch || 0) + (x.followers.kick || 0) })).filter((x) => x.f > 0).sort((a, b) => b.f - a.f);
     const active = streamers.filter((x) => x.weekMinutes > 0).sort((a, b) => b.weekMinutes - a.weekMinutes)[0];
     return {
-      updatedAt: status?.at || members?.at || null,
-      configured: { discord: !!(this.env.DISCORD_BOT_TOKEN && this.env.DISCORD_GUILD_ID), twitch: !!(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_CLIENT_SECRET), kick: !!(this.env.KICK_CLIENT_ID && this.env.KICK_CLIENT_SECRET) },
+      updatedAt: status?.at || d.at || null,
+      configured: { discord: this.hasBot() || d.source === "fivem", twitch: !!(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_CLIENT_SECRET), kick: !!(this.env.KICK_CLIENT_ID && this.env.KICK_CLIENT_SECRET) },
+      source: d.source,
       streamers,
       top: { followers: withF.slice(0, 3).map((x) => x.id), active: active ? active.id : null },
     };
@@ -633,29 +1008,31 @@ export class SiteStore extends DurableObject {
     }
   }
 
+  // Lee del Discord (con el bot) a todos los que tienen el rol de Streamer o un rango de staff
   async refreshMembers() {
     const env = this.env;
-    if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID) return;
-    const role = env.STREAMER_ROLE_ID || DEFAULT_STREAMER_ROLE;
-    const out = [];
+    if (!this.hasBot()) return false;
+    const H = { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` };
+    const watch = await this.watchRoles();
+    try {
+      const rr = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/roles`, { headers: H });
+      if (rr.ok) await this.ctx.storage.put("guildRoles", (await rr.json()).filter((r) => r.id !== env.DISCORD_GUILD_ID).map((r) => ({ id: r.id, name: r.name, color: r.color, position: r.position })));
+    } catch {}
+    const members = {};
     let after = "0";
     for (let page = 0; page < 5; page++) {
-      const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members?limit=1000&after=${after}`, { headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } });
+      const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members?limit=1000&after=${after}`, { headers: H });
       if (!r.ok) throw new Error(`Discord ${r.status}`);
       const batch = await r.json();
       for (const m of batch) {
-        if (!(m.roles || []).includes(role) || m.user?.bot) continue;
-        const u = m.user;
-        const avatar = m.avatar
-          ? `https://cdn.discordapp.com/guilds/${env.DISCORD_GUILD_ID}/users/${u.id}/avatars/${m.avatar}.png?size=256`
-          : u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=256`
-          : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
-        out.push({ id: u.id, name: m.nick || u.global_name || u.username, username: u.username, avatar });
+        if (m.user?.bot) continue;
+        const c = this.cleanMember({ id: m.user.id, name: m.nick || m.user.global_name || m.user.username, username: m.user.username, avatar: this.avatarUrl(m.user.id, m.user.avatar, m.avatar), roles: m.roles }, watch);
+        if (c && c.roles.length) members[c.id] = c;
       }
       if (batch.length < 1000) break;
       after = batch[batch.length - 1].user.id;
     }
-    await this.ctx.storage.put("members", { at: Date.now(), list: out });
+    return this.saveDir({ at: Date.now(), source: "bot", members });
   }
 
   async token(platform) {
@@ -675,8 +1052,7 @@ export class SiteStore extends DurableObject {
 
   async refreshStatus() {
     const env = this.env;
-    let members = (await this.ctx.storage.get("members"))?.list || [];
-    if (!(env.DISCORD_BOT_TOKEN && env.DISCORD_GUILD_ID)) members = Object.values((await this.ctx.storage.get("profiles")) || {}).filter((p) => p.streamer);
+    const members = await this.streamerMembers();
     const channels = (await this.ctx.storage.get("channels")) || {};
     const prev = (await this.ctx.storage.get("status"))?.per || {};
     const per = {};
@@ -750,7 +1126,6 @@ export class SiteStore extends DurableObject {
     await this.ctx.storage.put("status", { at: now, per });
   }
 }
-
 
 /* ---------- The GOATs: perfiles de Discord de los owners ---------- */
 const GOAT_IDS_DEFAULT = ["1270133887372230718", "457432500768210945", "808082230320693338"];
@@ -827,14 +1202,26 @@ export default {
     if (url.pathname === "/api/stats") return handleStats(request, env, ctx);
     if (url.pathname === "/api/gandy") return handleGandy(request, env);
     if (url.pathname === "/api/goats") return handleGoats(request, env);
+    if (url.pathname === "/api/live") {
+      // canal en vivo para que las páginas se actualicen solas
+      const origin = request.headers.get("Origin");
+      if (origin && origin !== url.origin) return json({ error: "Origen no permitido." }, 403);
+      return env.SITE_STORE.get(env.SITE_STORE.idFromName("auren")).fetch(new Request("https://store/live", { headers: { Upgrade: request.headers.get("Upgrade") || "" } }));
+    }
+    const bm = url.pathname.match(/^\/api\/buzon(?:\/([a-z]+))?\/?$/);
+    if (bm) return handleBuzon(request, env, bm[1] || "");
+    const rm = url.pathname.match(/^\/api\/ruleta(?:\/([a-z]+))?\/?$/);
+    if (rm) return handleRuleta(request, env, rm[1] || "");
+    const fm = url.pathname.match(/^\/api\/staff(?:\/([a-z]+))?\/?$/);
+    if (fm) return handleStaffFamily(request, env, fm[1] || "");
     const sm = url.pathname.match(/^\/api\/streamers(?:\/([a-z]+))?\/?$/);
     if (sm) return handleStreamers(request, env, sm[1] || "");
     if (url.pathname.startsWith("/api/")) return json({ error: "Ruta no encontrada" }, 404);
     return env.ASSETS.fetch(request);
   },
-  // Cada 10 minutos: actualiza miembros del rol, directos, seguidores y actividad
+  // Cada 2 minutos: rangos de Discord; cada ~5: directos, seguidores y actividad
   async scheduled(event, env, ctx) {
     const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
-    ctx.waitUntil(store.fetch("https://store/refresh", { method: "POST" }).catch(() => {}));
+    ctx.waitUntil(store.fetch("https://store/tick", { method: "POST" }).catch(() => {}));
   },
 };

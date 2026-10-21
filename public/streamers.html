@@ -527,7 +527,7 @@ html[data-contrast="high"] .sc.is-live::before,html[data-contrast="high"] .scree
   function openManage(){
     const d = $("mdlg"), cfg = DATA.configured || {};
     const warns = [];
-    if(!DEMO && !cfg.discord) warns.push(`Falta el Secret <code>DISCORD_BOT_TOKEN</code> en Cloudflare: sin él la web no puede leer quién tiene el rol de Streamer.`);
+    if(!DEMO && !cfg.discord) warns.push(`Para ver a todos los que tienen el rol de Streamer, pon el Secret <code>DISCORD_BOT_TOKEN</code> en Cloudflare o deja encendido el servidor de FiveM con el panel web conectado. Mientras tanto salen los que inician sesión en la web.`);
     if(!DEMO && !cfg.twitch) warns.push(`Faltan <code>TWITCH_CLIENT_ID</code> y <code>TWITCH_CLIENT_SECRET</code>: sin ellos no se ven los directos ni los seguidores de Twitch.`);
     if(!DEMO && !cfg.kick) warns.push(`Opcional: con <code>KICK_CLIENT_ID</code> y <code>KICK_CLIENT_SECRET</code> también se detectan los directos de Kick.`);
     const field = (s,p,label,ph) => `<div class="field"><label for="m-${p}-${esc(s.id)}">${label}</label><input class="input" id="m-${p}-${esc(s.id)}" data-p="${p}" value="${esc(s.channels[p]||"")}" placeholder="${ph}" autocomplete="off" spellcheck="false"></div>`;
@@ -649,6 +649,8 @@ html[data-contrast="high"] .sc.is-live::before,html[data-contrast="high"] .scree
     if(!DEMO){
       try{ const r = await fetch("/api/streamers/me"); if(r.ok){ const j = await r.json(); ADMIN = !!j.admin; LOGGED = !!j.logged; renderStats(); } }catch{}
       setInterval(()=>{ if(!document.hidden) load(true); }, 120000);
+      // en vivo: si le quitan o le ponen el rol a alguien, la lista cambia al momento
+      if(A.onLive) A.onLive(what=>{ if(what === "streamers" || what === "all") load(true); });
     }
     if(location.hash === "#gestionar"){ history.replaceState(null, "", location.pathname); if(ADMIN) openManage(); else $("manageBtn")?.click(); }
     const m = location.hash.match(/^#s-(\d+)$/);

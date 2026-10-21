@@ -21,8 +21,8 @@
   ],
   // IA gratis de Cloudflare para GandyDev (10.000 neuronas al día en el plan Free)
   "ai": { "binding": "AI" },
-  // Cada 10 minutos se actualizan los streamers (en vivo, seguidores y actividad)
-  "triggers": { "crons": ["*/10 * * * *"] },
+  // Cada 2 minutos se revisan los rangos de Discord (Streamers y Familia Staff); los directos cada ~5
+  "triggers": { "crons": ["*/2 * * * *"] },
   // Mantiene las variables que pongas en el panel de Cloudflare al volver a desplegar
   "keep_vars": true,
   "workers_dev": true,

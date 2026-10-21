@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "auren-rp",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  // Solo se publica la carpeta public (nada de .git ni archivos internos)
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  // Mantiene las variables que pongas en el panel de Cloudflare al volver a desplegar
+  "keep_vars": true,
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}

@@ -52,8 +52,9 @@ Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID`
 - La lista sale sola de las personas con el rol **1553781042383552687** en tu Discord, con su foto y su apodo.
 - **Bot de Discord:** discord.com/developers → tu bot → *Bot* → activa **Server Members Intent**. El bot tiene
   que estar dentro de tu servidor. Copia su token como Secret `DISCORD_BOT_TOKEN` (nunca en GitHub ni en el chat).
-- **Admins de la web:** pon tu ID de Discord (y el de quien quieras) en `WEB_ADMIN_IDS`. Al entrar a
-  /streamers con sesión iniciada sale el botón **Gestionar streamers**: ahí pegas el enlace de Twitch,
+- **Admins de la web:** Gandy, RichDinero y MagicBullet ya lo son siempre. Para añadir a más gente pon su ID de
+  Discord en `WEB_ADMIN_IDS`. El botón **Gestionar streamers** sale siempre en /streamers (también en el pie de
+  página → Cuenta): si no has iniciado sesión te lleva a hacerlo, y si eres admin abre el panel: ahí pegas el enlace de Twitch,
   Kick, YouTube y TikTok de cada uno y marcas quién va **Destacado**.
 - **Twitch (directos y seguidores):** dev.twitch.tv/console → *Register Your Application* → nombre "Auren Web",
   OAuth Redirect `https://auren-rp.sf242295.workers.dev`, categoría *Website Integration*, cliente *Confidential*.
@@ -67,9 +68,10 @@ Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID`
 - La primera vez que alguien abre la portada, GandyDev le enseña la web en 8 pasos con una barra de progreso.
   Al terminar se abre **The GOATs** (portada, al final): Gandy destacado en dorado como Owner principal y mérito
   principal, RichDinero (segundo owner principal: ingresos, negocios y progreso) y MagicBullet (owner).
-- La foto (también animada), el banner, el apodo, la decoración de avatar y desde cuándo están en Discord salen
-  solos de su Discord con el bot (`DISCORD_BOT_TOKEN`). La "Sobre mí" de Discord no se puede leer con un bot,
-  por eso el texto de cada uno se escribe en `assets/site.js` → `goats`.
+- Los tres salen iguales, cada uno con su color; Gandy con "Owner principal" y los otros con "Owner".
+- Las fotos salen de Discord: con el bot (`DISCORD_BOT_TOKEN`) si está puesto; si no, cuando cada uno inicia sesión
+  en la web se guarda su foto; y si tampoco, se usa un servicio público de perfiles de Discord. Además
+  `assets/site.js` → `goats` trae sus fotos actuales de respaldo. La "Sobre mí" de Discord no se puede leer.
 - Si alguien salta el recorrido, la sección sale bloqueada con su barra de progreso y un botón para abrirla.
   Se puede repetir el recorrido diciéndole "tutorial" a GandyDev.
 
@@ -95,6 +97,13 @@ Para que `DISCORD_GUILD_ID` y el bot funcionen con Streamers, `DISCORD_GUILD_ID`
 - El canal en vivo usa Durable Objects de Cloudflare, incluidos gratis en el plan Free.
 - **Monitor de pantallas:** en el menú del panel. Elige hasta 4 jugadores y ves sus pantallas cada 6 segundos;
   pulsa una para verla en grande. Hace falta el permiso de monitoreo o de spectate en tu rango. Queda en los logs.
+
+## Modo blanco y sonidos
+- Arriba hay un botón de sol/luna para pasar a **modo blanco** y otro de altavoz para **activar o quitar los sonidos**
+  (en el móvil están dentro del botón AA). Se recuerdan en cada navegador.
+- Los sonidos se generan en la propia web (sin archivos): botones, avisos, GandyDev (saludo, saltos, cuando lo
+  lanzas o lo atrapas, cuando escribe) y el recorrido (cada paso y al abrir The GOATs).
+- Si alguien inicia sesión con Discord y tiene el rol de Streamer, también aparece en Streamers aunque el bot no esté puesto.
 
 ## Lectura y accesibilidad
 El botón **AA** de arriba abre las opciones de lectura: tamaño de letra, letra fácil de leer

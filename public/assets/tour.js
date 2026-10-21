@@ -29,30 +29,30 @@
   .tour-hole{position:fixed;left:0;top:0;border-radius:14px;box-shadow:0 0 0 9999px rgba(3,4,6,.8),0 0 0 3px #ffd76a,0 0 30px 6px rgba(255,215,106,.45);pointer-events:none;transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s,height .35s}
   .tour-hole.pulse{animation:tourPulse 1.8s infinite}
   @keyframes tourPulse{50%{box-shadow:0 0 0 9999px rgba(3,4,6,.8),0 0 0 3px #ffd76a,0 0 46px 12px rgba(255,215,106,.6)}}
-  .tour-card{position:fixed;left:0;top:0;width:min(400px,calc(100% - 24px));padding:20px;border-radius:20px;background:#0d1016;border:1px solid rgba(255,255,255,.22);box-shadow:0 30px 70px -15px rgba(0,0,0,.95);color:#f3f4f6;font-family:var(--font,system-ui);display:grid;gap:12px;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+  .tour-card{position:fixed;left:0;top:0;width:min(400px,calc(100% - 24px));padding:20px;border-radius:20px;background:var(--panel);border:1px solid rgb(var(--fg) / .22);box-shadow:0 30px 70px -15px rgb(var(--sink) / .95);color:var(--ink,#f3f4f6);font-family:var(--font,system-ui);display:grid;gap:12px;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
   .tour-top{display:flex;align-items:center;gap:10px}
-  .tour-av{width:40px;height:40px;border-radius:12px;background:#1b1f27;display:grid;place-items:center;flex:none}
+  .tour-av{width:40px;height:40px;border-radius:12px;background:var(--chip);display:grid;place-items:center;flex:none}
   .tour-av svg{width:30px;height:38px}
   .tour-av .eye,.tour-av .mouth{transform-box:fill-box;transform-origin:center}
   .tour-av .heyes,.tour-av .zz{opacity:0}
   .tour-av.talk .mouth{animation:gdTalk .14s infinite alternate}
   .tour-top b{display:block;font-size:.98rem}
-  .tour-top small{color:#a7aebb;font-size:.84rem}
-  .tour-bar{height:10px;border-radius:10px;background:rgba(255,255,255,.09);overflow:hidden;position:relative}
+  .tour-top small{color:var(--muted,#a7aebb);font-size:.84rem}
+  .tour-bar{height:10px;border-radius:10px;background:rgb(var(--fg) / .09);overflow:hidden;position:relative}
   .tour-bar i{position:absolute;inset:0 auto 0 0;border-radius:10px;background:linear-gradient(90deg,#f5c451,#fff1b8);transition:width .5s cubic-bezier(.2,.8,.2,1)}
-  .tour-bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:tourShine 1.6s infinite}
+  .tour-bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgb(var(--fg) / .6),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:tourShine 1.6s infinite}
   @keyframes tourShine{from{background-position:-60% 0}to{background-position:160% 0}}
   .tour-dots{display:flex;gap:6px}
-  .tour-dots span{flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.12)}
+  .tour-dots span{flex:1;height:4px;border-radius:4px;background:rgb(var(--fg) / .12)}
   .tour-dots span.on{background:#f5c451}
   .tour-card h3{font-size:1.3rem;letter-spacing:-.02em;line-height:1.15}
-  .tour-card p{color:#d6dae1;font-size:1rem;line-height:1.55;min-height:3.1em}
+  .tour-card p{color:var(--soft,#d6dae1);font-size:1rem;line-height:1.55;min-height:3.1em}
   .tour-btns{display:flex;gap:8px;align-items:center}
   .tour-btns .sp{flex:1}
-  .tour-btns button{height:44px;padding:0 16px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.05);color:inherit}
-  .tour-btns .next{background:#f3f4f6;color:#0a0b0e;border-color:#f3f4f6}
+  .tour-btns button{height:44px;padding:0 16px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer;border:1px solid rgb(var(--fg) / .22);background:rgb(var(--fg) / .05);color:inherit}
+  .tour-btns .next{background:var(--accent,#f3f4f6);color:var(--on-accent,#0a0b0e);border-color:var(--accent,#f3f4f6)}
   .tour-btns .next.gold{background:linear-gradient(90deg,#f5c451,#fff1b8);border:0}
-  .tour-btns .skip{border:0;background:none;color:#a7aebb;text-decoration:underline;text-underline-offset:3px;padding:0 4px;font-weight:500}
+  .tour-btns .skip{border:0;background:none;color:var(--muted,#a7aebb);text-decoration:underline;text-underline-offset:3px;padding:0 4px;font-weight:500}
   .tour-btns button:focus-visible{outline:3px solid #ffd76a;outline-offset:3px}
   .tour-burst{position:fixed;pointer-events:none;z-index:81;width:8px;height:8px;border-radius:2px;left:0;top:0;animation:tourConf 1.4s cubic-bezier(.2,.7,.4,1) forwards}
   @keyframes tourConf{from{opacity:1;transform:translate(var(--x0),var(--y0)) rotate(0)}to{opacity:0;transform:translate(calc(var(--x0) + var(--dx)),calc(var(--y0) + var(--dy))) rotate(var(--r))}}
@@ -90,7 +90,7 @@
     hole = el.querySelector(".tour-hole"); card = el.querySelector(".tour-card"); shade = el.querySelector(".tour-shade");
     el.querySelector(".skip").onclick = ()=> end(false);
     el.querySelector(".back").onclick = ()=> go(cur - 1);
-    el.querySelector(".next").onclick = ()=> cur >= N - 1 ? end(true) : go(cur + 1);
+    el.querySelector(".next").onclick = ()=>{ if(cur >= N - 1) return end(true); window.AurenSFX && window.AurenSFX.play("step"); go(cur + 1); };
     el.addEventListener("keydown", e=>{
       if(e.key === "Escape"){ e.preventDefault(); end(false); }
       else if(e.key === "ArrowRight"){ e.preventDefault(); el.querySelector(".next").click(); }
@@ -165,7 +165,7 @@
     hole.classList.toggle("pulse", !!s.final);
     const prev = +(store.get("auren_tour_step") || 0);
     if(cur + 1 > prev){ store.set("auren_tour_step", String(cur + 1)); window.dispatchEvent(new Event("auren:tour-progress")); }
-    if(s.final){ window.dispatchEvent(new Event("auren:goats-unlock")); burst(); }
+    if(s.final){ window.dispatchEvent(new Event("auren:goats-unlock")); burst(); window.AurenSFX && window.AurenSFX.play("unlock"); }
     if(window.GandyDev){ if(t && t.classList.contains("gd")) window.GandyDev.say("¡Ese soy yo! 👋", 2500); }
     setTimeout(()=> next.focus({ preventScroll:true }), 30);
   }

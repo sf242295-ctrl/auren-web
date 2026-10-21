@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>try{var t=localStorage.getItem("auren_theme");if(t==="light"){document.documentElement.dataset.theme="light"}if(localStorage.getItem("auren_sound")==="off"){document.documentElement.dataset.sound="off"}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Panel del staff · Auren RP</title>
 <meta name="description" content="Panel del staff de Auren RP conectado en vivo al menú de administración del servidor.">
@@ -34,12 +35,12 @@ body[data-page="staff"] .wrap{width:min(1500px,100% - 32px)}
 .side button[aria-current="page"] .lbl small{color:var(--soft)}
 .side button svg{width:22px;height:22px;flex:none;opacity:.9}
 .side button:hover{background:var(--surface-2);color:var(--ink)}
-.side button[aria-current="page"]{background:rgba(255,255,255,.09);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.side button[aria-current="page"]{background:rgb(var(--fg) / .09);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
 .side .badge{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--on-accent);font-size:.8rem;font-weight:600;display:grid;place-items:center}
 .view{padding:clamp(20px,2.8vw,36px);min-height:60vh}
 .view > h2{font-size:clamp(1.8rem,2.8vw,2.3rem);line-height:1.1}
 .view > .sub{color:var(--soft);margin-top:8px;font-size:1.06rem;max-width:70ch}
-.howto{margin-top:12px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--soft);font-size:.98rem}
+.howto{margin-top:12px;padding:12px 16px;border-radius:12px;background:rgb(var(--fg) / .04);border:1px solid var(--line);color:var(--soft);font-size:.98rem}
 .howto b{color:var(--ink)}
 .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0 16px}
 .bar .search{flex:1;min-width:220px;max-width:420px}
@@ -52,7 +53,7 @@ body[data-page="staff"] .wrap{width:min(1500px,100% - 32px)}
 .tile span{display:block;margin-top:8px;color:var(--soft);font-size:1rem}
 .quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:16px}
 .qk{display:grid;gap:4px;text-align:left;padding:16px 18px;border-radius:16px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:1.02rem}
-.qk:hover{background:rgba(255,255,255,.08)}
+.qk:hover{background:rgb(var(--fg) / .08)}
 .qk b{font-weight:600}
 .qk span{color:var(--soft);font-size:.92rem}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
@@ -63,7 +64,7 @@ body[data-page="staff"] .wrap{width:min(1500px,100% - 32px)}
 .rows li:last-child{border-bottom:0}
 .rows .muted{color:var(--muted)}
 .feed{list-style:none;display:grid;gap:8px;max-height:420px;overflow:auto}
-.feed li{padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.25);font-size:.95rem;line-height:1.5}
+.feed li{padding:10px 12px;border-radius:10px;background:rgb(var(--sink) / .25);font-size:.95rem;line-height:1.5}
 .feed time{display:block;color:var(--muted);font-size:.85rem;margin-bottom:2px}
 
 /* tablas */
@@ -71,9 +72,9 @@ body[data-page="staff"] .wrap{width:min(1500px,100% - 32px)}
 table{width:100%;border-collapse:collapse;font-size:1.04rem}
 caption{text-align:left;padding:12px 14px;color:var(--soft);font-size:.92rem}
 th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-weight:600;font-size:.88rem;color:var(--soft);background:rgba(255,255,255,.03);white-space:nowrap}
+th{font-weight:600;font-size:.88rem;color:var(--soft);background:rgb(var(--fg) / .03);white-space:nowrap}
 tr:last-child td{border-bottom:0}
-tbody tr:hover{background:rgba(255,255,255,.03)}
+tbody tr:hover{background:rgb(var(--fg) / .03)}
 td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 td .two{display:grid;line-height:1.35}
 td .two small{color:var(--muted);font-size:.86rem}
@@ -87,15 +88,15 @@ td .two small{color:var(--muted);font-size:.86rem}
 .bulk b{margin-right:auto;padding-left:6px}
 
 /* ficha del jugador */
-dialog{color:var(--ink);background:#0d1016;border:1px solid var(--line-2);border-radius:20px;padding:0;max-width:min(560px,calc(100% - 24px));width:100%;margin:auto}
-dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog{color:var(--ink);background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:0;max-width:min(560px,calc(100% - 24px));width:100%;margin:auto}
+dialog::backdrop{background:rgb(var(--sink) / .7)}
 .dlg-in{padding:22px;display:grid;gap:16px}
 .dlg-in h3{font-size:1.35rem}
 .dlg-in .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 dialog.drawer{max-width:min(1060px,calc(100% - 24px));height:calc(100vh - 24px);max-height:none;margin:12px 12px 12px auto}
 @media (max-width:700px){dialog.drawer{margin:auto;height:calc(100vh - 16px);max-width:calc(100% - 16px)}}
 .p-head{display:flex;gap:14px;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}
-.p-head .pid{width:56px;height:56px;border-radius:14px;background:#1b1f27;display:grid;place-items:center;font-weight:600;font-size:1.1rem;flex:none}
+.p-head .pid{width:56px;height:56px;border-radius:14px;background:var(--chip);display:grid;place-items:center;font-weight:600;font-size:1.1rem;flex:none}
 .p-head h3{font-size:1.4rem;line-height:1.15}
 .p-head p{color:var(--soft);font-size:.95rem}
 .p-head .icon-btn{margin-left:auto}
@@ -111,7 +112,7 @@ dialog.drawer{max-width:min(1060px,calc(100% - 24px));height:calc(100vh - 24px);
 .agroup h4{font-size:1.02rem;color:var(--ink);font-weight:600;margin-bottom:10px}
 .agroup .btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .acard{display:grid;gap:4px;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:1rem}
-.acard:hover{background:rgba(255,255,255,.08)}
+.acard:hover{background:rgb(var(--fg) / .08)}
 .acard b{font-weight:600}
 .acard span{color:var(--soft);font-size:.9rem;line-height:1.45}
 .acard.danger{border-color:rgba(248,113,113,.45);background:rgba(248,113,113,.07)}
@@ -126,13 +127,13 @@ dialog.drawer{max-width:min(1060px,calc(100% - 24px));height:calc(100vh - 24px);
 .chat > *{min-width:0}
 .chat-list{display:grid;gap:4px;align-content:start;max-height:560px;overflow:auto}
 .chat-list button{display:grid;gap:2px;text-align:left;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;color:var(--ink)}
-.chat-list button[aria-current="true"]{border-color:var(--line-2);background:rgba(255,255,255,.08)}
+.chat-list button[aria-current="true"]{border-color:var(--line-2);background:rgb(var(--fg) / .08)}
 .chat-list small{color:var(--muted)}
 .chat-pane{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .chat-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
 .chat-top b{margin-right:auto}
 .msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:10px;align-content:start;max-height:420px}
-.msg{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);max-width:80%}
+.msg{padding:10px 12px;border-radius:12px;background:rgb(var(--fg) / .04);max-width:80%}
 .msg b{font-size:.9rem}
 .msg time{color:var(--muted);font-size:.82rem;margin-left:6px}
 .msg p{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -144,7 +145,7 @@ dialog.drawer{max-width:min(1060px,calc(100% - 24px));height:calc(100vh - 24px);
 .screen .bar2 b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .screen .shot{position:relative;aspect-ratio:16/9;display:grid;place-items:center;color:var(--muted);cursor:zoom-in;max-width:100%}
 .screen .shot img{width:100%;height:100%;object-fit:contain;display:block}
-.screen .when{position:absolute;left:10px;bottom:10px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.7);font-size:.84rem;color:#e5e7eb}
+.screen .when{position:absolute;left:10px;bottom:10px;padding:3px 9px;border-radius:999px;background:rgb(var(--sink) / .7);font-size:.84rem;color:#e5e7eb}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block}
 .pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .pick button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:.95rem}

@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>try{var t=localStorage.getItem("auren_theme");if(t==="light"){document.documentElement.dataset.theme="light"}if(localStorage.getItem("auren_sound")==="off"){document.documentElement.dataset.sound="off"}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mi cuenta · Auren RP</title>
 <meta name="description" content="Tu cuenta de Auren RP: Discord vinculado y accesos rápidos.">
@@ -21,7 +22,7 @@
 .quick > p{color:var(--soft);margin-top:8px;max-width:60ch}
 .links{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:22px}
 .link{display:grid;gap:4px;padding:18px;border-radius:16px;border:1px solid var(--line-2);background:var(--surface-2);transition:border-color .15s,background .15s}
-.link:hover{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.07)}
+.link:hover{border-color:rgb(var(--fg) / .35);background:rgb(var(--fg) / .07)}
 .link b{font-weight:600;font-size:1.05rem}
 .link span{color:var(--soft);font-size:.95rem}
 .login-box{text-align:center;display:grid;justify-items:center;gap:14px;padding:clamp(36px,6vw,64px) 22px}

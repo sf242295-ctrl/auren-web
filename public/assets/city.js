@@ -448,7 +448,7 @@
     requestAnimationFrame(loop);
   }
   const root = document.documentElement;
-  const userStill = ()=> root.dataset.motion === "reduce" || root.dataset.contrast === "high";
+  const userStill = ()=> root.dataset.motion === "reduce" || root.dataset.contrast === "high" || root.dataset.theme === "light";
   function start(){ if(running || paused || reduce || userStill()) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
   function stop(){ running = false; }
 

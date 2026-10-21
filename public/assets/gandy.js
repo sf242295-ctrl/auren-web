@@ -17,8 +17,14 @@
   const css = `
   .gd{position:fixed;z-index:45;left:0;top:0;width:64px;height:84px;padding:0;border:0;background:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transform:translate3d(var(--x,0px),var(--y,0px),0);will-change:transform}
   .gd.drag{cursor:grabbing}
-  .gd svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));pointer-events:none}
+  .gd svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 12px rgb(var(--sink) / .6));pointer-events:none}
   .gd .sq{transform-origin:32px 82px;transition:transform .12s ease-out}
+  .gd .shadow{opacity:.45;transform-box:fill-box;transform-origin:center;transition:opacity .2s,transform .2s}
+  .gd.air .shadow,.gd.drag .shadow{opacity:.12;transform:scale(.5)}
+  .gd .jet{transform-box:fill-box;transform-origin:top center;transition:opacity .12s}
+  .gd.air:not(.drag) .jet{opacity:1;animation:gdJet .07s infinite alternate}
+  @keyframes gdJet{from{transform:scaleY(.65)}to{transform:scaleY(1.15)}}
+  .gd:hover svg,.gd:focus-visible svg{filter:drop-shadow(0 6px 12px rgb(var(--sink) / .55)) drop-shadow(0 0 10px rgba(122,240,180,.45))}
   .gd.crouch .sq{transform:scale(1.14,.82)}
   .gd.land .sq{transform:scale(1.2,.78)}
   .gd.air .sq{transform:scale(.92,1.1)}
@@ -60,6 +66,7 @@
   @keyframes gdLeg{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
   @keyframes gdArm{0%,100%{transform:rotate(16deg)}50%{transform:rotate(-16deg)}}
   @keyframes gdBob{to{transform:translateY(-2px)}}
+  .gd.walk .bodyg{transform-box:fill-box;transform-origin:bottom center}
   @keyframes gdBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
   @keyframes gdWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-140deg)}}
   @keyframes gdLight{50%{opacity:.35}}
@@ -73,38 +80,38 @@
   @keyframes gdZ{0%{opacity:0;transform:translate(0,4px)}30%{opacity:1}100%{opacity:0;transform:translate(6px,-10px)}}
   @keyframes gdBreath{50%{transform:translateY(1.5px)}}
   @keyframes gdTalk{from{transform:scaleY(1) scaleX(1)}to{transform:scaleY(3.2) scaleX(.8)}}
-  .gd-bubble{position:fixed;z-index:46;left:0;top:0;max-width:250px;padding:10px 14px;border-radius:14px;background:#f3f4f6;color:#0a0b0e;font:500 .95rem/1.4 var(--font,system-ui);box-shadow:0 12px 30px -8px rgba(0,0,0,.7);pointer-events:none;transform:translate3d(var(--bx,0px),var(--by,0px),0);opacity:0;transition:opacity .18s}
+  .gd-bubble{position:fixed;z-index:46;left:0;top:0;max-width:250px;padding:10px 14px;border-radius:14px;background:#f3f4f6;color:#0a0b0e;font:500 .95rem/1.4 var(--font,system-ui);box-shadow:0 12px 30px -8px rgb(var(--sink) / .7);pointer-events:none;transform:translate3d(var(--bx,0px),var(--by,0px),0);opacity:0;transition:opacity .18s}
   .gd-bubble.on{opacity:1}
   .gd-bubble::after{content:"";position:absolute;left:var(--tail,50%);bottom:-6px;width:12px;height:12px;background:#f3f4f6;transform:translateX(-50%) rotate(45deg);border-radius:2px}
-  .gd-fx{position:fixed;z-index:46;left:0;top:0;pointer-events:none;font:700 18px/1 system-ui;color:#ffd76a;text-shadow:0 2px 8px rgba(0,0,0,.6);animation:gdFx 1.1s ease-out forwards}
+  .gd-fx{position:fixed;z-index:46;left:0;top:0;pointer-events:none;font:700 18px/1 system-ui;color:#ffd76a;text-shadow:0 2px 8px rgb(var(--sink) / .6);animation:gdFx 1.1s ease-out forwards}
   @keyframes gdFx{from{opacity:1;transform:translate(var(--fx0),var(--fy0)) scale(.6)}to{opacity:0;transform:translate(calc(var(--fx0) + var(--dx)),calc(var(--fy0) - 70px)) scale(1.3) rotate(var(--rot))}}
-  .gd-panel{position:fixed;z-index:70;padding:0;margin:0;right:max(16px, env(safe-area-inset-right,0px));bottom:calc(104px + env(safe-area-inset-bottom,0px));width:min(410px,calc(100% - 32px));height:min(580px,calc(100vh - 140px));display:flex;flex-direction:column;border-radius:20px;background:#0d1016;border:1px solid var(--line-2,rgba(255,255,255,.22));box-shadow:0 30px 70px -15px rgba(0,0,0,.9);color:var(--ink,#f3f4f6);font-family:var(--font,system-ui);overflow:hidden}
-  .gd-head{display:flex;align-items:center;gap:12px;padding:14px 14px 14px 16px;border-bottom:1px solid var(--line,rgba(255,255,255,.11))}
-  .gd-head .av{width:40px;height:40px;border-radius:12px;background:#1b1f27;display:grid;place-items:center;flex:none}
+  .gd-panel{position:fixed;z-index:70;padding:0;margin:0;right:max(16px, env(safe-area-inset-right,0px));bottom:calc(104px + env(safe-area-inset-bottom,0px));width:min(410px,calc(100% - 32px));height:min(580px,calc(100vh - 140px));display:flex;flex-direction:column;border-radius:20px;background:var(--panel);border:1px solid var(--line-2,rgb(var(--fg) / .22));box-shadow:0 30px 70px -15px rgb(var(--sink) / .9);color:var(--ink,#f3f4f6);font-family:var(--font,system-ui);overflow:hidden}
+  .gd-head{display:flex;align-items:center;gap:12px;padding:14px 14px 14px 16px;border-bottom:1px solid var(--line,rgb(var(--fg) / .11))}
+  .gd-head .av{width:40px;height:40px;border-radius:12px;background:var(--chip);display:grid;place-items:center;flex:none}
   .gd-head .av svg{width:30px;height:38px}
   .gd-head b{display:block;font-size:1.02rem}
   .gd-head small{color:var(--muted,#a7aebb);font-size:.84rem}
-  .gd-head button{margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.11));background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center}
+  .gd-head button{margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line,rgb(var(--fg) / .11));background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center}
   .gd-head,.gd-chips,.gd-form{flex:none}
   .gd-msgs{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:12px}
   .gd-m{max-width:88%;padding:11px 14px;border-radius:16px;font-size:.98rem;line-height:1.55;overflow-wrap:anywhere}
-  .gd-m.bot{background:rgba(255,255,255,.06);border:1px solid var(--line,rgba(255,255,255,.11));border-top-left-radius:6px;align-self:flex-start}
-  .gd-m.me{background:#f3f4f6;color:#0a0b0e;border-top-right-radius:6px;align-self:flex-end}
+  .gd-m.bot{background:rgb(var(--fg) / .06);border:1px solid var(--line,rgb(var(--fg) / .11));border-top-left-radius:6px;align-self:flex-start}
+  .gd-m.me{background:var(--accent,#f3f4f6);color:var(--on-accent,#0a0b0e);border-top-right-radius:6px;align-self:flex-end}
   .gd-m a{color:inherit;text-decoration:underline;text-underline-offset:3px}
   .gd-m ul{padding-left:18px;margin-top:4px}
-  .gd-m .code{display:inline-block;font-size:.84em;font-weight:600;padding:0 7px;border-radius:999px;border:1px solid var(--line-2,rgba(255,255,255,.3));text-decoration:none;margin:0 1px}
+  .gd-m .code{display:inline-block;font-size:.84em;font-weight:600;padding:0 7px;border-radius:999px;border:1px solid var(--line-2,rgb(var(--fg) / .3));text-decoration:none;margin:0 1px}
   .gd-links{display:grid;gap:8px;margin-top:10px}
-  .gd-link{display:grid;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--line-2,rgba(255,255,255,.22));background:rgba(0,0,0,.25);color:inherit;text-decoration:none!important;text-align:left;cursor:pointer;font:inherit}
-  .gd-link:hover{background:rgba(255,255,255,.08)}
+  .gd-link{display:grid;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--line-2,rgb(var(--fg) / .22));background:rgb(var(--sink) / .25);color:inherit;text-decoration:none!important;text-align:left;cursor:pointer;font:inherit}
+  .gd-link:hover{background:rgb(var(--fg) / .08)}
   .gd-link b{font-size:.95rem}
   .gd-link span{color:var(--soft,#d6dae1);font-size:.86rem}
   .gd-src{margin-top:8px;font-size:.84rem;color:var(--muted,#a7aebb)}
   .gd-chips{display:flex;gap:8px;overflow-x:auto;padding:0 16px 10px}
-  .gd-chips button{flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line-2,rgba(255,255,255,.22));background:rgba(255,255,255,.04);color:inherit;cursor:pointer;font:inherit;font-size:.88rem;white-space:nowrap}
-  .gd-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line,rgba(255,255,255,.11))}
-  .gd-form input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line-2,rgba(255,255,255,.22));background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:1rem}
-  .gd-form input:focus{outline:none;border-color:rgba(255,255,255,.5)}
-  .gd-form button{height:46px;padding:0 16px;border-radius:12px;border:0;background:#f3f4f6;color:#0a0b0e;font:inherit;font-weight:600;cursor:pointer}
+  .gd-chips button{flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line-2,rgb(var(--fg) / .22));background:rgb(var(--fg) / .04);color:inherit;cursor:pointer;font:inherit;font-size:.88rem;white-space:nowrap}
+  .gd-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line,rgb(var(--fg) / .11))}
+  .gd-form input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line-2,rgb(var(--fg) / .22));background:rgb(var(--sink) / .35);color:inherit;font:inherit;font-size:1rem}
+  .gd-form input:focus{outline:none;border-color:rgb(var(--fg) / .5)}
+  .gd-form button{height:46px;padding:0 16px;border-radius:12px;border:0;background:var(--accent,#f3f4f6);color:var(--on-accent,#0a0b0e);font:inherit;font-weight:600;cursor:pointer}
   .gd-typing{display:inline-flex;gap:4px}
   .gd-typing i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:gdDot 1s infinite}
   .gd-typing i:nth-child(2){animation-delay:.15s}.gd-typing i:nth-child(3){animation-delay:.3s}
@@ -116,26 +123,46 @@
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   /* ---------- el muñequito (diseño propio) ---------- */
-  const BOT = () => `<svg viewBox="0 0 64 84" aria-hidden="true"><g class="sq"><g class="spin"><g class="flip">
-    <g class="legL"><rect x="22" y="62" width="7" height="16" rx="3.5" fill="#2b313c"/><rect x="20" y="75" width="11" height="6" rx="3" fill="#f3f4f6"/></g>
-    <g class="legR"><rect x="35" y="62" width="7" height="16" rx="3.5" fill="#2b313c"/><rect x="33" y="75" width="11" height="6" rx="3" fill="#f3f4f6"/></g>
-    <g class="bodyg">
-      <g class="armL"><rect x="11" y="45" width="6" height="15" rx="3" fill="#2b313c"/></g>
-      <g class="armR"><rect x="47" y="45" width="6" height="15" rx="3" fill="#2b313c"/></g>
-      <rect x="17" y="43" width="30" height="22" rx="9" fill="#1b1f27" stroke="#3a414e" stroke-width="1.5"/>
-      <text x="32" y="58" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" font-weight="700" fill="#f3f4f6">GD</text>
-      <line x1="32" y1="8" x2="32" y2="14" stroke="#3a414e" stroke-width="2"/>
-      <circle class="light" cx="32" cy="7" r="3" fill="#4ade80"/>
-      <rect x="10" y="13" width="44" height="32" rx="12" fill="#1b1f27" stroke="#3a414e" stroke-width="1.5"/>
-      <path d="M12 21c2-7 9-10 20-10s18 3 20 10z" fill="#f3f4f6"/>
-      <path d="M9 21h12v4H11a2 2 0 0 1-2-2z" fill="#f3f4f6"/>
-      <rect x="15" y="23" width="34" height="17" rx="7" fill="#06070a"/>
-      <g class="eyes"><rect class="eye" x="22" y="27" width="6" height="9" rx="3" fill="#7af0b4"/><rect class="eye" x="36" y="27" width="6" height="9" rx="3" fill="#7af0b4"/></g>
-      <g class="heyes" fill="none" stroke="#7af0b4" stroke-width="2.4" stroke-linecap="round"><path d="M21.5 33.5l3.5-4 3.5 4"/><path d="M35.5 33.5l3.5-4 3.5 4"/></g>
-      <rect class="mouth" x="29" y="37" width="6" height="1.6" rx=".8" fill="#7af0b4"/>
-    </g></g></g>
-    <g class="zz" font-family="system-ui,sans-serif" font-weight="700" fill="#d6dae1"><text x="50" y="10" font-size="10">z</text><text x="57" y="2" font-size="7">z</text></g>
-  </g></svg>`;
+  let BOTN = 0;
+  const BOT = () => { const n = ++BOTN; return `<svg viewBox="0 0 64 84" aria-hidden="true">
+    <defs>
+      <linearGradient id="gdH${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4354"/><stop offset="1" stop-color="#151920"/></linearGradient>
+      <linearGradient id="gdB${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3543"/><stop offset="1" stop-color="#11141a"/></linearGradient>
+      <linearGradient id="gdV${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d1f1a"/><stop offset="1" stop-color="#020405"/></linearGradient>
+      <linearGradient id="gdC${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9dde4"/></linearGradient>
+      <filter id="gdG${n}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <g class="sq">
+    <ellipse class="shadow" cx="32" cy="82" rx="15" ry="2.6" fill="#000" opacity="0"/>
+    <g class="spin"><g class="flip">
+      <g class="jet" opacity="0" filter="url(#gdG${n})"><path d="M23 80.5c1.4 3.6 2.6 6.6 3 9 .4-2.4 1.6-5.4 3-9z" fill="#ffb347"/><path d="M24.6 80.5c.8 2 1.4 3.8 1.4 5.2.2-1.4.8-3.2 1.4-5.2z" fill="#fff3c4"/><path d="M36 80.5c1.4 3.6 2.6 6.6 3 9 .4-2.4 1.6-5.4 3-9z" fill="#ffb347"/><path d="M37.6 80.5c.8 2 1.4 3.8 1.4 5.2.2-1.4.8-3.2 1.4-5.2z" fill="#fff3c4"/></g>
+      <g class="legL"><rect x="22.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M19.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="19.5" y="78.6" width="13" height="1.8" rx=".9" fill="#7af0b4"/></g>
+      <g class="legR"><rect x="34.5" y="61" width="7" height="15" rx="3.5" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><path d="M31.5 77a3.2 3.2 0 0 1 3.2-3.2h6.6a3.2 3.2 0 0 1 3.2 3.2v2.6h-13z" fill="url(#gdC${n})"/><rect x="31.5" y="78.6" width="13" height="1.8" rx=".9" fill="#7af0b4"/></g>
+      <g class="bodyg">
+        <g class="armL"><rect x="10.5" y="45" width="6.5" height="13.5" rx="3.25" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><circle cx="13.75" cy="59.6" r="3.3" fill="url(#gdC${n})"/></g>
+        <g class="armR"><rect x="47" y="45" width="6.5" height="13.5" rx="3.25" fill="url(#gdB${n})" stroke="#3a414e" stroke-width=".8"/><circle cx="50.25" cy="59.6" r="3.3" fill="url(#gdC${n})"/></g>
+        <rect x="16.5" y="42" width="31" height="23" rx="10" fill="url(#gdB${n})" stroke="#475061" stroke-width="1"/>
+        <path d="M21 44.5c3-1.4 7-2 11-2" stroke="rgba(255,255,255,.18)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <rect x="23" y="48" width="18" height="11" rx="4" fill="#090c11" stroke="#2a313d" stroke-width=".8"/>
+        <text x="32" y="56.4" text-anchor="middle" font-family="system-ui,sans-serif" font-size="7.4" font-weight="800" letter-spacing=".3" fill="#7af0b4" filter="url(#gdG${n})">GD</text>
+        <path d="M38.5 12.5c.6-3 1.6-5 3.2-6.6" stroke="#4a5262" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <circle class="light" cx="42.3" cy="5.3" r="2.7" fill="#4ade80" filter="url(#gdG${n})"/>
+        <rect x="5.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="6.8" y="26" width="2.4" height="6" rx="1.2" fill="#7af0b4" opacity=".85"/>
+        <rect x="53.5" y="22.5" width="5" height="13" rx="2.5" fill="#1b2029" stroke="#4a5262" stroke-width=".8"/><rect x="54.8" y="26" width="2.4" height="6" rx="1.2" fill="#7af0b4" opacity=".85"/>
+        <rect x="9" y="12.5" width="46" height="32.5" rx="13" fill="url(#gdH${n})" stroke="#4d5667" stroke-width="1"/>
+        <path d="M11.2 22.5c1.6-7.4 9.4-11.4 20.8-11.4s19.2 4 20.8 11.4z" fill="url(#gdC${n})"/>
+        <path d="M12.4 21.8H4.6a2.3 2.3 0 0 0 0 4.6h7.8z" fill="#c9ced7"/>
+        <path d="M32 11.2v10.6" stroke="#c5cad3" stroke-width=".8"/>
+        <circle cx="32" cy="11.4" r="1.3" fill="#7af0b4"/>
+        <rect x="14" y="24" width="36" height="17" rx="7.5" fill="url(#gdV${n})" stroke="#0f1a17" stroke-width=".8"/>
+        <path d="M17.5 27h8" stroke="rgba(255,255,255,.2)" stroke-width="1.4" stroke-linecap="round"/>
+        <g class="eyes" filter="url(#gdG${n})"><rect class="eye" x="22" y="27.5" width="6" height="9" rx="3" fill="#7af0b4"/><rect class="eye" x="36" y="27.5" width="6" height="9" rx="3" fill="#7af0b4"/></g>
+        <g class="heyes" opacity="0" fill="none" stroke="#7af0b4" stroke-width="2.4" stroke-linecap="round" filter="url(#gdG${n})"><path d="M21.5 34l3.5-4 3.5 4"/><path d="M35.5 34l3.5-4 3.5 4"/></g>
+        <rect class="mouth" x="29" y="37.6" width="6" height="1.6" rx=".8" fill="#7af0b4"/>
+        <circle cx="18.6" cy="37.4" r="1.7" fill="#ff7aa2" opacity=".3"/><circle cx="45.4" cy="37.4" r="1.7" fill="#ff7aa2" opacity=".3"/>
+      </g></g></g>
+    <g class="zz" opacity="0" font-family="system-ui,sans-serif" font-weight="700" fill="#d6dae1"><text x="50" y="10" font-size="10">z</text><text x="57" y="2" font-size="7">z</text></g>
+  </g></svg>`; };
 
   const gd = document.createElement("button");
   gd.className = "gd"; gd.type = "button";
@@ -147,6 +174,7 @@
 
   /* ---------- frases ---------- */
   const pick = a => a[Math.floor(Math.random() * a.length)];
+  const SFX = n => { try{ window.AurenSFX && window.AurenSFX.play(n); }catch{} };
   const R = Math.random;
   const LINES = {
     hi: ["¡Klk! Soy GandyDev. ¿En qué te ayudo?", "¡Hey! Dime, ¿qué buscas?", "¡Wepa! Pregúntame lo que quieras.", "¡Epa! Aquí estoy. ¿Qué necesitas?"],
@@ -236,7 +264,7 @@
   }
   function hop(h = 320){ if(mode === "ground" || mode === "plat"){ jumpTo(x, y, mode === "plat" ? plat : null, { h:h * .25, now:true }); } }
   function fall(){ mode = "air"; vx = 0; vy = 0; target = null; plat = null; }
-  function landed(now){ vx = 0; vy = 0; target = null; landUntil = now + 170; pauseUntil = now + 400 + R() * 900; }
+  function landed(now){ vx = 0; vy = 0; target = null; landUntil = now + 170; pauseUntil = now + 400 + R() * 900; if(now - lastTouch < 4000) SFX("land"); }
   function randomAction(now){
     if(R() < .5 && prep == null){
       const el = findPlatform();
@@ -320,6 +348,7 @@
     } else {
       if(prep && now >= prep.at && mode !== "drag"){
         vx = prep.vx; vy = prep.vy; target = prep.el; plat = null; mode = "air"; prep = null;
+        if(now - lastTouch < 3000) SFX("jump");
       }
       if(act && now > actUntil){ if(act === "sleep" && !open) {} act = null; }
       if(face && now > faceUntil) face = null;
@@ -367,7 +396,7 @@
     try{ gd.setPointerCapture(e.pointerId); }catch{}
     if(still()) return;
     pressed = true; prep = null;
-    if(mode === "air"){ mode = "drag"; lastTouch = performance.now(); }
+    if(mode === "air"){ mode = "drag"; lastTouch = performance.now(); SFX("catch"); }
   });
   gd.addEventListener("pointermove", e=>{
     if(!down || still()) return;
@@ -387,7 +416,7 @@
       const h = down.hist, a = h[0], b = h[h.length - 1], dt = Math.max(16, b.t - a.t) / 1000;
       vx = moved ? Math.max(-1500, Math.min(1500, (b.x - a.x) / dt)) : 0; vy = moved ? Math.max(-1500, Math.min(1200, (b.y - a.y) / dt)) : 0;
       mode = "air"; target = null;
-      if(moved){ say(pick(LINES.drop), 1400); setFace("happy", 1500); }
+      if(moved){ say(pick(LINES.drop), 1400); setFace("happy", 1500); SFX("whoosh"); }
     }
     down = null;
     if(e && e.type === "pointerup" && !moved){ suppressClick = true; setTimeout(()=> suppressClick = false, 400); activate(); }
@@ -397,6 +426,7 @@
   gd.addEventListener("pointercancel", endDrag);
 
   function greet(){
+    SFX("chirp");
     lastTouch = performance.now();
     if(act === "sleep"){ act = null; say(pick(LINES.wake)); setFace("happy", 1200); return; }
     setFace("happy", 1600);
@@ -582,7 +612,7 @@
     nodes.forEach(n=> n.nodeValue = "");
     const total = full.reduce((n, t)=> n + t.length, 0);
     const per = Math.max(1, Math.ceil(total / 260));       // como mucho ~6 segundos escribiendo
-    let ni = 0, ci = 0, timer = 0, resolve;
+    let ni = 0, ci = 0, timer = 0, resolve, blips = 0;
     talk(true); speak(plain);
     const reveal = n => { let p = n.parentElement; while(p && p !== el){ p.style.visibility = ""; p = p.parentElement; } };
     function finish(){
@@ -600,6 +630,7 @@
       let n = per, ch = "";
       while(n-- > 0 && ni < nodes.length){
         if(ci === 0) reveal(nodes[ni]);
+        if(++blips % 4 === 0 && open) SFX("blip");
         ch = full[ni][ci]; ci++;
         nodes[ni].nodeValue = full[ni].slice(0, ci);
         if(ci >= full[ni].length){ ni++; ci = 0; }
@@ -664,7 +695,7 @@
       });
       panel.addEventListener("keydown", e=>{ if(e.key === "Escape") closePanel(); });
     }
-    panel.hidden = false; open = true; gd.setAttribute("aria-expanded", "true");
+    panel.hidden = false; open = true; gd.setAttribute("aria-expanded", "true"); SFX("open");
     setTimeout(()=> input.focus(), 30);
     buildIndex();
   }
@@ -672,7 +703,7 @@
     if(!panel) return;
     if(typing) typing.finish();
     try{ speechSynthesis.cancel(); }catch{}
-    panel.hidden = true; open = false; gd.setAttribute("aria-expanded", "false"); gd.focus();
+    panel.hidden = true; open = false; gd.setAttribute("aria-expanded", "false"); gd.focus(); SFX("close");
     if(!still()){ setAct("wave", 1500); say(pick(LINES.bye), 1600); }
   }
   function activate(){
@@ -753,7 +784,7 @@
       `Conectar: botón Conectar de la web, o en FiveM pulsa F8 y escribe connect cfx.re/join/${C.cfxCode || "lee9965"}.`,
       `No hay whitelist: entrada directa. Discord: ${C.discord || "discord.gg/aurenrp"} (tickets, soporte, apelaciones y compras VIP).`,
       `Páginas: Normativas (normativas.html), Ayuda (ayuda.html), Streamers (streamers.html), Mi cuenta (panel.html), Panel del staff (staff.html, solo staff), The GOATs en la portada (index.html#goats).`,
-      `Owners de Auren (The GOATs): ${(C.goats || []).map(g=> `${g.name} (${g.rank}${g.desc ? ": " + g.desc : ""})`).join("; ") || "Gandy (Owner principal), RichDinero (segundo owner principal), MagicBullet (owner)"}.`,
+      `Owners de Auren (The GOATs): ${(C.goats || []).map(g=> `${g.name} (${g.rank}${g.desc ? ": " + g.desc : ""})`).join("; ") || "Gandy (Owner principal), RichDinero (Owner), MagicBullet (Owner)"}. Son un equipo: no digas que uno vale más que otro.`,
       `Tú eres GandyDev, el asistente de la web de Auren.`
     ];
     const ctx = facts.join("\n") + "\n\nREGLAS Y AYUDA RELEVANTES:\n" + hits.map(h=>`[${h.d.code}] ${h.d.title}: ${h.d.text}`).join("\n");

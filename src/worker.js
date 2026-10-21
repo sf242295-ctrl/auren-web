@@ -162,11 +162,27 @@ async function handleAuth(request, env, action) {
     if (!userRes.ok) return redirect(withParam(next, "login=error"), [clearState]);
     const user = await userRes.json();
 
-    let member = null;
+    let member = null, mData = null;
     if (env.DISCORD_GUILD_ID) {
       const mRes = await fetch(`https://discord.com/api/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`, { headers: authHeader });
       member = mRes.ok;
+      if (mRes.ok) mData = await mRes.json().catch(() => null);
     }
+    // Guardamos su perfil público (foto, banner, apodo) para The GOATs y Streamers,
+    // así salen aunque todavía no esté puesto el bot de Discord.
+    try {
+      if (env.SITE_STORE) {
+        const role = env.STREAMER_ROLE_ID || DEFAULT_STREAMER_ROLE;
+        const store = env.SITE_STORE.get(env.SITE_STORE.idFromName("auren"));
+        await store.fetch("https://store/profile", { method: "POST", body: JSON.stringify({
+          id: user.id, username: user.username, globalName: user.global_name || null,
+          nick: mData?.nick || null, avatar: user.avatar || null, guildAvatar: mData?.avatar || null,
+          banner: user.banner || null, accent: user.accent_color ?? null,
+          deco: user.avatar_decoration_data?.asset || mData?.avatar_decoration_data?.asset || null,
+          joinedAt: mData?.joined_at || null, streamer: !!(mData?.roles || []).includes(role), at: Date.now(),
+        }) });
+      }
+    } catch {}
 
     const session = {
       id: user.id,
@@ -474,6 +490,7 @@ const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boole
 async function isWebAdmin(env, user) {
   if (!user) return false;
   if (list(env.WEB_ADMIN_IDS).includes(user.id)) return true;
+  if ((list(env.GOAT_IDS).length ? list(env.GOAT_IDS) : GOAT_IDS_DEFAULT).includes(user.id)) return true;   // los owners siempre
   const roles = list(env.WEB_ADMIN_ROLE_IDS);
   if (!roles.length || !env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID) return false;
   const key = new Request(`https://admin.local/${user.id}`);
@@ -553,6 +570,22 @@ export class SiteStore extends DurableObject {
       await this.refresh(true);
       return json({ ok: true });
     }
+    if (url.pathname === "/profile" && request.method === "POST") {
+      const p = await request.json();
+      if (!/^\d{5,25}$/.test(String(p.id || ""))) return json({ error: "id" }, 400);
+      const all = (await this.ctx.storage.get("profiles")) || {};
+      all[p.id] = p;
+      const ids = Object.keys(all);
+      if (ids.length > 3000) ids.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ids.length - 3000).forEach((k) => delete all[k]);
+      await this.ctx.storage.put("profiles", all);
+      return json({ ok: true });
+    }
+    if (url.pathname === "/profiles") {
+      const all = (await this.ctx.storage.get("profiles")) || {};
+      const ids = (url.searchParams.get("ids") || "").split(",").filter(Boolean);
+      const out = {}; ids.forEach((id) => { if (all[id]) out[id] = all[id]; });
+      return json(out);
+    }
     return json({ error: "no encontrado" }, 404);
   }
 
@@ -561,9 +594,15 @@ export class SiteStore extends DurableObject {
       this.ctx.storage.get("members"), this.ctx.storage.get("channels"), this.ctx.storage.get("status"), this.ctx.storage.get("activity"),
     ]);
     const ch = channels || {}, st = status?.per || {}, act = activity || {};
+    let memberList = members?.list || [];
+    if (!(this.env.DISCORD_BOT_TOKEN && this.env.DISCORD_GUILD_ID)) {
+      // sin bot: usamos a quienes iniciaron sesión en la web y tienen el rol de Streamer
+      const prof = (await this.ctx.storage.get("profiles")) || {};
+      memberList = Object.values(prof).filter((p) => p.streamer).map((p) => ({ id: p.id, name: p.nick || p.globalName || p.username, username: p.username, avatar: profileAvatar(p, this.env, 256).still }));
+    }
     const week = {};
     for (const day of Object.keys(act)) for (const [id, m] of Object.entries(act[day])) week[id] = (week[id] || 0) + m;
-    const streamers = (members?.list || []).map((m) => {
+    const streamers = memberList.map((m) => {
       const c = ch[m.id] || {}, s = st[m.id] || {};
       return {
         id: m.id, name: m.name, username: m.username, avatar: m.avatar,
@@ -636,7 +675,8 @@ export class SiteStore extends DurableObject {
 
   async refreshStatus() {
     const env = this.env;
-    const members = (await this.ctx.storage.get("members"))?.list || [];
+    let members = (await this.ctx.storage.get("members"))?.list || [];
+    if (!(env.DISCORD_BOT_TOKEN && env.DISCORD_GUILD_ID)) members = Object.values((await this.ctx.storage.get("profiles")) || {}).filter((p) => p.streamer);
     const channels = (await this.ctx.storage.get("channels")) || {};
     const prev = (await this.ctx.storage.get("status"))?.per || {};
     const per = {};
@@ -716,39 +756,55 @@ export class SiteStore extends DurableObject {
 const GOAT_IDS_DEFAULT = ["1270133887372230718", "457432500768210945", "808082230320693338"];
 const snowflakeDate = (id) => { try { return new Date(Number((BigInt(id) >> 22n) + 1420070400000n)).toISOString(); } catch { return null; } };
 
+function profileAvatar(p, env, size) {
+  const cdn = "https://cdn.discordapp.com";
+  const img = (path, hash) => hash ? { still: `${cdn}/${path}/${hash}.png?size=${size}`, anim: hash.startsWith("a_") ? `${cdn}/${path}/${hash}.gif?size=${size}` : null } : null;
+  return (p.guildAvatar && env.DISCORD_GUILD_ID && img(`guilds/${env.DISCORD_GUILD_ID}/users/${p.id}/avatars`, p.guildAvatar))
+    || img(`avatars/${p.id}`, p.avatar)
+    || { still: `${cdn}/embed/avatars/${Number((BigInt(p.id) >> 22n) % 6n)}.png`, anim: null };
+}
+
 async function handleGoats(request, env) {
   const ids = list(env.GOAT_IDS).length ? list(env.GOAT_IDS) : GOAT_IDS_DEFAULT;
-  const key = new Request(`https://goats.local/v2/${ids.join("-")}`);
+  const key = new Request(`https://goats.local/v3/${ids.join("-")}`);
   const hit = await caches.default.match(key);
   if (hit) return new Response(hit.body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300" } });
-  if (!env.DISCORD_BOT_TOKEN) return json({ configured: false, people: ids.map((id) => ({ id, createdAt: snowflakeDate(id) })) });
-  const H = { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` };
   const cdn = "https://cdn.discordapp.com";
+  const H = env.DISCORD_BOT_TOKEN ? { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } : null;
+  let saved = {};
+  try { if (env.SITE_STORE) saved = await (await env.SITE_STORE.get(env.SITE_STORE.idFromName("auren")).fetch(`https://store/profiles?ids=${ids.join(",")}`)).json(); } catch {}
   const people = await Promise.all(ids.map(async (id) => {
     const out = { id, createdAt: snowflakeDate(id) };
+    let u = null, m = null;
     try {
-      const [u, m] = await Promise.all([
+      if (H) [u, m] = await Promise.all([
         fetch(`https://discord.com/api/v10/users/${id}`, { headers: H }).then((r) => (r.ok ? r.json() : null)),
         env.DISCORD_GUILD_ID ? fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${id}`, { headers: H }).then((r) => (r.ok ? r.json() : null)) : null,
       ]);
-      if (!u) return out;
-      out.username = u.username;
-      out.name = (m && m.nick) || u.global_name || u.username;
-      out.globalName = u.global_name || u.username;
-      const img = (path, hash, size) => hash ? { still: `${cdn}/${path}/${hash}.png?size=${size}`, anim: hash.startsWith("a_") ? `${cdn}/${path}/${hash}.gif?size=${size}` : null } : null;
-      out.avatar = (m && m.avatar && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/avatars`, m.avatar, 512)) || img(`avatars/${id}`, u.avatar, 512)
-        || { still: `${cdn}/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`, anim: null };
-      out.banner = (m && m.banner && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/banners`, m.banner, 1024)) || img(`banners/${id}`, u.banner, 1024);
-      out.accent = u.accent_color != null ? "#" + Number(u.accent_color).toString(16).padStart(6, "0") : (u.banner_color || null);
-      const deco = (m && m.avatar_decoration_data) || u.avatar_decoration_data;
-      out.decoration = deco && deco.asset ? `${cdn}/avatar-decoration-presets/${deco.asset}.png?size=240&passthrough=true` : null;
-      out.joinedAt = (m && m.joined_at) || null;
-      out.inServer = !!m;
     } catch {}
+    const p = saved[id];
+    if (!u && p) u = { id, username: p.username, global_name: p.globalName, avatar: p.avatar, banner: p.banner, accent_color: p.accent, avatar_decoration_data: p.deco ? { asset: p.deco } : null };
+    if (!m && p && (p.nick || p.guildAvatar || p.joinedAt)) m = { nick: p.nick, avatar: p.guildAvatar, joined_at: p.joinedAt };
+    if (!u) {
+      // último recurso: perfil público de Discord por un servicio abierto
+      try { const r = await fetch(`https://japi.rest/discord/v1/user/${id}`, { headers: { Accept: "application/json" } }); if (r.ok) { const j = await r.json(); u = j.data || j; } } catch {}
+    }
+    if (!u || !u.username) return out;
+    out.username = u.username;
+    out.name = (m && m.nick) || u.global_name || u.username;
+    out.globalName = u.global_name || u.username;
+    const img = (path, hash, size) => hash ? { still: `${cdn}/${path}/${hash}.png?size=${size}`, anim: hash.startsWith("a_") ? `${cdn}/${path}/${hash}.gif?size=${size}` : null } : null;
+    out.avatar = (m && m.avatar && env.DISCORD_GUILD_ID && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/avatars`, m.avatar, 512)) || img(`avatars/${id}`, u.avatar, 512)
+      || { still: `${cdn}/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`, anim: null };
+    out.banner = (m && m.banner && env.DISCORD_GUILD_ID && img(`guilds/${env.DISCORD_GUILD_ID}/users/${id}/banners`, m.banner, 1024)) || img(`banners/${id}`, u.banner, 1024);
+    out.accent = u.accent_color ? "#" + Number(u.accent_color).toString(16).padStart(6, "0") : null;
+    const deco = (m && m.avatar_decoration_data) || u.avatar_decoration_data;
+    out.decoration = deco && deco.asset ? `${cdn}/avatar-decoration-presets/${deco.asset}.png?size=240&passthrough=true` : null;
+    out.joinedAt = (m && m.joined_at) || null;
     return out;
   }));
-  const body = JSON.stringify({ configured: true, people });
-  await caches.default.put(key, new Response(body, { headers: { "Cache-Control": "max-age=1800" } }));
+  const body = JSON.stringify({ configured: !!H, people });
+  await caches.default.put(key, new Response(body, { headers: { "Cache-Control": "max-age=900" } }));
   return new Response(body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300" } });
 }
 

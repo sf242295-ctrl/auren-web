@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ayuda · Auren RP</title>
+<meta name="description" content="Preguntas frecuentes de Auren RP: cómo entrar, whitelist, trabajos, sanciones, compras VIP y cuenta.">
+<meta name="theme-color" content="#06070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.help-layout{display:grid;grid-template-columns:250px 1fr;gap:24px;align-items:start}
+.help-layout > *{min-width:0}
+#faq{padding:clamp(18px,3vw,36px)}
+.toc{position:sticky;top:100px;padding:16px}
+.toc h2{font-size:.85rem;font-weight:500;color:var(--muted);letter-spacing:0;margin:2px 4px 8px}
+.toc ol{list-style:none;display:grid;gap:2px}
+.toc a{display:block;padding:8px 10px;border-radius:10px;color:var(--soft);font-size:.9rem}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.ticket{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:10px;font-size:.86rem;color:var(--muted)}
+.faq-sec{scroll-margin-top:100px}
+.faq-sec + .faq-sec{margin-top:3rem}
+.faq-sec h2{font-size:clamp(1.4rem,2.4vw,1.8rem);line-height:1.1;padding-bottom:10px}
+details{border-top:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;font-weight:500}
+summary::-webkit-details-marker{display:none}
+summary .plus{width:26px;height:26px;flex:none;border-radius:8px;border:1px solid var(--line-2);display:grid;place-items:center;color:var(--muted);transition:transform .2s}
+details[open] summary .plus{transform:rotate(45deg);color:var(--ink)}
+.ans{padding:0 0 18px;color:var(--soft);max-width:66ch;font-size:.95rem}
+.ans a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.35)}
+.page-head .search{max-width:480px;margin-top:1.4rem}
+.empty{padding:2rem 0;color:var(--muted)}
+@media (max-width:960px){
+  .help-layout{grid-template-columns:1fr;gap:16px}
+  .toc{position:static}
+}
+</style>
+</head>
+<body data-page="ayuda" data-city="dim">
+<header id="siteHeader"></header>
+
+<main class="wrap">
+  <div class="page-head">
+    <h1>Ayuda</h1>
+    <p>Las dudas más comunes, resueltas. Si la tuya no está, abre un ticket en el Discord y el staff te responde.</p>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="input" id="q" type="search" placeholder="Busca tu duda, por ejemplo “whitelist”" aria-label="Buscar en la ayuda" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="help-layout">
+    <nav class="card toc" aria-label="Secciones de ayuda">
+      <h2>Secciones</h2>
+      <ol id="toc"></ol>
+      <div class="ticket">
+        ¿No encuentras tu respuesta?
+        <a class="btn btn-primary" href="#" data-link="tickets">Abrir un ticket</a>
+      </div>
+    </nav>
+    <div class="card" id="faq"></div>
+  </div>
+</main>
+
+<footer id="siteFooter"></footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/city.js"></script>
+<script src="data/ayuda.js"></script>
+<script>
+(function(){
+  const A = window.Auren, F = window.AUREN_AYUDA, esc = A.esc;
+  const toc = document.getElementById("toc"), faq = document.getElementById("faq"), q = document.getElementById("q");
+  const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  const strip = s => s.replace(/<[^>]+>/g,"");
+
+  function render(term=""){
+    const t = norm(term.trim());
+    const secs = F.map(s=>({s, qs: s.preguntas.filter(p=> !t || norm(p.q + " " + strip(p.a)).includes(t))})).filter(x=>x.qs.length);
+    toc.innerHTML = F.map(s=>`<li><a href="#${s.id}">${esc(s.nombre)}</a></li>`).join("");
+    faq.innerHTML = secs.length ? secs.map(({s,qs})=>`
+      <section class="faq-sec" id="${s.id}" style="padding:0">
+        <h2>${esc(s.nombre)}</h2>
+        ${qs.map(p=>`<details${t?" open":""}><summary>${esc(p.q)}<span class="plus" aria-hidden="true">+</span></summary><div class="ans">${p.a}</div></details>`).join("")}
+      </section>`).join("")
+      : `<p class="empty">No encontramos nada sobre “${esc(term)}”. Abre un ticket en el Discord y te ayudamos.</p>`;
+  }
+  q.addEventListener("input", ()=> render(q.value));
+  render();
+})();
+</script>
+</body>
+</html>
